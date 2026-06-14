@@ -129,7 +129,7 @@ function TestTable({ tests = [], interpretations = [] }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
         <thead>
           <tr>
-            {['Test', 'Value', 'Unit', 'Normal Range', 'Status'].map(h => (
+            {['Category', 'Test Name', 'Observed Value', 'Units', 'Biological Reference Interval', 'Status', 'What Test Checks', 'Clinical Meaning'].map(h => (
               <th key={h} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-3)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
@@ -139,11 +139,12 @@ function TestTable({ tests = [], interpretations = [] }) {
             const status = (t.status || 'unknown').toLowerCase();
             const statusColor = status === 'high' ? '#fca5a5' : status === 'low' ? '#93c5fd' : status === 'normal' ? '#6ee7b7' : 'var(--text-3)';
             const statusBg   = status === 'high' ? 'rgba(239,68,68,0.13)' : status === 'low' ? 'rgba(59,130,246,0.13)' : status === 'normal' ? 'rgba(16,185,129,0.11)' : 'rgba(107,114,128,0.1)';
-            const range = t.normalMin && t.normalMax ? `${t.normalMin} – ${t.normalMax}` : t.normalMin || t.normalMax || '—';
-            const interp = getInterp(t.name);
+            const range = t.interval || (t.normalMin && t.normalMax ? `${t.normalMin} – ${t.normalMax}` : t.normalMin || t.normalMax || '—');
+            const interp = t.meaning || getInterp(t.name);
             return (
               <Fragment key={i}>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '8px 10px', color: 'var(--text-2)' }}>{t.category || '—'}</td>
                   <td style={{ padding: '8px 10px', fontWeight: 600 }}>{t.name}</td>
                   <td style={{ padding: '8px 10px', fontWeight: 700, color: statusColor }}>{t.value || '—'}</td>
                   <td style={{ padding: '8px 10px', color: 'var(--text-3)' }}>{t.unit || '—'}</td>
@@ -153,10 +154,12 @@ function TestTable({ tests = [], interpretations = [] }) {
                       {status}
                     </span>
                   </td>
+                  <td style={{ padding: '8px 10px', color: 'var(--text-2)', minWidth: 150 }}>{t.checks || '—'}</td>
+                  <td style={{ padding: '8px 10px', color: 'var(--text-2)', minWidth: 200 }}>{t.meaning || '—'}</td>
                 </tr>
-                {interp && (
+                {!t.meaning && interp && (
                   <tr>
-                    <td colSpan={5} style={{ padding: '2px 10px 9px 10px', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
+                    <td colSpan={8} style={{ padding: '2px 10px 9px 10px', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
                       💡 {interp}
                     </td>
                   </tr>
@@ -558,7 +561,10 @@ function TestResultCard({ tr, onView, onDelete, aiStatus, onUpdateTests }) {
   const canAI = aiStatus == null || aiStatus.anyActive !== false;
 
   const tests = tr.tests || [];
-  const outOfRange = tests.filter(t => t.status === 'high' || t.status === 'low');
+  const outOfRange = tests.filter(t => {
+    const s = (t.status || '').toLowerCase();
+    return s === 'high' || s === 'low';
+  });
   const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); const mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return `${parseInt(d)} ${mons[parseInt(m) - 1]} ${y}`; };
 
   async function handleReExtractTests() {

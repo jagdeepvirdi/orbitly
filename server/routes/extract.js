@@ -116,12 +116,10 @@ Output this exact JSON structure:
 const TEST_PROMPT_TEXT = `You are a strict medical document parser.
 
 RULES — read carefully before answering:
-1. Extract ONLY values and text literally present in the report below.
-2. Do NOT invent test names, values, ranges, or any data not in the text.
-3. Copy test names, values, and units exactly as they appear.
-4. For status: compare value to the normal range given in the report and set "high", "low", or "normal". Use "unknown" only if no range is provided.
-5. If any field is absent, use an empty string "".
-6. Return ONLY the JSON object — no explanation, no markdown, no code fences.
+1. Extract ALL test results present in the report below.
+2. For each test, you MUST generate and enhance two additional columns: "What test Checks" and "Clinical Meaning for Your Health" based on the observed value and status.
+3. For status: compare the value to the normal range/biological reference interval. Set "High", "Low", or "Normal". If no range is provided, use "Normal".
+4. Return ONLY the JSON object — no explanation, no markdown, no code fences.
 
 Output this exact JSON structure:
 {
@@ -130,15 +128,17 @@ Output this exact JSON structure:
   "lab": "laboratory or hospital name as written",
   "date": "test date in YYYY-MM-DD format",
   "doctor": "ordering doctor name as written",
-  "notes": "brief summary of key findings using only information in the report",
+  "notes": "brief summary of key findings",
   "tests": [
     {
-      "name": "individual test name exactly as written",
-      "value": "measured result exactly as written",
-      "unit": "unit exactly as written",
-      "normalMin": "lower bound of reference range as written, empty if absent",
-      "normalMax": "upper bound of reference range as written, empty if absent",
-      "status": "normal | high | low | unknown"
+      "category": "specific sub-category of the test (e.g. Hematology, Liver Function, Lipid Panel, Thyroid, Electrolytes, Kidney Function, etc.)",
+      "name": "individual test name exactly as written (e.g., Hemoglobin, HbA1c, Cholesterol)",
+      "value": "measured result/value exactly as written (e.g., 14.5, 6.8)",
+      "unit": "unit of measurement exactly as written (e.g., g/dL, %)",
+      "interval": "biological reference interval or reference range exactly as written (e.g., '13.5 - 17.5', '< 100')",
+      "status": "High | Low | Normal",
+      "checks": "clear, simple explanation of what this specific test checks (AI enhanced)",
+      "meaning": "clinical meaning of the observed value for the patient's health, explaining what it means if it is high, low, or normal (AI enhanced)"
     }
   ]
 }
@@ -149,12 +149,10 @@ REPORT TEXT:
 const TEST_PROMPT_VISION = `You are a strict medical document parser reading a lab result image.
 
 RULES — follow exactly:
-1. Read ONLY values and text physically visible in this image.
-2. Do NOT invent test names, values, ranges, or any details not clearly visible.
-3. Copy test names, values, and units exactly as they appear.
-4. For status: compare the value to the reference range visible in the image. Set "high", "low", or "normal". Use "unknown" only if no range is shown.
-5. If any field is absent or illegible, use an empty string "".
-6. Return ONLY the JSON object — no explanation, no markdown, no code fences.
+1. Read ALL test results physically visible in this image.
+2. For each test, you MUST generate and enhance two additional columns: "What test Checks" and "Clinical Meaning for Your Health" based on the observed value and status.
+3. For status: compare the value to the reference range/biological reference interval. Set "High", "Low", or "Normal". If no range is shown, use "Normal".
+4. Return ONLY the JSON object — no explanation, no markdown, no code fences.
 
 Output this exact JSON structure:
 {
@@ -163,15 +161,17 @@ Output this exact JSON structure:
   "lab": "laboratory or hospital name as visible",
   "date": "test date in YYYY-MM-DD format",
   "doctor": "ordering doctor name as visible",
-  "notes": "brief summary of key findings visible in the image",
+  "notes": "brief summary of key findings",
   "tests": [
     {
+      "category": "specific sub-category of the test (e.g. Hematology, Liver Function, Lipid Panel, Thyroid, Electrolytes, Kidney Function, etc.)",
       "name": "individual test name exactly as visible",
-      "value": "measured result exactly as visible",
-      "unit": "unit exactly as visible",
-      "normalMin": "lower bound of reference range as visible, empty if absent",
-      "normalMax": "upper bound of reference range as visible, empty if absent",
-      "status": "normal | high | low | unknown"
+      "value": "measured result/value exactly as visible",
+      "unit": "unit of measurement exactly as visible",
+      "interval": "biological reference interval or reference range exactly as visible",
+      "status": "High | Low | Normal",
+      "checks": "clear, simple explanation of what this specific test checks (AI enhanced)",
+      "meaning": "clinical meaning of the observed value for the patient's health, explaining what it means if it is high, low, or normal (AI enhanced)"
     }
   ]
 }`;
@@ -204,6 +204,7 @@ async function ollamaText(prompt, timeoutMs = 180000) {
       model: OLLAMA_MODEL,
       messages: [{ role: 'user', content: prompt }],
       stream: false,
+      format: 'json',
       options: { temperature: 0 },
     }),
     signal: AbortSignal.timeout(timeoutMs),
@@ -223,6 +224,7 @@ async function ollamaVision(base64, prompt) {
       model: OLLAMA_MODEL,
       messages: [{ role: 'user', content: prompt, images: [base64] }],
       stream: false,
+      format: 'json',
       options: { temperature: 0 },
     }),
     signal: AbortSignal.timeout(120000),
@@ -234,7 +236,14 @@ async function ollamaVision(base64, prompt) {
   return extractJSON(raw);
 }
 
-// ── Gemini helper ─────────────────────────────────────────────────────────────
+// ── Gemini helper with model failover chain ──────────────────────────────────
+const GEMINI_MODELS = [
+  'gemini-flash-latest',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash'
+];
+
 async function tryGemini(prompt, base64, mimeType) {
   if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY not set');
   geminiReset();
@@ -247,42 +256,64 @@ async function tryGemini(prompt, base64, mimeType) {
     parts.push({ inline_data: { mime_type: mimeType, data: base64 } });
   }
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: { temperature: 0.1 },
-      }),
-      signal: AbortSignal.timeout(60000),
-    }
-  );
+  let lastError = null;
+  for (const model of GEMINI_MODELS) {
+    console.log(`[extract] Attempting Gemini model: ${model}`);
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: { 
+              temperature: 0.1,
+              responseMimeType: 'application/json'
+            },
+          }),
+          signal: AbortSignal.timeout(60000),
+        }
+      );
 
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 429) {
-      if (body.includes('RESOURCE_EXHAUSTED') || body.includes('quota')) {
-        gemini.quotaExceeded = true;
-        console.warn('[extract] Gemini daily quota exceeded');
-      } else {
-        gemini.rateLimited = true;
-        console.warn('[extract] Gemini rate limited (per-minute)');
+      if (!res.ok) {
+        const body = await res.text();
+        console.warn(`[extract] Gemini model ${model} returned HTTP ${res.status}:`, body.slice(0, 200));
+        
+        if (res.status === 429) {
+          if (body.includes('RESOURCE_EXHAUSTED') || body.includes('quota')) {
+            // This specific model is out of quota; continue to try other models
+            continue;
+          } else {
+            gemini.rateLimited = true;
+          }
+        } else if (res.status === 400 && body.includes('API_KEY')) {
+          gemini.keyInvalid = true;
+          throw new Error('Gemini API key invalid');
+        }
+        lastError = new Error(`Gemini HTTP ${res.status} for ${model}`);
+        continue;
       }
-    } else if (res.status === 400 && body.includes('API_KEY')) {
-      gemini.keyInvalid = true;
-      console.warn('[extract] Gemini invalid API key');
-    } else {
-      console.warn(`[extract] Gemini HTTP ${res.status}:`, body.slice(0, 300));
+
+      gemini.used++;
+      gemini.rateLimited = false;
+      const d = await res.json();
+      const extracted = extractJSON(d.candidates?.[0]?.content?.parts?.[0]?.text || '');
+      if (extracted) {
+        return { data: extracted, modelUsed: model };
+      }
+      lastError = new Error(`Gemini returned unparseable JSON for ${model}`);
+    } catch (e) {
+      console.warn(`[extract] Gemini model ${model} failed:`, e.message);
+      lastError = e;
     }
-    throw new Error(`Gemini HTTP ${res.status}`);
   }
 
-  gemini.used++;
-  gemini.rateLimited = false;
-  const d = await res.json();
-  return extractJSON(d.candidates?.[0]?.content?.parts?.[0]?.text || '');
+  // If we reach here, all models in the chain failed
+  if (lastError && (lastError.message.includes('429') || lastError.message.includes('quota') || lastError.message.includes('RESOURCE_EXHAUSTED'))) {
+    gemini.quotaExceeded = true;
+  }
+  throw lastError || new Error('All Gemini models failed');
 }
 
 // ── Status route ──────────────────────────────────────────────────────────────
@@ -309,19 +340,21 @@ router.get('/status', async (req, res) => {
     return 'active';
   };
 
+  const isGeminiActive = geminiState() === 'active';
+
   res.json({
     ollama: ollamaStatus,
     gemini: {
       configured: Boolean(GEMINI_KEY),
-      model: 'gemini-2.0-flash',
+      model: 'gemini-flash-latest (with failover chain)',
       state: geminiState(),
       used: gemini.used,
       limit: GEMINI_DAILY_LIMIT,
       pct: Math.round((gemini.used / GEMINI_DAILY_LIMIT) * 100),
       resetsAt: `${gemini.date}T17:00:00Z`,
     },
-    anyActive: ollamaStatus.active || geminiState() === 'active',
-    primary: ollamaStatus.active ? 'ollama' : (geminiState() === 'active' ? 'gemini' : 'none'),
+    anyActive: ollamaStatus.active || isGeminiActive,
+    primary: isGeminiActive ? 'gemini' : (ollamaStatus.active ? 'ollama' : 'none'),
   });
 });
 
@@ -363,7 +396,34 @@ router.post('/', async (req, res) => {
     console.log(`[extract] vision mode — mimeType: ${mimeType}`);
   }
 
-  // ── Step 3: try Ollama ────────────────────────────────────────────────────
+  // Determine if Gemini is available to use
+  geminiReset();
+  const geminiAvailable = GEMINI_KEY && !gemini.quotaExceeded && !gemini.keyInvalid;
+
+  // ── Step 3: try Gemini first if available ─────────────────────────────────
+  if (geminiAvailable) {
+    try {
+      const result = useTextMode
+        ? await tryGemini(textPrompt, null, null)
+        : await tryGemini(visionPrompt, base64, mimeType);
+
+      if (result && result.data) {
+        console.log(`[extract] ✓ Gemini (${gemini.used}/${GEMINI_DAILY_LIMIT}) — ${useTextMode ? 'text' : 'vision'} mode using ${result.modelUsed}`);
+        return res.json({
+          source: 'gemini', model: result.modelUsed,
+          mode: useTextMode ? 'text' : 'vision',
+          geminiUsed: gemini.used,
+          data: result.data,
+          ...(pdfText ? { extractedTextLength: pdfText.length } : {}),
+        });
+      }
+      console.warn('[extract] Gemini returned unparseable JSON — falling back to Ollama');
+    } catch (e) {
+      console.warn('[extract] Gemini failed, falling back to Ollama:', e.message);
+    }
+  }
+
+  // ── Step 4: try Ollama (fallback or primary if Gemini unconfigured/exhausted) ──
   try {
     const data = useTextMode
       ? await ollamaText(textPrompt)
@@ -378,30 +438,9 @@ router.post('/', async (req, res) => {
         ...(pdfText ? { extractedTextLength: pdfText.length } : {}),
       });
     }
-    console.warn('[extract] Ollama returned unparseable JSON — falling back to Gemini');
+    console.warn('[extract] Ollama returned unparseable JSON');
   } catch (e) {
     console.warn('[extract] Ollama failed:', e.message, e.cause?.code || '');
-  }
-
-  // ── Step 4: Gemini fallback ───────────────────────────────────────────────
-  try {
-    const data = useTextMode
-      ? await tryGemini(textPrompt, null, null)
-      : await tryGemini(visionPrompt, base64, mimeType);
-
-    if (data) {
-      console.log(`[extract] ✓ Gemini (${gemini.used}/${GEMINI_DAILY_LIMIT}) — ${useTextMode ? 'text' : 'vision'} mode`);
-      return res.json({
-        source: 'gemini', model: 'gemini-2.0-flash',
-        mode: useTextMode ? 'text' : 'vision',
-        geminiUsed: gemini.used,
-        data,
-        ...(pdfText ? { extractedTextLength: pdfText.length } : {}),
-      });
-    }
-    console.warn('[extract] Gemini returned unparseable JSON');
-  } catch (e) {
-    console.warn('[extract] Gemini failed:', e.message, e.cause?.code || '', e.cause?.message || '');
   }
 
   res.status(503).json({
@@ -418,23 +457,30 @@ router.post('/interpret', async (req, res) => {
   if (!Array.isArray(tests) || tests.length === 0) {
     return res.status(400).json({ error: 'tests array required' });
   }
-  const outOfRange = tests.filter(t => t.status === 'high' || t.status === 'low');
+  const outOfRange = tests.filter(t => t.status === 'high' || t.status === 'low' || t.status === 'High' || t.status === 'Low');
   if (outOfRange.length === 0) return res.json({ interpretations: [] });
 
   const prompt = INTERPRET_PROMPT(outOfRange);
+
+  geminiReset();
+  const geminiAvailable = GEMINI_KEY && !gemini.quotaExceeded && !gemini.keyInvalid;
+
+  if (geminiAvailable) {
+    try {
+      const result = await tryGemini(prompt, null, null);
+      if (result && Array.isArray(result.data)) {
+        return res.json({ source: 'gemini', interpretations: result.data, model: result.modelUsed });
+      }
+    } catch (e) {
+      console.warn('[interpret] Gemini failed, falling back to Ollama:', e.message);
+    }
+  }
 
   try {
     const r = await ollamaText(prompt);
     if (Array.isArray(r)) return res.json({ source: 'ollama', interpretations: r });
   } catch (e) {
     console.warn('[interpret] Ollama failed:', e.message);
-  }
-
-  try {
-    const r = await tryGemini(prompt, null, null);
-    if (Array.isArray(r)) return res.json({ source: 'gemini', interpretations: r });
-  } catch (e) {
-    console.warn('[interpret] Gemini failed:', e.message);
   }
 
   res.status(503).json({ error: 'Interpretation unavailable', interpretations: [] });
