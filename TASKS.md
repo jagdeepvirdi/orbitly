@@ -252,7 +252,7 @@
 - Add a `extractedText` field to the API response so the UI can show a preview of what the AI saw
 - Test with a real prescription PDF and blood report PDF
 
-### 13.2 — Full prescription extraction + medication import  `[ ]`
+### 13.2 — Full prescription extraction + medication import  `[x]`
 - Update `PRESCR_PROMPT` to return:
   ```json
   {
@@ -272,7 +272,7 @@
 - Show a second "Add morning/evening reminders to calendar?" toggle (future: creates calendar events)
 - Fall back gracefully: if `medications` is empty/missing, leave the manual form as-is
 
-### 13.3 — Blood report table extraction  `[ ]`
+### 13.3 — Blood report table extraction  `[x]`
 - Update `TEST_PROMPT` to return:
   ```json
   {
@@ -292,14 +292,14 @@
   - Status pill: green = normal, red = high/low, grey = unknown
   - Sort: out-of-range rows first
 
-### 13.4 — AI interpretation of blood results  `[ ]`
+### 13.4 — AI interpretation of blood results  `[x]`
 - After the test table is extracted, make a **second AI call** with the out-of-range results
 - Prompt: "You are a friendly health educator. For each out-of-range test result below, explain in 1–2 plain sentences what it means and when to consult a doctor. Return JSON: `[{ name, interpretation }]`"
 - Store interpretation alongside the test row
 - Show as a tooltip or expandable row below each flagged result
 - Use Gemini for this call if Ollama interpretation quality is poor (configurable via `INTERPRET_MODEL=gemini` in `.env`)
 
-### 13.5 — AI availability UI  `[ ]`
+### 13.5 — AI availability UI  `[x]`
 - The `GET /api/extract/status` route already returns Ollama + Gemini state
 - Add a small status banner in the prescription and test-result upload modals:
   - 🟢 "AI ready — Ollama (gemma3:4b)" 

@@ -1,5 +1,5 @@
 import { Router }   from 'express';
-import pdfParse      from 'pdf-parse/lib/pdf-parse.js';
+import { PDFParse } from 'pdf-parse';
 
 const router = Router();
 
@@ -35,106 +35,152 @@ function geminiReset() {
 // ── PDF text extraction ───────────────────────────────────────────────────────
 async function extractPDFText(base64) {
   const buffer = Buffer.from(base64, 'base64');
-  const result = await pdfParse(buffer);
-  return result.text.trim();
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    return result.text.trim();
+  } finally {
+    await parser.destroy().catch(() => {});
+  }
+}
+
+// ── Text truncation (prevents Ollama timeout on large PDFs) ──────────────────
+// 10 000 chars covers ~6–8 pages of dense lab report text — more than enough.
+function truncateText(text, maxChars = 10000) {
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars) + '\n[... document truncated for length ...]';
 }
 
 // ── Prompts ───────────────────────────────────────────────────────────────────
+// IMPORTANT: Do NOT put example medication names, test values, doctor names, or
+// any real-world medical content inside the prompt templates. Small vision models
+// (e.g. gemma3:4b) are known to copy examples from the prompt verbatim instead
+// of reading the actual document — causing hallucinations.
 
-const PRESCR_PROMPT_TEXT = `You are a medical document parser. Read the following prescription text carefully.
-Extract the information and return ONLY a valid JSON object with exactly these fields:
+const PRESCR_PROMPT_TEXT = `You are a strict medical document parser.
+
+RULES — read carefully before answering:
+1. Extract ONLY information that is literally present in the text below.
+2. Do NOT invent, guess, or hallucinate any medication names, doses, doctors, or dates.
+3. Copy medication names and doses character-for-character as they appear.
+4. If any field is absent from the text, use an empty string "".
+5. Return ONLY the JSON object — no explanation, no markdown, no code fences.
+
+Output this exact JSON structure:
 {
-  "label": "a short label like 'Metformin 500mg — Dr. Sharma' using the primary medication and doctor",
-  "doctor": "prescribing doctor full name",
-  "clinic": "clinic or hospital name, empty string if not found",
-  "date": "prescription date in YYYY-MM-DD format, empty string if not found",
+  "label": "short identifier built from the actual doctor name and first drug found in the text",
+  "doctor": "prescribing doctor name as written",
+  "clinic": "clinic or hospital name as written",
+  "date": "prescription date in YYYY-MM-DD format",
   "medications": [
     {
-      "name": "medication name",
-      "dose": "dose e.g. 500mg, 1 tablet",
-      "frequency": "e.g. twice daily, once at night",
-      "duration": "e.g. 30 days, 2 weeks, ongoing",
-      "instructions": "e.g. take with food, avoid alcohol"
+      "name": "drug name exactly as written",
+      "dose": "dose exactly as written",
+      "frequency": "frequency exactly as written",
+      "duration": "duration exactly as written",
+      "instructions": "instructions exactly as written"
     }
   ]
 }
-The medications array must contain ALL medications listed. If a field is not found use an empty string.
-Return only the JSON object, no explanation, no markdown fences.
 
 PRESCRIPTION TEXT:
 `;
 
-const PRESCR_PROMPT_VISION = `You are a medical document parser. Look at this prescription image carefully.
-Extract the information and return ONLY a valid JSON object with exactly these fields:
+const PRESCR_PROMPT_VISION = `You are a strict medical document parser reading a prescription image.
+
+RULES — follow exactly:
+1. Read ONLY the text physically visible/printed in this image.
+2. Do NOT invent medications, doses, or any details not clearly visible.
+3. Do NOT use any example from your training data — only what you see in this image.
+4. If text is illegible or a field is absent, use an empty string "".
+5. Copy medication names and doses exactly as they appear in the image.
+6. Return ONLY the JSON object — no explanation, no markdown, no code fences.
+
+Output this exact JSON structure:
 {
-  "label": "a short label like 'Metformin 500mg — Dr. Sharma' using the primary medication and doctor",
-  "doctor": "prescribing doctor full name",
-  "clinic": "clinic or hospital name, empty string if not found",
-  "date": "prescription date in YYYY-MM-DD format, empty string if not found",
+  "label": "short identifier built from the actual doctor name and first drug visible in the image",
+  "doctor": "prescribing doctor name as it appears in the image",
+  "clinic": "clinic or hospital name as it appears",
+  "date": "prescription date in YYYY-MM-DD format",
   "medications": [
     {
-      "name": "medication name",
-      "dose": "dose e.g. 500mg, 1 tablet",
-      "frequency": "e.g. twice daily, once at night",
-      "duration": "e.g. 30 days, 2 weeks, ongoing",
-      "instructions": "e.g. take with food, avoid alcohol"
+      "name": "drug name exactly as written in the image",
+      "dose": "dose exactly as written in the image",
+      "frequency": "frequency exactly as written",
+      "duration": "duration exactly as written",
+      "instructions": "instructions exactly as written"
     }
   ]
-}
-The medications array must contain ALL medications listed. If a field is not found use an empty string.
-Return only the JSON object, no explanation, no markdown fences.`;
+}`;
 
-const TEST_PROMPT_TEXT = `You are a medical document parser. Read the following medical test result report carefully.
-Extract the information and return ONLY a valid JSON object with exactly these fields:
+const TEST_PROMPT_TEXT = `You are a strict medical document parser.
+
+RULES — read carefully before answering:
+1. Extract ONLY values and text literally present in the report below.
+2. Do NOT invent test names, values, ranges, or any data not in the text.
+3. Copy test names, values, and units exactly as they appear.
+4. For status: compare value to the normal range given in the report and set "high", "low", or "normal". Use "unknown" only if no range is provided.
+5. If any field is absent, use an empty string "".
+6. Return ONLY the JSON object — no explanation, no markdown, no code fences.
+
+Output this exact JSON structure:
 {
-  "name": "test panel name e.g. CBC Blood Panel, Lipid Profile, HbA1c",
+  "name": "test panel name as written in the report",
   "category": "exactly one of: Blood Test, Urine Test, X-Ray, MRI / CT, Ultrasound, ECG / EEG, Pathology, Other",
-  "lab": "laboratory or hospital name",
+  "lab": "laboratory or hospital name as written",
   "date": "test date in YYYY-MM-DD format",
-  "doctor": "ordering doctor full name",
-  "notes": "overall summary or key findings in 1-2 sentences",
+  "doctor": "ordering doctor name as written",
+  "notes": "brief summary of key findings using only information in the report",
   "tests": [
     {
-      "name": "individual test name e.g. Hemoglobin, WBC, Glucose",
-      "value": "measured value as a string e.g. 14.5",
-      "unit": "unit e.g. g/dL, mmol/L, %",
-      "normalMin": "lower bound of normal range as string, empty if not available",
-      "normalMax": "upper bound of normal range as string, empty if not available",
-      "status": "exactly one of: normal, high, low, unknown"
+      "name": "individual test name exactly as written",
+      "value": "measured result exactly as written",
+      "unit": "unit exactly as written",
+      "normalMin": "lower bound of reference range as written, empty if absent",
+      "normalMax": "upper bound of reference range as written, empty if absent",
+      "status": "normal | high | low | unknown"
     }
   ]
 }
-The tests array must contain ALL individual test results listed in the report.
-If a field is not found use an empty string. Return only the JSON object, no explanation, no markdown fences.
 
 REPORT TEXT:
 `;
 
-const TEST_PROMPT_VISION = `You are a medical document parser. Look at this medical test result image carefully.
-Extract the information and return ONLY a valid JSON object with exactly these fields:
+const TEST_PROMPT_VISION = `You are a strict medical document parser reading a lab result image.
+
+RULES — follow exactly:
+1. Read ONLY values and text physically visible in this image.
+2. Do NOT invent test names, values, ranges, or any details not clearly visible.
+3. Copy test names, values, and units exactly as they appear.
+4. For status: compare the value to the reference range visible in the image. Set "high", "low", or "normal". Use "unknown" only if no range is shown.
+5. If any field is absent or illegible, use an empty string "".
+6. Return ONLY the JSON object — no explanation, no markdown, no code fences.
+
+Output this exact JSON structure:
 {
-  "name": "test panel name e.g. CBC Blood Panel, Lipid Profile, HbA1c",
+  "name": "test panel name as visible in the image",
   "category": "exactly one of: Blood Test, Urine Test, X-Ray, MRI / CT, Ultrasound, ECG / EEG, Pathology, Other",
-  "lab": "laboratory or hospital name",
+  "lab": "laboratory or hospital name as visible",
   "date": "test date in YYYY-MM-DD format",
-  "doctor": "ordering doctor full name",
-  "notes": "overall summary or key findings in 1-2 sentences",
+  "doctor": "ordering doctor name as visible",
+  "notes": "brief summary of key findings visible in the image",
   "tests": [
     {
-      "name": "individual test name e.g. Hemoglobin, WBC, Glucose",
-      "value": "measured value as a string e.g. 14.5",
-      "unit": "unit e.g. g/dL, mmol/L, %",
-      "normalMin": "lower bound of normal range as string, empty if not available",
-      "normalMax": "upper bound of normal range as string, empty if not available",
-      "status": "exactly one of: normal, high, low, unknown"
+      "name": "individual test name exactly as visible",
+      "value": "measured result exactly as visible",
+      "unit": "unit exactly as visible",
+      "normalMin": "lower bound of reference range as visible, empty if absent",
+      "normalMax": "upper bound of reference range as visible, empty if absent",
+      "status": "normal | high | low | unknown"
     }
   ]
-}
-The tests array must contain ALL individual test results listed. Return only the JSON object, no explanation, no markdown fences.`;
+}`;
 
 const INTERPRET_PROMPT = (tests) =>
-  `You are a friendly health educator. Below are out-of-range blood test results. For each one, write 1–2 plain sentences explaining what it means and when the patient should consult a doctor. Return ONLY a JSON array with no explanation:
-[{ "name": "test name", "interpretation": "plain-English explanation" }]
+  `You are a friendly health educator. Below are out-of-range blood test results from a patient's report.
+For each result, write 1–2 plain sentences explaining what it means in simple language and whether the patient should consult a doctor soon.
+Return ONLY a JSON array — no explanation, no markdown:
+[{ "name": "exact test name from input", "interpretation": "plain-English explanation" }]
 
 OUT-OF-RANGE RESULTS:
 ${JSON.stringify(tests)}`;
@@ -150,7 +196,7 @@ function extractJSON(text) {
 }
 
 // ── Ollama helpers ────────────────────────────────────────────────────────────
-async function ollamaText(prompt) {
+async function ollamaText(prompt, timeoutMs = 180000) {
   const res = await fetch(`${OLLAMA_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -158,13 +204,15 @@ async function ollamaText(prompt) {
       model: OLLAMA_MODEL,
       messages: [{ role: 'user', content: prompt }],
       stream: false,
-      options: { temperature: 0.1 },
+      options: { temperature: 0 },
     }),
-    signal: AbortSignal.timeout(90000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
   const d = await res.json();
-  return extractJSON(d.message?.content || '');
+  const raw = d.message?.content || '';
+  console.log(`[ollama] raw response (first 300): ${raw.slice(0, 300)}`);
+  return extractJSON(raw);
 }
 
 async function ollamaVision(base64, prompt) {
@@ -175,13 +223,15 @@ async function ollamaVision(base64, prompt) {
       model: OLLAMA_MODEL,
       messages: [{ role: 'user', content: prompt, images: [base64] }],
       stream: false,
-      options: { temperature: 0.1 },
+      options: { temperature: 0 },
     }),
-    signal: AbortSignal.timeout(90000),
+    signal: AbortSignal.timeout(120000),
   });
   if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
   const d = await res.json();
-  return extractJSON(d.message?.content || '');
+  const raw = d.message?.content || '';
+  console.log(`[ollama] raw vision response (first 300): ${raw.slice(0, 300)}`);
+  return extractJSON(raw);
 }
 
 // ── Gemini helper ─────────────────────────────────────────────────────────────
@@ -206,7 +256,7 @@ async function tryGemini(prompt, base64, mimeType) {
         contents: [{ parts }],
         generationConfig: { temperature: 0.1 },
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(60000),
     }
   );
 
@@ -299,21 +349,25 @@ router.post('/', async (req, res) => {
     }
   }
 
-  // ── Step 2: choose prompt mode ────────────────────────────────────────────
-  // Text mode: PDF with extracted text, or a text prompt appended with PDF content
-  // Vision mode: image files passed directly to multimodal model
+  // ── Step 2: choose prompt mode and build prompt ───────────────────────────
   const useTextMode = isPDF && pdfText && pdfText.length > 50;
 
-  const textPrompt = useTextMode
-    ? (prescr ? PRESCR_PROMPT_TEXT + pdfText : TEST_PROMPT_TEXT + pdfText)
-    : null;
-  const visionPromptText = prescr ? PRESCR_PROMPT_VISION : TEST_PROMPT_VISION;
+  // Truncate before sending — 10 000 chars covers any real-world blood report
+  const safeText     = useTextMode ? truncateText(pdfText, 10000) : null;
+  const textPrompt   = useTextMode ? (prescr ? PRESCR_PROMPT_TEXT + safeText : TEST_PROMPT_TEXT + safeText) : null;
+  const visionPrompt = prescr ? PRESCR_PROMPT_VISION : TEST_PROMPT_VISION;
+
+  if (useTextMode) {
+    console.log(`[extract] text mode — ${safeText.length} chars (original ${pdfText.length})`);
+  } else {
+    console.log(`[extract] vision mode — mimeType: ${mimeType}`);
+  }
 
   // ── Step 3: try Ollama ────────────────────────────────────────────────────
   try {
     const data = useTextMode
       ? await ollamaText(textPrompt)
-      : await ollamaVision(base64, visionPromptText);
+      : await ollamaVision(base64, visionPrompt);
 
     if (data) {
       console.log(`[extract] ✓ Ollama (${OLLAMA_MODEL}) — ${useTextMode ? 'text' : 'vision'} mode`);
@@ -324,17 +378,16 @@ router.post('/', async (req, res) => {
         ...(pdfText ? { extractedTextLength: pdfText.length } : {}),
       });
     }
-    console.warn('[extract] Ollama returned unparseable response');
+    console.warn('[extract] Ollama returned unparseable JSON — falling back to Gemini');
   } catch (e) {
-    console.warn('[extract] Ollama failed:', e.message);
+    console.warn('[extract] Ollama failed:', e.message, e.cause?.code || '');
   }
 
   // ── Step 4: Gemini fallback ───────────────────────────────────────────────
   try {
-    // For text mode: send only the text prompt (no inline_data); Gemini handles both
     const data = useTextMode
       ? await tryGemini(textPrompt, null, null)
-      : await tryGemini(visionPromptText, base64, mimeType);
+      : await tryGemini(visionPrompt, base64, mimeType);
 
     if (data) {
       console.log(`[extract] ✓ Gemini (${gemini.used}/${GEMINI_DAILY_LIMIT}) — ${useTextMode ? 'text' : 'vision'} mode`);
@@ -346,15 +399,16 @@ router.post('/', async (req, res) => {
         ...(pdfText ? { extractedTextLength: pdfText.length } : {}),
       });
     }
-    console.warn('[extract] Gemini returned unparseable response');
+    console.warn('[extract] Gemini returned unparseable JSON');
   } catch (e) {
-    console.warn('[extract] Gemini failed:', e.message);
+    console.warn('[extract] Gemini failed:', e.message, e.cause?.code || '', e.cause?.message || '');
   }
 
   res.status(503).json({
     error: 'Both AI backends unavailable. Check Ollama is running or verify GEMINI_API_KEY in .env.',
     geminiState: gemini.quotaExceeded ? 'quota_exceeded' : gemini.keyInvalid ? 'invalid_key' : 'failed',
     pdfTextExtracted: Boolean(pdfText),
+    pdfTextLength: pdfText?.length,
   });
 });
 

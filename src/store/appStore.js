@@ -154,10 +154,13 @@ function reducer(state, action) {
         lab: action.lab, date: action.date, who: action.who,
         doctor: action.doctor || '', notes: action.notes || '',
         fileName: action.fileName, fileType: action.fileType,
+        tests: Array.isArray(action.tests) ? action.tests : [],
         uploadedAt: new Date().toISOString(),
       };
       return { ...state, testResults: [...state.testResults, tr] };
     }
+    case 'UPDATE_TEST_RESULT':
+      return { ...state, testResults: state.testResults.map(r => r.id === action.id ? { ...r, ...action.updates } : r) };
     case 'DELETE_TEST_RESULT':
       return { ...state, testResults: state.testResults.filter(r => r.id !== action.id) };
     case 'TOGGLE_TASK': {
