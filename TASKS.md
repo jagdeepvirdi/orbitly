@@ -234,6 +234,81 @@
 
 ---
 
+---
+
+## PHASE 13 — Medical Document AI Extraction
+
+> Goal: Make prescription uploads extract a full medication list (auto-add to Med checklist + calendar), and make blood report uploads extract all test rows into a colour-coded table with AI interpretation.
+>
+> **Why current extraction is broken:**
+> PDFs are sent raw to Ollama vision, which only accepts images → silent failure. Gemini is the fallback but quota is often exceeded. Even when it does work, the prompts only return 3–6 metadata fields, not the actual medication list or test rows.
+>
+> **Stack decision:** Use `pdf-parse` (Node.js, no Python needed) for PDF-to-text. markitdown (Microsoft Python tool) is equivalent but requires Python runtime — skip for now. Ollama handles text prompts well; vision is only needed for image files (JPGs/PNGs of handwritten prescriptions).
+
+### 13.1 — PDF text extraction layer  `[x]`
+- Install `pdf-parse` (`npm install pdf-parse`)
+- In `server/routes/extract.js`: if `mimeType === 'application/pdf'`, extract plain text with `pdf-parse`, then send as a **text prompt** to Ollama/Gemini (not vision/image)
+- If file is an image (JPEG/PNG/WEBP), keep the current vision approach
+- Add a `extractedText` field to the API response so the UI can show a preview of what the AI saw
+- Test with a real prescription PDF and blood report PDF
+
+### 13.2 — Full prescription extraction + medication import  `[ ]`
+- Update `PRESCR_PROMPT` to return:
+  ```json
+  {
+    "label": "short label",
+    "doctor": "Dr. Name",
+    "clinic": "clinic/hospital name",
+    "date": "YYYY-MM-DD",
+    "medications": [
+      { "name": "med name", "dose": "500mg", "frequency": "twice daily", "duration": "30 days", "instructions": "take with food" }
+    ]
+  }
+  ```
+- After extraction: show an **"Extracted Medications"** confirmation step inside the prescription upload modal
+  - Each extracted medication shown as a row with a checkbox (pre-ticked)
+  - User can uncheck any to skip
+  - "Add X medications to checklist" button → calls `api.createMed()` for each ticked item, links `prescriptionId`
+- Show a second "Add morning/evening reminders to calendar?" toggle (future: creates calendar events)
+- Fall back gracefully: if `medications` is empty/missing, leave the manual form as-is
+
+### 13.3 — Blood report table extraction  `[ ]`
+- Update `TEST_PROMPT` to return:
+  ```json
+  {
+    "name": "CBC Blood Panel",
+    "category": "Blood Test",
+    "lab": "lab name",
+    "date": "YYYY-MM-DD",
+    "doctor": "Dr. Name",
+    "tests": [
+      { "name": "Hemoglobin", "value": "14.5", "unit": "g/dL", "normalMin": "13.5", "normalMax": "17.5", "status": "normal" }
+    ]
+  }
+  ```
+- Store `tests` array in the `testResults` entry (add `tests` column to `test_results` table or store as JSONB)
+- In `HealthWellness.jsx` `TestResultCard`: add an expand button "View test table"
+- Expanded view: a table with columns — Test | Value | Unit | Normal Range | Status
+  - Status pill: green = normal, red = high/low, grey = unknown
+  - Sort: out-of-range rows first
+
+### 13.4 — AI interpretation of blood results  `[ ]`
+- After the test table is extracted, make a **second AI call** with the out-of-range results
+- Prompt: "You are a friendly health educator. For each out-of-range test result below, explain in 1–2 plain sentences what it means and when to consult a doctor. Return JSON: `[{ name, interpretation }]`"
+- Store interpretation alongside the test row
+- Show as a tooltip or expandable row below each flagged result
+- Use Gemini for this call if Ollama interpretation quality is poor (configurable via `INTERPRET_MODEL=gemini` in `.env`)
+
+### 13.5 — AI availability UI  `[ ]`
+- The `GET /api/extract/status` route already returns Ollama + Gemini state
+- Add a small status banner in the prescription and test-result upload modals:
+  - 🟢 "AI ready — Ollama (gemma3:4b)" 
+  - 🟡 "Gemini only — Ollama offline"
+  - 🔴 "AI unavailable — Gemini quota exceeded, resets at midnight ICT. Fill in manually."
+- When both are down, hide the "Extract with AI" button and show the red banner instead of a broken spinner
+
+---
+
 ## Notes for Claude Code
 - Read `CLAUDE.md` fully before starting any phase
 - Read `Orbitly-handoff.zip/orbitly/project/Orbitly.dc.html` fully before starting Phase 2
