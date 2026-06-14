@@ -64,6 +64,9 @@ const INITIAL_STATE = {
     birthday: true, evening_wrap: true, weekly_digest: true,
   },
   settingsTab: 'profiles',
+  familyMembers: [],     // loaded from DB on mount
+  familyGroups:  [],     // loaded from DB on mount
+  familyEvents:  [],     // loaded from DB on mount
   familyContacts: {},   // kept for inline edits before DB save; authoritative source is family_contacts table
   familyTab: 'wall',    // 'wall' | 'directory'
   directorySide: 'sahmbi', // 'sahmbi' | 'virdi'
@@ -331,16 +334,29 @@ export function AppStoreProvider({ children }) {
       dispatch({ type: 'DAILY_RESET' });
     }
     Promise.all([
-      fetch('/api/meds?date='    + today).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/habits?date='  + today).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/appointments')          .then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/shopping')              .then(r => r.ok ? r.json() : []).catch(() => []),
-    ]).then(([meds, habits, appts, shop]) => {
+      fetch('/api/meds?date='      + today).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/habits?date='    + today).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/appointments')           .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/shopping')               .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/family/members')         .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/family/groups')          .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/family/events')          .then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([meds, habits, appts, shop, rawMembers, rawGroups, rawEvents]) => {
       dispatch({ type: 'BOOTSTRAP', data: {
         meds:         meds.map(m => ({ ...m, prescriptionId: m.prescription_id, startDate: m.start_date })),
         habits,
         appointments: appts.map(a => ({ ...a, date: fmtApptDate(a.appt_date) })),
         shopList:     shop,
+        familyMembers: rawMembers.map(r => ({
+          id: r.id, realName: r.real_name, petName: r.pet_name,
+          side: r.side, group: r.group_id, relation: r.relation || '',
+          bday: r.bday_month ? [r.bday_month, r.bday_day] : null,
+        })),
+        familyGroups: rawGroups,
+        familyEvents: rawEvents.map(r => ({
+          id: r.id, label: r.label, type: r.type, side: r.side,
+          group: r.group_id, m: r.event_month, d: r.event_day,
+        })),
       }});
     });
   }, []); // intentionally runs only on mount

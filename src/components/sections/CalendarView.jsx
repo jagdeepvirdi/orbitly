@@ -86,7 +86,7 @@ export default function CalendarView() {
 
   // Use static June events only when viewing June 2026; other months show only birthday/anniversary events
   const baseEvents = (state.calYear === 2026 && state.calMonth === 5) ? JUNE_EVENTS : {};
-  const bdayEvents = buildBirthdayEvents(state.calYear, state.calMonth);
+  const bdayEvents = buildBirthdayEvents(state.calYear, state.calMonth, state.familyMembers, state.familyEvents);
   const holidayEvents = buildHolidayEvents(holidays, state.calYear, state.calMonth);
   const cricketEvents = buildCricketEvents(cricketMatches, state.calYear, state.calMonth);
   const importedEvts  = buildImportedEvtMap(state.importedCalEvents, state.calYear, state.calMonth);
@@ -97,7 +97,7 @@ export default function CalendarView() {
 
   // Week view is always the current week (June 2026), so always merge with June base + June birthdays
   const weekBase = (state.calYear === 2026 && state.calMonth === 5) ? JUNE_EVENTS : {};
-  const weekBday = buildBirthdayEvents(2026, 5); // APP_TODAY month
+  const weekBday = buildBirthdayEvents(2026, 5, state.familyMembers, state.familyEvents);
   const weekHolidays = buildHolidayEvents(holidays, 2026, 5);
   const weekCricket = buildCricketEvents(cricketMatches, 2026, 5);
   const weekEvents = mergeCalEvents(

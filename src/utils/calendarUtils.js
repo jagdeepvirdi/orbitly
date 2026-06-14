@@ -1,6 +1,5 @@
 import { CAT } from '../store/appStore';
 import { APP_TODAY } from './dateUtils';
-import { FAMILY_MEMBERS, FAMILY_EVENTS } from '../data/familyDirectory';
 
 export const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 export const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -77,18 +76,18 @@ export function buildWeekCells(calEvents, overlays) {
 // Builds a day-keyed event map for birthdays and anniversaries in a given month.
 // month is 0-indexed (JS convention). Events use 'family' category so they're
 // always visible regardless of overlay toggles.
-export function buildBirthdayEvents(year, month) {
+export function buildBirthdayEvents(year, month, familyMembers = [], familyEvents = []) {
   const jsMonth = month + 1; // convert to 1-indexed to match bday/m fields
   const events = {};
   const add = (day, evt) => { events[day] = [...(events[day] || []), evt]; };
 
-  FAMILY_MEMBERS.forEach(m => {
+  familyMembers.forEach(m => {
     if (m.bday && m.bday[0] === jsMonth) {
       add(m.bday[1], { t: `🎂 ${m.petName}`, c: 'family' });
     }
   });
 
-  FAMILY_EVENTS.forEach(e => {
+  familyEvents.forEach(e => {
     if (e.m === jsMonth) {
       // Shorten label for pill display
       const short = e.label

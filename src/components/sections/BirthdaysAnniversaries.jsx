@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { FAMILY_MEMBERS, FAMILY_EVENTS, fmtBday, nextBdayDays } from '../../data/familyDirectory';
-import { APP_TODAY } from '../../utils/dateUtils';
+import { useAppStore } from '../../store/appStore';
+import { APP_TODAY, fmtBday, nextBdayDays } from '../../utils/dateUtils';
 
 function urgentColor(days) {
   return days === 0 ? '#34d399' : days <= 7 ? '#ef4444' : days <= 21 ? '#f59e0b' : '#6c6c80';
@@ -120,19 +120,21 @@ function AnniversaryCard({ ev }) {
 }
 
 export default function BirthdaysAnniversaries() {
+  const { state } = useAppStore();
+  const { familyMembers, familyEvents } = state;
   const [side, setSide] = useState('all');
 
   const people = useMemo(() => {
-    let list = FAMILY_MEMBERS.filter(m => m.bday);
+    let list = familyMembers.filter(m => m.bday);
     if (side !== 'all') list = list.filter(m => m.side === side);
     return list.map(m => ({ ...m, _days: nextBdayDays(m.bday) })).sort((a, b) => a._days - b._days);
-  }, [side]);
+  }, [familyMembers, side]);
 
   const events = useMemo(() => {
-    let list = FAMILY_EVENTS;
+    let list = familyEvents;
     if (side !== 'all') list = list.filter(e => e.side === side);
     return list.map(e => ({ ...e, _days: nextEventDays(e.m, e.d) })).sort((a, b) => a._days - b._days);
-  }, [side]);
+  }, [familyEvents, side]);
 
   const todayBdays = people.filter(p => p._days === 0);
   const soonBdays  = people.filter(p => p._days > 0 && p._days <= 30);
@@ -142,8 +144,8 @@ export default function BirthdaysAnniversaries() {
   const soonEvents  = events.filter(e => e._days > 0 && e._days <= 30);
   const laterEvents = events.filter(e => e._days > 30);
 
-  const totalSahmbi = FAMILY_MEMBERS.filter(m => m.side === 'sahmbi' && m.bday).length;
-  const totalVirdi  = FAMILY_MEMBERS.filter(m => m.side === 'virdi'  && m.bday).length;
+  const totalSahmbi = familyMembers.filter(m => m.side === 'sahmbi' && m.bday).length;
+  const totalVirdi  = familyMembers.filter(m => m.side === 'virdi'  && m.bday).length;
 
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '26px 34px 60px' }}>

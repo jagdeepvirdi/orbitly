@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../store/appStore';
-import { fmtBday, nextBdayDays } from '../../data/familyDirectory';
+import { fmtBday, nextBdayDays } from '../../utils/dateUtils';
 import { api } from '../../api/client';
 import CheckRow from '../ui/CheckRow';
 

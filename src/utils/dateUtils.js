@@ -1,5 +1,21 @@
 export const APP_TODAY = new Date();
 
+const _BDY_MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+export function fmtBday(bday) {
+  if (!bday) return null;
+  return `${bday[1]} ${_BDY_MONTHS[bday[0]]}`;
+}
+
+export function nextBdayDays(bday) {
+  if (!bday) return Infinity;
+  const y = APP_TODAY.getFullYear();
+  const today = new Date(y, APP_TODAY.getMonth(), APP_TODAY.getDate());
+  let next = new Date(y, bday[0] - 1, bday[1]);
+  if (next < today) next = new Date(y + 1, bday[0] - 1, bday[1]);
+  return Math.round((next - today) / 86400000);
+}
+
 export function isWeekend(date) {
   const d = date.getDay();
   return d === 0 || d === 6;
