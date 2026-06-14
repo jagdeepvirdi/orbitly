@@ -1,0 +1,54 @@
+# ── Environment & secrets ──────────────────────────────────────────────────────
+.env
+!.env.example
+
+# ── Personal & sensitive data ──────────────────────────────────────────────────
+# Contains real family names, medical records (medications, appointments),
+# financial data (loan amounts, credit cards) and API keys
+server/seed.sql
+
+# Contains real full names and birthdays of 70+ family members
+src/data/familyDirectory.js
+
+# Contains personal medication list with health details
+src/data/seedMeds.js
+
+# Contains alternative family member identities; not for version control
+GEMINI.md
+
+# ── Orbitly runtime files ──────────────────────────────────────────────────────
+.orbitly-dev.pid
+.orbitly-prod.pid
+.orbitly-logs/
+
+# ── Code-review tool artifacts ─────────────────────────────────────────────────
+.code-review-graph/
+
+# ── Stray directories (path-mangled artefacts from tool bugs) ─────────────────
+D:Project*/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Build output ───────────────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# ── Editor directories & files ─────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

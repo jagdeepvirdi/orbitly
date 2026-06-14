@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-om-pop: om-pop 0.3s ease;
+  --animate-om-fade-up: om-fade-up 0.3s ease;
+  --animate-om-confetti: om-confetti 2s cubic-bezier(0.3, 0.6, 0.5, 1) forwards;
+  --animate-om-pulse: om-pulse 1.6s infinite;
+  --animate-om-spin: om-spin 1s linear infinite;
+}
+
+@keyframes om-pop {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+}
+
+@keyframes om-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes om-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes om-confetti {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+}
+
+@keyframes om-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes om-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg, #0a0a0f);
+  color: var(--text, #f5f5f8);
+}
+
+#root {
+  height: 100%;
+}
+
+:root {
+  --bg: #0a0a0f;
+  --sidebar: #0c0c12;
+  --bar: rgba(10,10,15,0.72);
+  --surface: rgba(255,255,255,0.045);
+  --surface-2: rgba(255,255,255,0.075);
+  --surface-solid: #15151d;
+  --border: rgba(255,255,255,0.09);
+  --border-strong: rgba(255,255,255,0.17);
+  --text: #f5f5f8;
+  --text-2: #a6a6b8;
+  --text-3: #6c6c80;
+  --accent: #6366f1;
+  --accent-soft: rgba(99,102,241,0.16);
+  --glow: rgba(99,102,241,0.18);
+  --hero-a: rgba(99,102,241,0.22);
+  --hero-b: rgba(168,85,247,0.12);
+  --main-pad-b: 40px;
+  color-scheme: dark;
+}
+
+.light {
+  --bg: #f4f4f2;
+  --sidebar: #fbfbf9;
+  --bar: rgba(248,248,246,0.8);
+  --surface: #ffffff;
+  --surface-2: #f5f5f2;
+  --surface-solid: #ffffff;
+  --border: rgba(20,20,30,0.09);
+  --border-strong: rgba(20,20,30,0.16);
+  --text: #16161d;
+  --text-2: #5c5c6b;
+  --text-3: #9a9aa8;
+  color-scheme: light;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong, rgba(255,255,255,0.16));
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track { background: transparent; }
+
+input::placeholder { color: var(--text-3); }
+input:focus { outline: none; }
+button { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+
+/* ── Select / dropdown fixes ──────────────────────────────────────────────────
+   CSS custom properties (var(--text) etc.) don't reach the OS-level native
+   popup on Windows Chrome/Edge. Fix with two complementary approaches:
+   1. color-scheme tells the browser which OS palette to use for native controls
+   2. Hardcoded option colours as a fallback for browsers that do honour them  */
+
+select {
+  color-scheme: dark;
+}
+.light select {
+  color-scheme: light;
+}
+
+select option {
+  background-color: #15151d;
+  color: #f5f5f8;
+}
+.light select option {
+  background-color: #ffffff;
+  color: #16161d;
+}

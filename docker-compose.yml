@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: orbitly-postgres
+    environment:
+      POSTGRES_DB: orbitly
+      POSTGRES_USER: orbitly
+      POSTGRES_PASSWORD: orbitly
+    ports:
+      - "5437:5432"
+    volumes:
+      - orbitly_pg_data:/var/lib/postgresql/data
+      - ./server/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./server/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orbitly -d orbitly"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  orbitly_pg_data:
