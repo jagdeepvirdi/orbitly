@@ -1,9 +1,16 @@
 import { createContext, useContext, useReducer, useEffect, createElement } from 'react';
 import { USERS, USER_ORDER } from '../data/users';
 import { SEED_WORK_TASKS, SEED_PERSONAL_TASKS } from '../data/seedTasks';
-import { SEED_MEDS } from '../data/seedMeds';
 import { CERT_COURSES } from '../data/certPlan';
 import { addWorkdayToISO, fmtShortDate } from '../utils/dateUtils';
+
+function fmtApptDate(iso) {
+  if (!iso) return '';
+  try {
+    const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+    return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+  } catch { return String(iso); }
+}
 
 export const CAT = {
   work: '#64748b',
@@ -33,7 +40,7 @@ const INITIAL_STATE = {
   isMobile: false,
   timer: 3600,
   timerRunning: false,
-  meds: SEED_MEDS,
+  meds: [],
   workTasks: SEED_WORK_TASKS,
   personalTasks: SEED_PERSONAL_TASKS,
   calView: 'month',
@@ -44,29 +51,14 @@ const INITIAL_STATE = {
   taskView: 'kanban',
   courses: CERT_COURSES,
   examDone: false,
-  habits: [
-    { id: 'h1', label: 'Water (8 glasses)', icon: '💧', done: true },
-    { id: 'h2', label: 'Exercise / walk', icon: '🏃', done: false },
-    { id: 'h3', label: 'Sleep 7+ hrs', icon: '😴', done: true },
-  ],
-  appointments: [
-    { id: 'a1', who: 'Jasleen', type: 'Vaccination · HPV booster', date: '3 Jun 2026', done: true },
-    { id: 'a2', who: 'Jagdeep', type: 'Annual checkup', date: '25 Jun 2026', done: false },
-    { id: 'a3', who: 'Namtan', type: 'Gynecologist', date: '8 Jul 2026', done: false },
-  ],
+  habits: [],
+  appointments: [],
   cycleDay: 14,
   prescriptions: [],
   testResults: [],
   sportsToggles: { f1: true, cricket: true, football: true, badminton: false },
   lastResetDate: null,
-  shopList: [
-    { id: 's1', item: 'Olive oil', done: false },
-    { id: 's2', item: 'Oats & muesli', done: false },
-    { id: 's3', item: 'Milk (3L)', done: true },
-    { id: 's4', item: 'Bananas & apples', done: false },
-    { id: 's5', item: 'Chicken breast', done: false },
-    { id: 's6', item: "Jasleen's school snacks", done: true },
-  ],
+  shopList: [],
   notifications: {
     meds: true, learning: true, festivals: true, f1race: true,
     birthday: true, evening_wrap: true, weekly_digest: true,
@@ -92,7 +84,7 @@ const PERSIST_KEYS = [
   'taskView', 'calView', 'rescheduleDismissed',
   'timer', 'lastResetDate',
   'familyTab', 'directorySide',
-  'meds', 'prescriptions', 'testResults',
+  'prescriptions', 'testResults',
   'importedCalEvents', 'importHistory',
   'recipes', 'mealPlan',
   'hobbyProjects', 'hobbyLog',
@@ -135,16 +127,8 @@ function reducer(state, action) {
       return { ...state, isMobile: action.isMobile };
     case 'TOGGLE_MED':
       return { ...state, meds: state.meds.map(m => m.id === action.id ? { ...m, done: !m.done } : m) };
-    case 'ADD_MED': {
-      const med = {
-        id: 'm' + Date.now(),
-        name: action.name, dose: action.dose || '', time: action.time || 'Morning',
-        who: action.who || 'Jagdeep', doctor: action.doctor || '',
-        notes: action.notes || '', startDate: action.startDate || '',
-        prescriptionId: action.prescriptionId || null, done: false,
-      };
-      return { ...state, meds: [...state.meds, med] };
-    }
+    case 'ADD_MED':
+      return { ...state, meds: [...state.meds, action.med] };
     case 'DELETE_MED':
       return { ...state, meds: state.meds.filter(m => m.id !== action.id) };
     case 'ADD_PRESCRIPTION': {
@@ -189,7 +173,7 @@ function reducer(state, action) {
     case 'TOGGLE_SHOP':
       return { ...state, shopList: state.shopList.map(i => i.id === action.id ? { ...i, done: !i.done } : i) };
     case 'ADD_SHOP':
-      return { ...state, shopList: [...state.shopList, { id: 's' + Date.now(), item: action.item, done: false }] };
+      return { ...state, shopList: [...state.shopList, action.shopItem] };
     case 'ADD_TASK': {
       const task = { id: 't' + Date.now(), title: action.title, priority: action.priority || 'Normal', due: action.due || '', status: 'todo', overdue: false, recurring: false };
       return { ...state, [action.list]: [...state[action.list], task] };
@@ -198,10 +182,8 @@ function reducer(state, action) {
       const list = action.list;
       return { ...state, [list]: state[list].filter(t => t.id !== action.id) };
     }
-    case 'ADD_APPT': {
-      const appt = { id: 'a' + Date.now(), who: action.who, type: action.type, date: action.date, done: false };
-      return { ...state, appointments: [...state.appointments, appt] };
-    }
+    case 'ADD_APPT':
+      return { ...state, appointments: [...state.appointments, action.appt] };
     case 'SET_CAL_VIEW':
       return { ...state, calView: action.view };
     case 'CAL_NAV': {
@@ -348,6 +330,19 @@ export function AppStoreProvider({ children }) {
     if (state.lastResetDate !== today) {
       dispatch({ type: 'DAILY_RESET' });
     }
+    Promise.all([
+      fetch('/api/meds?date='    + today).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/habits?date='  + today).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/appointments')          .then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/shopping')              .then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([meds, habits, appts, shop]) => {
+      dispatch({ type: 'BOOTSTRAP', data: {
+        meds:         meds.map(m => ({ ...m, prescriptionId: m.prescription_id, startDate: m.start_date })),
+        habits,
+        appointments: appts.map(a => ({ ...a, date: fmtApptDate(a.appt_date) })),
+        shopList:     shop,
+      }});
+    });
   }, []); // intentionally runs only on mount
 
   useEffect(() => {

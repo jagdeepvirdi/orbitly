@@ -882,11 +882,16 @@ function FamilyWall({ state, dispatch }) {
       .finally(() => setTermsLoading(false));
   }, []);
 
-  function handleAddShop() {
+  async function handleAddShop() {
     const v = shopInput.trim();
     if (!v) return;
-    dispatch({ type: 'ADD_SHOP', item: v });
     setShopInput('');
+    try {
+      const row = await api.addShopItem(v);
+      dispatch({ type: 'ADD_SHOP', shopItem: row });
+    } catch {
+      dispatch({ type: 'ADD_SHOP', shopItem: { id: 's' + Date.now(), item: v, done: false } });
+    }
   }
 
   async function handleSaveTerm(form) {
@@ -990,7 +995,10 @@ function FamilyWall({ state, dispatch }) {
           <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{shopDone}/{state.shopList.length}</span>
         </div>
         {state.shopList.map(item => (
-          <CheckRow key={item.id} done={item.done} onToggle={() => dispatch({ type: 'TOGGLE_SHOP', id: item.id })} label={item.item} accent="#6366f1" />
+          <CheckRow key={item.id} done={item.done} onToggle={() => {
+            dispatch({ type: 'TOGGLE_SHOP', id: item.id });
+            api.toggleShopItem(item.id, !item.done).catch(() => {});
+          }} label={item.item} accent="#6366f1" />
         ))}
         <div style={{ display: 'flex', gap: 9, marginTop: 13 }}>
           <input type="text" value={shopInput} onChange={e => setShopInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddShop()} placeholder="Add item…"

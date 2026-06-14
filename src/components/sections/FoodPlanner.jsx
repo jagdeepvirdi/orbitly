@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { APP_TODAY } from '../../utils/dateUtils';
 import { parseRecipeText, extractTextFromPDF } from '../../utils/recipeParser';
+import { api } from '../../api/client';
 
 const MEAL_SLOTS = ['Breakfast', 'Lunch', 'Dinner'];
 const SHORT_SLOT = { Breakfast: 'B', Lunch: 'L', Dinner: 'D' };
@@ -81,7 +82,7 @@ function MealPlanView({ recipes, mealPlan, dispatch, shopList }) {
     dispatch({ type: 'CLEAR_MEAL', key });
   }
 
-  function addDayToShop(iso) {
+  async function addDayToShop(iso) {
     const dayIngredients = [];
     MEAL_SLOTS.forEach(slot => {
       const key = `${iso}-${slot.toLowerCase()}`;
@@ -91,16 +92,21 @@ function MealPlanView({ recipes, mealPlan, dispatch, shopList }) {
       if (rec?.ingredients) dayIngredients.push(...rec.ingredients);
     });
     const existing = new Set(shopList.map(i => i.item.toLowerCase()));
-    dayIngredients.forEach(ing => {
+    await Promise.all(dayIngredients.map(async ing => {
       if (!existing.has(ing.toLowerCase())) {
-        dispatch({ type: 'ADD_SHOP', item: ing });
         existing.add(ing.toLowerCase());
+        try {
+          const row = await api.addShopItem(ing);
+          dispatch({ type: 'ADD_SHOP', shopItem: row });
+        } catch {
+          dispatch({ type: 'ADD_SHOP', shopItem: { id: 's' + Date.now() + Math.random(), item: ing, done: false } });
+        }
       }
-    });
+    }));
   }
 
-  function addWeekToShop() {
-    days.forEach(d => addDayToShop(d.iso));
+  async function addWeekToShop() {
+    for (const d of days) await addDayToShop(d.iso);
   }
 
   const filteredForPicker = recipes.filter(r =>

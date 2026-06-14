@@ -1,6 +1,19 @@
 import { useState, useRef, useCallback } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { pdfFirstPageToJpeg } from '../../utils/pdfToImage';
+import { api } from '../../api/client';
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fmtApptDate(iso) {
+  if (!iso) return '';
+  try {
+    const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+    return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+  } catch { return String(iso); }
+}
 
 const INP = {
   width: '100%', padding: '10px 13px', borderRadius: 10,
@@ -487,20 +500,32 @@ export default function HealthWellness() {
   const trFileRef = useRef(null);
   const trExtract = useExtract();
 
-  function handleApptSubmit(e) {
+  async function handleApptSubmit(e) {
     e.preventDefault();
     if (!apptForm.type.trim() || !apptForm.date) return;
-    const [y, m, d] = apptForm.date.split('-').map(Number);
-    const mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    dispatch({ type: 'ADD_APPT', who: apptForm.who, type: apptForm.type.trim(), date: `${d} ${mons[m-1]} ${y}` });
+    try {
+      const row = await api.createAppt({ who: apptForm.who, type: apptForm.type.trim(), appt_date: apptForm.date });
+      dispatch({ type: 'ADD_APPT', appt: { ...row, date: fmtApptDate(row.appt_date) } });
+    } catch {
+      dispatch({ type: 'ADD_APPT', appt: { id: 'a' + Date.now(), who: apptForm.who, type: apptForm.type.trim(), date: fmtApptDate(apptForm.date), done: false } });
+    }
     setApptModal(false);
     setApptForm({ type: '', who: 'Jagdeep', date: '' });
   }
 
-  function handleMedSubmit(e) {
+  async function handleMedSubmit(e) {
     e.preventDefault();
     if (!medForm.name.trim()) return;
-    dispatch({ type: 'ADD_MED', ...medForm });
+    try {
+      const row = await api.createMed({
+        name: medForm.name, dose: medForm.dose, time: medForm.time,
+        who: medForm.who, doctor: medForm.doctor, notes: medForm.notes,
+        start_date: medForm.startDate || null,
+      });
+      dispatch({ type: 'ADD_MED', med: { ...row, prescriptionId: row.prescription_id, startDate: row.start_date } });
+    } catch {
+      dispatch({ type: 'ADD_MED', med: { id: 'm' + Date.now(), ...medForm, done: false } });
+    }
     setMedModal(false);
     setMedForm(EMPTY_MED);
   }
@@ -578,8 +603,14 @@ export default function HealthWellness() {
           </div>
           {state.meds.map(m => (
             <MedRow key={m.id} med={m}
-              onToggle={() => dispatch({ type: 'TOGGLE_MED', id: m.id })}
-              onDelete={() => dispatch({ type: 'DELETE_MED', id: m.id })}
+              onToggle={() => {
+                dispatch({ type: 'TOGGLE_MED', id: m.id });
+                api.toggleMed(m.id, todayISO()).catch(() => {});
+              }}
+              onDelete={() => {
+                dispatch({ type: 'DELETE_MED', id: m.id });
+                api.deleteMed(m.id).catch(() => {});
+              }}
               rx={m.prescriptionId ? prescriptions.find(r => r.id === m.prescriptionId) : null}
             />
           ))}
@@ -600,7 +631,10 @@ export default function HealthWellness() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {state.habits.map(h => (
-              <button key={h.id} onClick={() => dispatch({ type: 'TOGGLE_HABIT', id: h.id })}
+              <button key={h.id} onClick={() => {
+                dispatch({ type: 'TOGGLE_HABIT', id: h.id });
+                api.toggleHabit(h.id, todayISO()).catch(() => {});
+              }}
                 style={{ display: 'flex', alignItems: 'center', gap: 13, width: '100%', padding: '13px 14px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${h.done ? 'rgba(16,185,129,0.35)' : 'var(--border)'}`, background: h.done ? 'rgba(16,185,129,0.1)' : 'var(--surface)', transition: 'all .15s' }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
                 onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
@@ -649,7 +683,10 @@ export default function HealthWellness() {
             <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6ee7b7' }}>Appointments & Health</span>
           </div>
           {state.appointments.map(a => (
-            <button key={a.id} onClick={() => dispatch({ type: 'TOGGLE_APPT', id: a.id })}
+            <button key={a.id} onClick={() => {
+              dispatch({ type: 'TOGGLE_APPT', id: a.id });
+              api.updateAppt(a.id, { done: !a.done }).catch(() => {});
+            }}
               style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '10px 10px', margin: '0 -10px', borderRadius: 12, border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
