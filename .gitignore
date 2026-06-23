@@ -10,11 +10,21 @@ server/seed.sql
 # Contains real full names and birthdays of 70+ family members
 src/data/familyDirectory.js
 
+# Family import seed files — real names, birthdays, relationships
+public/seeds/family-*.json
+src/data/seeds/family-*.json
+
+# Contains real financial data: loan EMIs, bank names, credit card details
+src/data/financeData.js
+
 # Contains personal medication list with health details
 src/data/seedMeds.js
 
 # Contains alternative family member identities; not for version control
 GEMINI.md
+
+# Scratch / working notes
+scratch/
 
 # ── Orbitly runtime files ──────────────────────────────────────────────────────
 .orbitly-dev.pid
