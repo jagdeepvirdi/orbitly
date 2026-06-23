@@ -1,16 +1,11 @@
 import { createContext, useContext, useReducer, useEffect, createElement } from 'react';
-import { USERS, USER_ORDER } from '../data/users';
+import { USERS } from '../data/users';
 import { SEED_WORK_TASKS, SEED_PERSONAL_TASKS } from '../data/seedTasks';
+import { SEED_CHORES } from '../data/seedChores';
 import { CERT_COURSES } from '../data/certPlan';
 import { addWorkdayToISO, fmtShortDate } from '../utils/dateUtils';
 
-function fmtApptDate(iso) {
-  if (!iso) return '';
-  try {
-    const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
-    return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
-  } catch { return String(iso); }
-}
+
 
 export const CAT = {
   work: '#64748b',
@@ -23,6 +18,13 @@ export const CAT = {
   holiday: '#eab308',
   hobby: '#f97316',
   food: '#84cc16',
+  // Calendar pack accent colors
+  hindu:          '#f59e0b',
+  sikh:           '#fb923c',
+  islamic:        '#34d399',
+  'thai-buddhist':'#a855f7',
+  christian:      '#3b82f6',
+  jain:           '#a78bfa',
 };
 
 export const PRIORITY = {
@@ -32,8 +34,9 @@ export const PRIORITY = {
   Low:    { bg: 'rgba(148,163,184,0.16)', color: '#cbd5e1' },
 };
 
-const _now = new Date();
-const INITIAL_STATE = {
+function createInitialState() {
+  const now = new Date();
+  return {
   theme: 'dark',
   userId: 'jagdeep',
   section: 'today',
@@ -44,8 +47,8 @@ const INITIAL_STATE = {
   workTasks: SEED_WORK_TASKS,
   personalTasks: SEED_PERSONAL_TASKS,
   calView: 'month',
-  calMonth: _now.getMonth(),
-  calYear: _now.getFullYear(),
+  calMonth: now.getMonth(),
+  calYear: now.getFullYear(),
   overlays: { festivals: true, sports: true, holidays: true },
   rescheduleDismissed: false,
   taskView: 'kanban',
@@ -54,9 +57,15 @@ const INITIAL_STATE = {
   habits: [],
   appointments: [],
   cycleDay: 14,
+  userGender: 'prefer-not-to-say',
+  householdCycleShared: false,
   prescriptions: [],
   testResults: [],
-  sportsToggles: { f1: true, cricket: true, football: true, badminton: false },
+  sportSubscriptions: [
+    { sport: 'f1', leagues: [] },
+    { sport: 'cricket', leagues: ['ipl'] },
+    { sport: 'football', leagues: ['PL', 'CL'] }
+  ],
   lastResetDate: null,
   shopList: [],
   notifications: {
@@ -77,13 +86,19 @@ const INITIAL_STATE = {
   mealPlan: {},          // { 'YYYY-MM-DD-breakfast': recipeId, ... }
   hobbyProjects: [],     // [{ id, name, color, desc, progress, createdAt }]
   hobbyLog: [],          // [{ id, hobby, date, duration, notes }]
-};
+  choreList: SEED_CHORES, // [{ id, name, emoji, category, frequencyDays, lastDone, notes }]
+  subscribedCalendars: ['IN', 'TH', 'hindu', 'sikh'], // enabled calendar packs
+  icsFeeds: [],
+  householdId: null,     // loaded from DB on mount — not persisted locally
+  };
+}
 
 // UI prefs + user-authored data (meds, prescriptions) are persisted locally in v1.
 // Prescription file blobs live in a separate localStorage key ('orbitly-rx-files').
 const PERSIST_KEYS = [
   'theme', 'userId', 'examDone', 'cycleDay',
-  'sportsToggles', 'overlays', 'notifications',
+  'userGender', 'householdCycleShared',
+  'sportSubscriptions', 'overlays', 'notifications',
   'taskView', 'calView', 'rescheduleDismissed',
   'timer', 'lastResetDate',
   'familyTab', 'directorySide',
@@ -91,6 +106,9 @@ const PERSIST_KEYS = [
   'importedCalEvents', 'importHistory',
   'recipes', 'mealPlan',
   'hobbyProjects', 'hobbyLog',
+  'choreList',
+  'subscribedCalendars',
+  'icsFeeds',
 ];
 
 function loadFromStorage() {
@@ -98,6 +116,20 @@ function loadFromStorage() {
     const saved = localStorage.getItem('orbitly-state');
     if (!saved) return {};
     const parsed = JSON.parse(saved);
+
+    // Migration from sportsToggles to sportSubscriptions
+    if (parsed.sportsToggles && !parsed.sportSubscriptions) {
+      const subs = [];
+      const toggles = parsed.sportsToggles;
+      if (toggles.f1) subs.push({ sport: 'f1', leagues: [] });
+      if (toggles.cricket) subs.push({ sport: 'cricket', leagues: ['ipl'] });
+      if (toggles.football) subs.push({ sport: 'football', leagues: ['PL', 'CL'] });
+      if (toggles.badminton || toggles.tennis) {
+        subs.push({ sport: 'tennis', leagues: ['wimbledon', 'us-open', 'french-open', 'aus-open'] });
+      }
+      parsed.sportSubscriptions = subs;
+    }
+
     return Object.fromEntries(
       PERSIST_KEYS.filter(k => parsed[k] !== undefined).map(k => [k, parsed[k]])
     );
@@ -118,10 +150,6 @@ function reducer(state, action) {
   switch (action.type) {
     case 'SET_USER':
       return { ...state, userId: action.id };
-    case 'CYCLE_USER': {
-      const i = USER_ORDER.indexOf(state.userId);
-      return { ...state, userId: USER_ORDER[(i + 1) % 3] };
-    }
     case 'SET_SECTION':
       return { ...state, section: action.section };
     case 'TOGGLE_THEME':
@@ -132,6 +160,8 @@ function reducer(state, action) {
       return { ...state, meds: state.meds.map(m => m.id === action.id ? { ...m, done: !m.done } : m) };
     case 'ADD_MED':
       return { ...state, meds: [...state.meds, action.med] };
+    case 'UPDATE_MED':
+      return { ...state, meds: state.meds.map(m => m.id === action.id ? { ...m, ...action.med } : m) };
     case 'DELETE_MED':
       return { ...state, meds: state.meds.filter(m => m.id !== action.id) };
     case 'ADD_PRESCRIPTION': {
@@ -174,8 +204,24 @@ function reducer(state, action) {
     }
     case 'TOGGLE_HABIT':
       return { ...state, habits: state.habits.map(h => h.id === action.id ? { ...h, done: !h.done } : h) };
+    case 'ADD_HABIT':
+      return { ...state, habits: [...state.habits, action.habit] };
+    case 'UPDATE_HABIT':
+      return { ...state, habits: state.habits.map(h => h.id === action.id ? { ...h, ...action.fields } : h) };
+    case 'DELETE_HABIT':
+      return { ...state, habits: state.habits.filter(h => h.id !== action.id) };
     case 'TOGGLE_APPT':
       return { ...state, appointments: state.appointments.map(a => a.id === action.id ? { ...a, done: !a.done } : a) };
+    case 'ADD_APPT':
+      return { ...state, appointments: [...state.appointments, action.appt] };
+    case 'UPDATE_APPT':
+      return { ...state, appointments: state.appointments.map(a => a.id === action.id ? { ...a, ...action.appt } : a) };
+    case 'DELETE_APPT':
+      return { ...state, appointments: state.appointments.filter(a => a.id !== action.id) };
+    case 'SET_GENDER':
+      return { ...state, userGender: action.gender };
+    case 'SET_CYCLE_SHARED':
+      return { ...state, householdCycleShared: action.shared };
     case 'TOGGLE_SHOP':
       return { ...state, shopList: state.shopList.map(i => i.id === action.id ? { ...i, done: !i.done } : i) };
     case 'ADD_SHOP':
@@ -188,8 +234,6 @@ function reducer(state, action) {
       const list = action.list;
       return { ...state, [list]: state[list].filter(t => t.id !== action.id) };
     }
-    case 'ADD_APPT':
-      return { ...state, appointments: [...state.appointments, action.appt] };
     case 'SET_CAL_VIEW':
       return { ...state, calView: action.view };
     case 'CAL_NAV': {
@@ -237,8 +281,30 @@ function reducer(state, action) {
       return { ...state, notifications: { ...state.notifications, [action.key]: !state.notifications[action.key] } };
     case 'SET_SETTINGS_TAB':
       return { ...state, settingsTab: action.tab };
-    case 'TOGGLE_SPORT':
-      return { ...state, sportsToggles: { ...state.sportsToggles, [action.sport]: !state.sportsToggles[action.sport] } };
+    case 'ADD_SPORT_SUBSCRIPTION': {
+      if (state.sportSubscriptions.some(s => s.sport === action.sport)) return state;
+      return {
+        ...state,
+        sportSubscriptions: [...state.sportSubscriptions, { sport: action.sport, leagues: action.leagues || [] }]
+      };
+    }
+    case 'REMOVE_SPORT_SUBSCRIPTION': {
+      return {
+        ...state,
+        sportSubscriptions: state.sportSubscriptions.filter(s => s.sport !== action.sport)
+      };
+    }
+    case 'UPDATE_SPORT_LEAGUES': {
+      return {
+        ...state,
+        sportSubscriptions: state.sportSubscriptions.map(s => {
+          if (s.sport === action.sport) {
+            return { ...s, leagues: action.leagues };
+          }
+          return s;
+        })
+      };
+    }
     case 'SET_FAMILY_CONTACT': {
       const prev = state.familyContacts[action.id] || {};
       return { ...state, familyContacts: { ...state.familyContacts, [action.id]: { ...prev, ...action.fields } } };
@@ -264,6 +330,54 @@ function reducer(state, action) {
         importedCalEvents: state.importedCalEvents.filter(e => e.importBatch !== action.batchId),
         importHistory: state.importHistory.filter(b => b.id !== action.batchId),
       };
+    case 'ADD_ICS_FEED': {
+      const feed = {
+        id: action.id || ('feed_' + Date.now()),
+        name: action.name,
+        url: action.url,
+        lastSynced: action.lastSynced || null,
+        enabled: true,
+      };
+      return { ...state, icsFeeds: [...(state.icsFeeds || []), feed] };
+    }
+    case 'DELETE_ICS_FEED':
+      return {
+        ...state,
+        icsFeeds: (state.icsFeeds || []).filter(f => f.id !== action.id),
+        importedCalEvents: (state.importedCalEvents || []).filter(e => e.importBatch !== action.id)
+      };
+    case 'TOGGLE_ICS_FEED': {
+      const nextFeeds = (state.icsFeeds || []).map(f =>
+        f.id === action.id ? { ...f, enabled: !f.enabled } : f
+      );
+      const targetFeed = nextFeeds.find(f => f.id === action.id);
+      let nextEvents = state.importedCalEvents || [];
+      if (targetFeed && !targetFeed.enabled) {
+        nextEvents = nextEvents.filter(e => e.importBatch !== action.id);
+      }
+      return {
+        ...state,
+        icsFeeds: nextFeeds,
+        importedCalEvents: nextEvents
+      };
+    }
+    case 'SYNC_ICS_FEED': {
+      const updatedFeeds = (state.icsFeeds || []).map(f =>
+        f.id === action.id ? { ...f, lastSynced: action.lastSynced || new Date().toISOString() } : f
+      );
+      const otherEvents = (state.importedCalEvents || []).filter(e => e.importBatch !== action.id);
+      const newEvents = (action.events || []).map(e => ({
+        ...e,
+        category: 'custom_ics',
+        importBatch: action.id,
+        importedAt: action.lastSynced || new Date().toISOString()
+      }));
+      return {
+        ...state,
+        icsFeeds: updatedFeeds,
+        importedCalEvents: [...otherEvents, ...newEvents]
+      };
+    }
 
     // ── Recipes ──────────────────────────────────────────────────
     case 'ADD_RECIPE': {
@@ -296,6 +410,35 @@ function reducer(state, action) {
     case 'DELETE_HOBBY_LOG':
       return { ...state, hobbyLog: state.hobbyLog.filter(e => e.id !== action.id) };
 
+    // ── Household Chores ─────────────────────────────────────────────
+    case 'ADD_CHORE': {
+      const chore = { id: 'ch' + Date.now(), ...action.chore };
+      return { ...state, choreList: [...state.choreList, chore] };
+    }
+    case 'COMPLETE_CHORE': {
+      const today = new Date().toISOString().slice(0, 10);
+      return { ...state, choreList: state.choreList.map(c => c.id === action.id ? { ...c, lastDone: today } : c) };
+    }
+    case 'EDIT_CHORE':
+      return { ...state, choreList: state.choreList.map(c => c.id === action.id ? { ...c, ...action.fields } : c) };
+    case 'DELETE_CHORE':
+      return { ...state, choreList: state.choreList.filter(c => c.id !== action.id) };
+
+    // ── Shopping ─────────────────────────────────────────────────────
+    case 'DELETE_SHOP':
+      return { ...state, shopList: state.shopList.filter(i => i.id !== action.id) };
+    case 'CLEAR_DONE_SHOP':
+      return { ...state, shopList: state.shopList.filter(i => !i.done) };
+
+    case 'TOGGLE_CALENDAR_PACK': {
+      const id = action.calendarId;
+      const current = state.subscribedCalendars || [];
+      const next = current.includes(id)
+        ? current.filter(c => c !== id)
+        : [...current, id];
+      return { ...state, subscribedCalendars: next };
+    }
+
     case 'BOOTSTRAP':
       // Merge DB data into state; fallback seeds remain until bootstrap resolves.
       return { ...state, ...action.data };
@@ -325,44 +468,27 @@ const AppStoreContext = createContext(null);
 
 export function AppStoreProvider({ children }) {
   const saved = loadFromStorage();
-  const [state, dispatch] = useReducer(reducer, { ...INITIAL_STATE, ...saved });
+  const [state, dispatch] = useReducer(reducer, undefined, () => ({ ...createInitialState(), ...saved }));
 
   useEffect(() => {
     saveToStorage(state);
-  }, PERSIST_KEYS.map(k => state[k]));
+  }, [
+    state.theme, state.userId, state.examDone, state.cycleDay,
+    state.userGender, state.householdCycleShared,
+    state.sportSubscriptions, state.overlays, state.notifications,
+    state.taskView, state.calView, state.rescheduleDismissed,
+    state.timer, state.lastResetDate,
+    state.familyTab, state.directorySide,
+    state.prescriptions, state.testResults,
+    state.importedCalEvents, state.importHistory,
+    state.recipes, state.mealPlan,
+    state.hobbyProjects, state.hobbyLog,
+    state.choreList,
+    state.subscribedCalendars,
+    state.icsFeeds,
+  ]);
 
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    if (state.lastResetDate !== today) {
-      dispatch({ type: 'DAILY_RESET' });
-    }
-    Promise.all([
-      fetch('/api/meds?date='      + today).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/habits?date='    + today).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/appointments')           .then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/shopping')               .then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/family/members')         .then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/family/groups')          .then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch('/api/family/events')          .then(r => r.ok ? r.json() : []).catch(() => []),
-    ]).then(([meds, habits, appts, shop, rawMembers, rawGroups, rawEvents]) => {
-      dispatch({ type: 'BOOTSTRAP', data: {
-        meds:         meds.map(m => ({ ...m, prescriptionId: m.prescription_id, startDate: m.start_date })),
-        habits,
-        appointments: appts.map(a => ({ ...a, date: fmtApptDate(a.appt_date) })),
-        shopList:     shop,
-        familyMembers: rawMembers.map(r => ({
-          id: r.id, realName: r.real_name, petName: r.pet_name,
-          side: r.side, group: r.group_id, relation: r.relation || '',
-          bday: r.bday_month ? [r.bday_month, r.bday_day] : null,
-        })),
-        familyGroups: rawGroups,
-        familyEvents: rawEvents.map(r => ({
-          id: r.id, label: r.label, type: r.type, side: r.side,
-          group: r.group_id, m: r.event_month, d: r.event_day,
-        })),
-      }});
-    });
-  }, []); // intentionally runs only on mount
+
 
   useEffect(() => {
     const root = document.documentElement;

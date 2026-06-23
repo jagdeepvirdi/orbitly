@@ -17,6 +17,12 @@ const CAT_LEGEND = [
   { label: 'Holiday', color: CAT.holiday },
   { label: 'Hobby', color: CAT.hobby },
   { label: 'Food', color: CAT.food },
+  { label: 'Hindu', color: CAT.hindu },
+  { label: 'Sikh', color: CAT.sikh },
+  { label: 'Islamic', color: CAT.islamic },
+  { label: 'Buddhist', color: CAT['thai-buddhist'] },
+  { label: 'Christian', color: CAT.christian },
+  { label: 'Jain', color: CAT.jain },
 ];
 
 function ViewToggleBtn({ label, active, onClick }) {
@@ -42,7 +48,9 @@ function buildHolidayEvents(holidays, year, month) {
     .forEach(h => {
       const d = h.day;
       if (!events[d]) events[d] = [];
-      events[d].push({ t: h.nameEn || h.name, c: 'holiday' });
+      // Use calendarId for named packs so they get their accent color
+      const cat = h.calendarId && !['IN', 'TH'].includes(h.calendarId) ? h.calendarId : 'holiday';
+      events[d].push({ t: h.nameEn || h.name, c: cat });
     });
   return events;
 }
@@ -81,7 +89,7 @@ export default function CalendarView() {
   const mob = state.isMobile;
   const [showImport, setShowImport] = useState(false);
 
-  const { holidays } = useLiveHolidays(['IN', 'TH'], state.calYear);
+  const { holidays } = useLiveHolidays(state.subscribedCalendars || ['IN', 'TH'], state.calYear);
   const { matches: cricketMatches } = useLiveCricket();
 
   // Use static June events only when viewing June 2026; other months show only birthday/anniversary events

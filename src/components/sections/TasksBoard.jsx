@@ -48,13 +48,12 @@ export default function TasksBoard() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.title.trim()) return;
-    const due = form.due ? fmtShortDate(form.due) : '';
+    const due = form.due || null;
     const laneList = LANES.find(l => l.key === addModal)?.list || 'work';
-    const id = 't' + Date.now();
     dispatch({ type: 'ADD_TASK', list: addModal, title: form.title.trim(), priority: form.priority, due });
     closeModal();
     try {
-      await api.createTask({ id, title: form.title.trim(), list: laneList, priority: form.priority, due, status: 'todo' });
+      await api.createTask({ title: form.title.trim(), list: laneList, priority: form.priority, due, status: 'todo' });
     } catch {}
   }
 
@@ -365,7 +364,7 @@ function KanbanCard({ task: t, onAdvance, onDelete }) {
           </button>
         )}
         <span style={{ fontSize: 11, fontWeight: 600, color: t.overdue ? '#fca5a5' : 'var(--text-3)' }}>
-          {t.due}
+          {t.due ? fmtShortDate(t.due) : ''}
         </span>
       </div>
     </div>
@@ -416,7 +415,7 @@ function CheckRow({ task: t, done, checkColor, onToggle, onDelete }) {
       <span style={{
         fontSize: 11, fontWeight: 600, minWidth: 58, textAlign: 'right',
         color: t.overdue ? '#fca5a5' : 'var(--text-3)',
-      }}>{t.due}</span>
+      }}>{t.due ? fmtShortDate(t.due) : ''}</span>
       {hov && (
         <button
           onClick={onDelete}

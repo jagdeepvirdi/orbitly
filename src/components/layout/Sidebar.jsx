@@ -1,5 +1,31 @@
 import { useAppStore } from '../../store/appStore';
 import { USERS } from '../../data/users';
+import { useClerk } from '@clerk/clerk-react';
+
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+function SignOutBtn() {
+  const { signOut } = useClerk();
+  return (
+    <button
+      onClick={() => signOut()}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+        padding: '10px 12px', marginTop: 6,
+        background: 'transparent', border: '1px solid var(--border)',
+        borderRadius: 13, cursor: 'pointer', color: 'var(--text-3)',
+        fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500,
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+      </svg>
+      Sign out
+    </button>
+  );
+}
 
 const ICON = {
   today: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>',
@@ -14,6 +40,7 @@ const ICON = {
   family: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.2"/><path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20M15.5 20v-1a3.5 3.5 0 0 1 3.5-3.5h0a2 2 0 0 1 2 2V20"/></svg>',
   hobby: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
   food: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',
+  home: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10.5z"/><path d="M9 22V12h6v10"/></svg>',
   settings: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.7.65 1.65 1.65 0 0 0-1.01 1.51V22a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8.5 20.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .65-2.7H4.5a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.01 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 11.5 3.6V3.5a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.01 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V11a1.65 1.65 0 0 0 1.51 1.01H22a2 2 0 0 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15z"/></svg>',
   sun: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.5"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>',
   moon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
@@ -31,6 +58,7 @@ const NAV_DEFS = [
   ['sports', 'Sports'],
   ['hobby', 'Hobby'],
   ['food', 'Food'],
+  ['home', 'Home'],
   ['family', 'Family'],
   ['settings', 'Settings'],
 ];
@@ -84,19 +112,13 @@ export default function Sidebar() {
         <div style={{ fontFamily: "'Newsreader', serif", fontSize: 23, fontWeight: 600, letterSpacing: '-0.01em' }}>Orbitly</div>
       </div>
 
-      {/* User switcher */}
-      <button
-        onClick={() => dispatch({ type: 'CYCLE_USER' })}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 11, width: '100%',
-          padding: '9px 10px', marginBottom: 16,
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 14, cursor: 'pointer', color: 'inherit', textAlign: 'left',
-          transition: 'background .15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
-      >
+      {/* User profile pill */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 11, width: '100%',
+        padding: '9px 10px', marginBottom: 16,
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 14, color: 'inherit',
+      }}>
         <div style={{
           width: 32, height: 32, borderRadius: 10,
           background: user.accent,
@@ -109,10 +131,7 @@ export default function Sidebar() {
           <div style={{ fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
           <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{user.role}</div>
         </div>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2">
-          <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
-        </svg>
-      </button>
+      </div>
 
       {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflowY: 'auto' }}>
@@ -158,6 +177,8 @@ export default function Sidebar() {
         <span dangerouslySetInnerHTML={{ __html: state.theme === 'dark' ? ICON.sun : ICON.moon }} style={{ display: 'flex' }} />
         <span>{state.theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
       </button>
+
+      {CLERK_KEY && <SignOutBtn />}
     </aside>
   );
 }

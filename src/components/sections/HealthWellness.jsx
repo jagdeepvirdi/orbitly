@@ -1,16 +1,7 @@
 import { useState, useRef, useCallback, useEffect, Fragment } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { api } from '../../api/client';
-
-function todayISO() { return new Date().toISOString().slice(0, 10); }
-
-function fmtApptDate(iso) {
-  if (!iso) return '';
-  try {
-    const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
-    return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
-  } catch { return String(iso); }
-}
+import { todayISO, fmtApptDate, fmtShortDate } from '../../utils/dateUtils';
 
 const INP = {
   width: '100%', padding: '10px 13px', borderRadius: 10,
@@ -20,11 +11,9 @@ const INP = {
 };
 
 const WHO_STYLE = {
-  Jagdeep: { bg: 'rgba(99,102,241,0.18)',  color: '#a5b4fc' },
-  Simran:  { bg: 'rgba(244,63,94,0.18)',   color: '#fda4af' },
-  Anaya:   { bg: 'rgba(245,158,11,0.18)',  color: '#fcd34d' },
+  Jagdeep: { bg: 'rgba(99,102,241,0.18)', color: '#a5b4fc' },
 };
-const WHO_NAMES = ['Jagdeep', 'Simran', 'Anaya'];
+const WHO_NAMES = ['Jagdeep'];
 
 const TR_CATS = {
   'Blood Test':  { bg: 'rgba(239,68,68,0.13)',   color: '#fca5a5',  stroke: '#fca5a5' },
@@ -60,8 +49,11 @@ function openFile(dataUrl) {
   if (w) w.document.write(`<html><body style="margin:0"><iframe src="${dataUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
 }
 
-const EMPTY_MED = { name: '', dose: '', time: 'Morning', who: 'Jagdeep', doctor: '', startDate: '', notes: '', prescriptionId: '' };
-const EMPTY_RX  = { name: '', doctor: '', date: '', who: 'Jagdeep' };
+const EMPTY_MED  = { name: '', dose: '', time: 'Morning', who: 'Jagdeep', doctor: '', startDate: '', endDate: '', notes: '', prescriptionId: '' };
+const EMPTY_APPT = { type: '', who: 'Jagdeep', date: '', doctor: '', location: '', time: '', notes: '' };
+const EMPTY_HABIT = { label: '', icon: '💧' };
+const HABIT_EMOJIS = ['💧','🏃','😴','🧘','📚','🥗','💊','🚶','🎯','🏋️','☀️','🍎','🌿','💪','🧠','🎵','✍️','🛁','🌙','🧹'];
+const EMPTY_RX   = { name: '', doctor: '', date: '', who: 'Jagdeep' };
 const EMPTY_TR  = { name: '', category: 'Blood Test', lab: '', date: '', who: 'Jagdeep', doctor: '', notes: '' };
 
 // ── AI helpers ────────────────────────────────────────────────────────────────
@@ -77,7 +69,7 @@ function guessTime(freq = '') {
 function useAIStatus() {
   const [status, setStatus] = useState(null);
   useEffect(() => {
-    fetch('http://localhost:3003/api/extract/status')
+    fetch('/api/extract/status')
       .then(r => r.ok ? r.json() : null)
       .then(d => setStatus(d))
       .catch(() => setStatus(null));
@@ -258,7 +250,7 @@ function useExtract() {
       const dataUrl  = await readFileAsDataUrl(file);
       const mimeType = file.type || 'application/octet-stream';
 
-      const resp = await fetch('http://localhost:3003/api/extract', {
+      const resp = await fetch('/api/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileBase64: dataUrl, mimeType, extractType }),
@@ -408,6 +400,24 @@ function TogglePills({ options, value, onChange }) {
   );
 }
 
+// ── Med status helpers ────────────────────────────────────────────────────────
+function getMedStatus(med) {
+  const today = todayISO();
+  if (med.startDate && med.startDate > today) return 'upcoming';
+  if (med.endDate && med.endDate < today) return 'past';
+  return 'active';
+}
+const MED_STATUS_ORDER = { active: 0, upcoming: 1, past: 2 };
+
+function fmtMedRange(med) {
+  const s = med.startDate ? fmtShortDate(med.startDate) : null;
+  const e = med.endDate   ? fmtShortDate(med.endDate)   : null;
+  if (s && e) return `${s} → ${e}`;
+  if (s) return `From ${s}`;
+  if (e) return `Until ${e}`;
+  return null;
+}
+
 // ── Category icon SVGs ────────────────────────────────────────────────────────
 function CatIcon({ category, stroke }) {
   switch (category) {
@@ -428,18 +438,32 @@ function MedRow({ med, onToggle, onDelete, rx }) {
   const ws = WHO_STYLE[med.who || 'Jagdeep'] || WHO_STYLE.Jagdeep;
   const timeBg    = med.time === 'Morning' ? 'rgba(245,158,11,0.16)' : med.time === 'Both' ? 'rgba(16,185,129,0.16)' : 'rgba(99,102,241,0.16)';
   const timeColor = med.time === 'Morning' ? '#fcd34d' : med.time === 'Both' ? '#6ee7b7' : '#a5b4fc';
+  const status = getMedStatus(med);
+  const isUpcoming = status === 'upcoming';
+  const isPast = status === 'past';
+  const dateRange = fmtMedRange(med);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', margin: '0 -10px', borderRadius: 12, transition: 'background .13s', background: hov ? 'var(--surface-2)' : 'transparent' }}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', margin: '0 -10px', borderRadius: 12, transition: 'background .13s', background: hov ? 'var(--surface-2)' : 'transparent', opacity: isPast ? 0.55 : 1 }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <button onClick={onToggle} style={{ flex: '0 0 22px', width: 22, height: 22, borderRadius: 7, border: `2px solid ${med.done ? '#10b981' : 'var(--border-strong)'}`, background: med.done ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <button onClick={isUpcoming ? undefined : onToggle} disabled={isUpcoming}
+        style={{ flex: '0 0 22px', width: 22, height: 22, borderRadius: 7, border: `2px solid ${med.done ? '#10b981' : isUpcoming ? 'var(--border)' : 'var(--border-strong)'}`, background: med.done ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isUpcoming ? 'default' : 'pointer', opacity: isUpcoming ? 0.4 : 1 }}>
         {med.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
       </button>
       <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...(med.done ? { textDecoration: 'line-through', color: 'var(--text-3)' } : {}) }}>{med.name}</div>
-        <div style={{ fontSize: 11.5, color: 'var(--text-3)' }}>{med.dose}{med.doctor ? ` · ${med.doctor}` : ''}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--text-3)' }}>
+          {med.dose}{med.doctor ? ` · ${med.doctor}` : ''}
+          {dateRange && <span style={{ marginLeft: 5, color: isUpcoming ? '#fcd34d' : isPast ? '#6ee7b7' : 'var(--text-3)' }}>{dateRange}</span>}
+        </div>
       </div>
-      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: ws.bg, color: ws.color, whiteSpace: 'nowrap' }}>{(med.who || 'Jagdeep').slice(0, 3).toUpperCase()}</span>
-      <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: timeBg, color: timeColor, whiteSpace: 'nowrap' }}>{med.time}</span>
+      {isUpcoming && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: 'rgba(245,158,11,0.16)', color: '#fcd34d', whiteSpace: 'nowrap' }}>Upcoming</span>}
+      {isPast    && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: 'rgba(16,185,129,0.16)', color: '#6ee7b7', whiteSpace: 'nowrap' }}>Completed</span>}
+      {!isUpcoming && !isPast && (
+        <>
+          <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: ws.bg, color: ws.color, whiteSpace: 'nowrap' }}>{(med.who || 'Jagdeep').slice(0, 3).toUpperCase()}</span>
+          <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: timeBg, color: timeColor, whiteSpace: 'nowrap' }}>{med.time}</span>
+        </>
+      )}
       {rx && (
         <span title={rx.name} style={{ color: '#10b981', display: 'flex', alignItems: 'center' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -473,7 +497,7 @@ function PrescriptionCard({ rx, linkedMeds, onView, onDelete, aiStatus }) {
     setReState('loading'); setReError(''); setReMeds([]); setShowPanel(false);
     try {
       const mimeType = rx.fileType || (rx.fileName?.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
-      const resp = await fetch('http://localhost:3003/api/extract', {
+      const resp = await fetch('/api/extract', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileBase64: dataUrl, mimeType, extractType: 'prescription' }),
       });
@@ -573,7 +597,7 @@ function TestResultCard({ tr, onView, onDelete, aiStatus, onUpdateTests }) {
     setReState('loading'); setReError('');
     try {
       const mimeType = tr.fileType || (tr.fileName?.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
-      const resp = await fetch('http://localhost:3003/api/extract', {
+      const resp = await fetch('/api/extract', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileBase64: dataUrl, mimeType, extractType: 'test-result' }),
       });
@@ -599,7 +623,7 @@ function TestResultCard({ tr, onView, onDelete, aiStatus, onUpdateTests }) {
   async function handleInterpret() {
     setInterpreting(true);
     try {
-      const resp = await fetch('http://localhost:3003/api/extract/interpret', {
+      const resp = await fetch('/api/extract/interpret', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tests: outOfRange }),
       });
@@ -689,11 +713,21 @@ export default function HealthWellness() {
   const { state, dispatch } = useAppStore();
   const aiStatus = useAIStatus();
 
-  const [apptModal, setApptModal] = useState(false);
-  const [apptForm, setApptForm]   = useState({ type: '', who: 'Jagdeep', date: '' });
+  const [apptModal, setApptModal]   = useState(false);
+  const [apptEditId, setApptEditId] = useState(null);
+  const [apptForm, setApptForm]     = useState(EMPTY_APPT);
 
   const [medModal, setMedModal] = useState(false);
   const [medForm, setMedForm]   = useState(EMPTY_MED);
+  const [pastMedsOpen, setPastMedsOpen] = useState(false);
+
+  const [habitModal, setHabitModal]   = useState(false);
+  const [habitEditId, setHabitEditId] = useState(null);
+  const [habitForm, setHabitForm]     = useState(EMPTY_HABIT);
+  const [habHov, setHabHov]           = useState(null);
+
+  const [apptHov, setApptHov]         = useState(null);
+  const [pastApptsOpen, setPastApptsOpen] = useState(false);
 
   // Prescription upload state
   const [rxModal, setRxModal]       = useState(false);
@@ -728,27 +762,93 @@ export default function HealthWellness() {
   async function handleApptSubmit(e) {
     e.preventDefault();
     if (!apptForm.type.trim() || !apptForm.date) return;
-    try {
-      const row = await api.createAppt({ who: apptForm.who, type: apptForm.type.trim(), appt_date: apptForm.date });
-      dispatch({ type: 'ADD_APPT', appt: { ...row, date: fmtApptDate(row.appt_date) } });
-    } catch {
-      dispatch({ type: 'ADD_APPT', appt: { id: 'a' + Date.now(), who: apptForm.who, type: apptForm.type.trim(), date: fmtApptDate(apptForm.date), done: false } });
+    const body = {
+      who: apptForm.who, type: apptForm.type.trim(), appt_date: apptForm.date,
+      doctor: apptForm.doctor.trim() || null, location: apptForm.location.trim() || null,
+      appt_time: apptForm.time || null, notes: apptForm.notes.trim() || null,
+    };
+    if (apptEditId) {
+      try {
+        const row = await api.updateApptFull(apptEditId, body);
+        dispatch({ type: 'UPDATE_APPT', id: apptEditId, appt: { ...row, date: fmtApptDate(row.appt_date) } });
+      } catch {
+        dispatch({ type: 'UPDATE_APPT', id: apptEditId, appt: { ...body, date: fmtApptDate(body.appt_date) } });
+      }
+    } else {
+      try {
+        const row = await api.createAppt(body);
+        dispatch({ type: 'ADD_APPT', appt: { ...row, date: fmtApptDate(row.appt_date) } });
+      } catch {
+        dispatch({ type: 'ADD_APPT', appt: { id: 'a' + Date.now(), ...body, date: fmtApptDate(body.appt_date), done: false } });
+      }
     }
     setApptModal(false);
-    setApptForm({ type: '', who: 'Jagdeep', date: '' });
+    setApptEditId(null);
+    setApptForm(EMPTY_APPT);
+  }
+
+  function handleApptEdit(a) {
+    setApptForm({
+      type: a.type || '', who: a.who || 'Jagdeep', date: a.appt_date || '',
+      doctor: a.doctor || '', location: a.location || '',
+      time: a.appt_time || '', notes: a.notes || '',
+    });
+    setApptEditId(a.id);
+    setApptModal(true);
+  }
+
+  async function handleApptDelete(id) {
+    if (!confirm('Delete this appointment?')) return;
+    dispatch({ type: 'DELETE_APPT', id });
+    api.deleteAppt(id).catch(() => {});
   }
 
   async function handleMedSubmit(e) {
     e.preventDefault();
     if (!medForm.name.trim()) return;
     try {
-      const row = await api.createMed({ name: medForm.name, dose: medForm.dose, time: medForm.time, who: medForm.who, doctor: medForm.doctor, notes: medForm.notes, start_date: medForm.startDate || null });
-      dispatch({ type: 'ADD_MED', med: { ...row, prescriptionId: row.prescription_id, startDate: row.start_date } });
+      const row = await api.createMed({
+        name: medForm.name, dose: medForm.dose, time: medForm.time, who: medForm.who,
+        doctor: medForm.doctor, notes: medForm.notes,
+        start_date: medForm.startDate || null, end_date: medForm.endDate || null,
+        prescription_id: medForm.prescriptionId || null,
+      });
+      dispatch({ type: 'ADD_MED', med: { ...row, prescriptionId: row.prescription_id, startDate: row.start_date, endDate: row.end_date } });
     } catch {
       dispatch({ type: 'ADD_MED', med: { id: 'm' + Date.now(), ...medForm, done: false } });
     }
     setMedModal(false);
     setMedForm(EMPTY_MED);
+  }
+
+  async function handleHabitSubmit(e) {
+    e.preventDefault();
+    if (!habitForm.label.trim()) return;
+    if (habitEditId) {
+      try {
+        const row = await api.updateHabit(habitEditId, { label: habitForm.label, icon: habitForm.icon });
+        dispatch({ type: 'UPDATE_HABIT', id: habitEditId, fields: { label: row.label, icon: row.icon } });
+      } catch {
+        dispatch({ type: 'UPDATE_HABIT', id: habitEditId, fields: { label: habitForm.label, icon: habitForm.icon } });
+      }
+    } else {
+      try {
+        const row = await api.createHabit({ label: habitForm.label, icon: habitForm.icon });
+        dispatch({ type: 'ADD_HABIT', habit: { ...row, done: false } });
+      } catch {
+        dispatch({ type: 'ADD_HABIT', habit: { id: 'h_' + Date.now(), ...habitForm, done: false, is_default: false } });
+      }
+    }
+    setHabitModal(false);
+    setHabitEditId(null);
+    setHabitForm(EMPTY_HABIT);
+  }
+
+  async function handleHabitDelete(h) {
+    if (h.is_default) return;
+    if (!confirm(`Delete "${h.label}"?`)) return;
+    dispatch({ type: 'DELETE_HABIT', id: h.id });
+    api.deleteHabit(h.id).catch(() => {});
   }
 
   async function handleRxSubmit(e) {
@@ -801,6 +901,21 @@ export default function HealthWellness() {
   const prescriptions = state.prescriptions || [];
   const testResults   = state.testResults   || [];
 
+  // 22.1: sort meds by status (active → upcoming → past)
+  const sortedMeds = [...state.meds].sort((a, b) => MED_STATUS_ORDER[getMedStatus(a)] - MED_STATUS_ORDER[getMedStatus(b)]);
+  const activeMeds = sortedMeds.filter(m => getMedStatus(m) !== 'past');
+  const pastMeds   = sortedMeds.filter(m => getMedStatus(m) === 'past');
+
+  // 22.3: split appointments into upcoming vs past
+  const today = todayISO();
+  const upcomingAppts = state.appointments.filter(a => !a.appt_date || a.appt_date >= today);
+  const pastAppts = [...state.appointments.filter(a => a.appt_date && a.appt_date < today)]
+    .sort((a, b) => b.appt_date.localeCompare(a.appt_date));
+
+  // 22.4: cycle tracker visibility
+  const showCycle = state.userGender !== 'male' || state.householdCycleShared;
+  const habitsSpan = showCycle ? 7 : 12;
+
   const cycleLen = 28;
   const fertile  = [12, 13, 14, 15, 16];
   const cycleCells = Array.from({ length: cycleLen }, (_, i) => {
@@ -827,13 +942,29 @@ export default function HealthWellness() {
             </div>
             <span style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{medsDone}/{state.meds.length} today</span>
           </div>
-          {state.meds.map(m => (
+          {activeMeds.map(m => (
             <MedRow key={m.id} med={m}
               onToggle={() => { dispatch({ type: 'TOGGLE_MED', id: m.id }); api.toggleMed(m.id, todayISO()).catch(() => {}); }}
               onDelete={() => { dispatch({ type: 'DELETE_MED', id: m.id }); api.deleteMed(m.id).catch(() => {}); }}
               rx={m.prescriptionId ? prescriptions.find(r => r.id === m.prescriptionId) : null}
             />
           ))}
+          {pastMeds.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <button type="button" onClick={() => setPastMedsOpen(o => !o)}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '4px 0' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: pastMedsOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><polyline points="9 18 15 12 9 6"/></svg>
+                Past medications ({pastMeds.length})
+              </button>
+              {pastMedsOpen && pastMeds.map(m => (
+                <MedRow key={m.id} med={m}
+                  onToggle={() => {}}
+                  onDelete={() => { dispatch({ type: 'DELETE_MED', id: m.id }); api.deleteMed(m.id).catch(() => {}); }}
+                  rx={m.prescriptionId ? prescriptions.find(r => r.id === m.prescriptionId) : null}
+                />
+              ))}
+            </div>
+          )}
           <button onClick={() => setMedModal(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', marginTop: 14, padding: '11px 14px', borderRadius: 13, border: '1px dashed var(--border-strong)', background: 'transparent', color: 'var(--text-3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5 }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
@@ -844,36 +975,85 @@ export default function HealthWellness() {
         </section>
 
         {/* ── DAILY HABITS ── */}
-        <section style={{ gridColumn: 'span 7', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 18 }}>
-            <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#6366f1' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#a5b4fc' }}>Daily Habits</span>
+        <section style={{ gridColumn: `span ${habitsSpan}`, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#6366f1' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#a5b4fc' }}>Daily Habits</span>
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {state.habits.map(h => (
-              <button key={h.id} onClick={() => { dispatch({ type: 'TOGGLE_HABIT', id: h.id }); api.toggleHabit(h.id, todayISO()).catch(() => {}); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 13, width: '100%', padding: '13px 14px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${h.done ? 'rgba(16,185,129,0.35)' : 'var(--border)'}`, background: h.done ? 'rgba(16,185,129,0.1)' : 'var(--surface)', transition: 'all .15s' }}
-                onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
-                onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                <span style={{ fontSize: 24, lineHeight: 1 }}>{h.icon}</span>
-                <span style={{ flex: 1, textAlign: 'left', fontSize: 14.5, fontWeight: 600 }}>{h.label}</span>
-                <span style={{ flex: '0 0 22px', width: 22, height: 22, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${h.done ? '#10b981' : 'var(--border-strong)'}`, background: h.done ? '#10b981' : 'transparent' }}>
-                  {h.done && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
-                </span>
-              </button>
+              <div key={h.id} style={{ position: 'relative' }}
+                onMouseEnter={() => setHabHov(h.id)} onMouseLeave={() => setHabHov(null)}>
+                <button onClick={() => { dispatch({ type: 'TOGGLE_HABIT', id: h.id }); api.toggleHabit(h.id, todayISO()).catch(() => {}); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 13, width: '100%', padding: '13px 14px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${h.done ? 'rgba(16,185,129,0.35)' : 'var(--border)'}`, background: h.done ? 'rgba(16,185,129,0.1)' : 'var(--surface)', transition: 'all .15s' }}>
+                  <span style={{ fontSize: 24, lineHeight: 1 }}>{h.icon}</span>
+                  <span style={{ flex: 1, textAlign: 'left', fontSize: 14.5, fontWeight: 600 }}>{h.label}</span>
+                  <span style={{ flex: '0 0 22px', width: 22, height: 22, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${h.done ? '#10b981' : 'var(--border-strong)'}`, background: h.done ? '#10b981' : 'transparent' }}>
+                    {h.done && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                  </span>
+                </button>
+                {habHov === h.id && (
+                  <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 5, zIndex: 1 }}>
+                    {h.is_default ? (
+                      <span title="Default habit — locked" style={{ display: 'flex', alignItems: 'center', color: 'var(--text-3)', padding: '3px 7px' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                      </span>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => { setHabitForm({ label: h.label, icon: h.icon }); setHabitEditId(h.id); setHabitModal(true); }}
+                          style={{ width: 24, height: 24, borderRadius: 7, border: '1px solid var(--border-strong)', background: 'var(--surface-solid)', color: 'var(--text-2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button type="button" onClick={() => handleHabitDelete(h)}
+                          style={{ width: 24, height: 24, borderRadius: 7, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
+          <button onClick={() => { setHabitForm(EMPTY_HABIT); setHabitEditId(null); setHabitModal(true); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', marginTop: 14, padding: '11px 14px', borderRadius: 13, border: '1px dashed var(--border-strong)', background: 'transparent', color: 'var(--text-3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5 }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            Add habit
+          </button>
         </section>
 
         {/* ── CYCLE TRACKER ── */}
+        {showCycle && (
         <section style={{ gridColumn: 'span 7', borderRadius: 22, padding: 24, background: 'linear-gradient(120deg,rgba(244,63,94,0.12),rgba(168,85,247,0.07))', border: '1px solid rgba(244,63,94,0.22)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#fda4af' }}>Simran · Cycle Tracker</span>
-              <span style={{ fontSize: 10.5, padding: '2px 8px', borderRadius: 99, background: 'rgba(244,63,94,0.18)', color: '#fb7185', fontWeight: 700 }}>🔒 Private</span>
+              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#fda4af' }}>Cycle Tracker</span>
+              <span style={{ fontSize: 10.5, padding: '2px 8px', borderRadius: 99, background: 'rgba(244,63,94,0.18)', color: '#fb7185', fontWeight: 700 }}>
+                {state.householdCycleShared ? '🔓 Shared' : '🔒 Private'}
+              </span>
             </div>
-            <span style={{ fontSize: 12.5, color: 'var(--text-2)' }}>Day {state.cycleDay} of 28</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {(state.userGender === 'female' || state.userGender === 'other') && (
+                <button type="button" title={state.householdCycleShared ? 'Stop sharing with household' : 'Share with household'}
+                  onClick={async () => {
+                    const next = !state.householdCycleShared;
+                    dispatch({ type: 'SET_CYCLE_SHARED', shared: next });
+                    try { await api.updateProfile({ share_cycle_tracker: next }); } catch {}
+                  }}
+                  style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, border: '1px solid rgba(244,63,94,0.3)', background: 'rgba(244,63,94,0.1)', color: '#fb7185', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                  {state.householdCycleShared ? '🔓 Unshare' : '🔒 Share'}
+                </button>
+              )}
+              <span style={{ fontSize: 12.5, color: 'var(--text-2)' }}>Day {state.cycleDay} of 28</span>
+            </div>
           </div>
+          {state.householdCycleShared && state.userGender === 'male' && (
+            <div style={{ fontSize: 12, color: '#fda4af', marginBottom: 10, opacity: 0.8 }}>Shared access — read only</div>
+          )}
           <div style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 16 }}>
             Next period in <strong>{nextPeriod} days</strong> · Fertile window: <strong>Day 12–16</strong>
           </div>
@@ -892,6 +1072,7 @@ export default function HealthWellness() {
             ))}
           </div>
         </section>
+        )}
 
         {/* ── APPOINTMENTS ── */}
         <section style={{ gridColumn: 'span 5', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
@@ -899,21 +1080,60 @@ export default function HealthWellness() {
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#10b981' }} />
             <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6ee7b7' }}>Appointments & Health</span>
           </div>
-          {state.appointments.map(a => (
-            <button key={a.id} onClick={() => { dispatch({ type: 'TOGGLE_APPT', id: a.id }); api.updateAppt(a.id, { done: !a.done }).catch(() => {}); }}
-              style={{ display:'flex',alignItems:'center',gap:12,width:'100%',padding:'10px 10px',margin:'0 -10px',borderRadius:12,border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',transition:'background .15s' }}
-              onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'}
-              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-              <span style={{ flex:'0 0 22px',width:22,height:22,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${a.done?'#10b981':'var(--border-strong)'}`,background:a.done?'#10b981':'transparent' }}>
-                {a.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
-              </span>
-              <span style={{ flex:1,textAlign:'left' }}>
-                <span style={{ display:'block',fontSize:14,fontWeight:600,...(a.done?{textDecoration:'line-through',color:'var(--text-3)'}:{}) }}>{a.type}</span>
-                <span style={{ display:'block',fontSize:11.5,color:'var(--text-3)' }}>{a.who} · {a.date}</span>
-              </span>
-            </button>
+          {upcomingAppts.map(a => (
+            <div key={a.id} style={{ position: 'relative' }}
+              onMouseEnter={() => setApptHov(a.id)} onMouseLeave={() => setApptHov(null)}>
+              <button onClick={() => { dispatch({ type: 'TOGGLE_APPT', id: a.id }); api.updateAppt(a.id, { done: !a.done }).catch(() => {}); }}
+                style={{ display:'flex',alignItems:'center',gap:12,width:'100%',padding:'10px 10px',margin:'0 -10px',borderRadius:12,border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',transition:'background .15s' }}
+                onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <span style={{ flex:'0 0 22px',width:22,height:22,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${a.done?'#10b981':'var(--border-strong)'}`,background:a.done?'#10b981':'transparent' }}>
+                  {a.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                </span>
+                <span style={{ flex:1,textAlign:'left' }}>
+                  <span style={{ display:'block',fontSize:14,fontWeight:600,...(a.done?{textDecoration:'line-through',color:'var(--text-3)'}:{}) }}>{a.type}</span>
+                  <span style={{ display:'block',fontSize:11.5,color:'var(--text-3)' }}>{a.who}{a.date ? ` · ${a.date}` : ''}{a.doctor ? ` · ${a.doctor}` : ''}</span>
+                </span>
+              </button>
+              {apptHov === a.id && (
+                <div style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 4, zIndex: 1 }}>
+                  <button type="button" onClick={() => handleApptEdit(a)}
+                    style={{ width: 24, height: 24, borderRadius: 7, border: '1px solid var(--border-strong)', background: 'var(--surface-solid)', color: 'var(--text-2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button type="button" onClick={() => handleApptDelete(a.id)}
+                    style={{ width: 24, height: 24, borderRadius: 7, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
-          <button onClick={() => setApptModal(true)}
+          {pastAppts.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <button type="button" onClick={() => setPastApptsOpen(o => !o)}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '4px 0' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: pastApptsOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><polyline points="9 18 15 12 9 6"/></svg>
+                Past appointments ({pastAppts.length})
+              </button>
+              {pastApptsOpen && pastAppts.map(a => (
+                <div key={a.id} style={{ display:'flex',alignItems:'center',gap:12,padding:'8px 10px',margin:'0 -10px',borderRadius:12,opacity:0.55 }}>
+                  <span style={{ flex:'0 0 22px',width:22,height:22,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid #10b981',background:'#10b981' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+                  </span>
+                  <span style={{ flex:1 }}>
+                    <span style={{ display:'block',fontSize:13.5,fontWeight:600,textDecoration:'line-through',color:'var(--text-3)' }}>{a.type}</span>
+                    <span style={{ display:'block',fontSize:11.5,color:'var(--text-3)' }}>{a.who}{a.date ? ` · ${a.date}` : ''}</span>
+                  </span>
+                  <button type="button" onClick={() => handleApptDelete(a.id)}
+                    style={{ width: 20, height: 20, borderRadius: 6, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.07)', color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button onClick={() => { setApptEditId(null); setApptForm(EMPTY_APPT); setApptModal(true); }}
             style={{ display:'flex',alignItems:'center',gap:9,width:'100%',marginTop:14,padding:'11px 14px',borderRadius:13,border:'1px dashed var(--border-strong)',background:'transparent',color:'var(--text-3)',cursor:'pointer',fontFamily:'inherit',fontSize:13.5 }}
             onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'}
             onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
@@ -969,17 +1189,23 @@ export default function HealthWellness() {
 
       </div>
 
-      {/* ════════ ADD APPOINTMENT MODAL ════════ */}
+      {/* ════════ ADD / EDIT APPOINTMENT MODAL ════════ */}
       {apptModal && (
-        <Overlay onClose={() => setApptModal(false)}>
+        <Overlay onClose={() => { setApptModal(false); setApptEditId(null); setApptForm(EMPTY_APPT); }}>
           <form onSubmit={handleApptSubmit} style={MODAL_STYLE}>
-            <ModalTitle>Add Appointment</ModalTitle>
-            <Field label="Appointment *"><input autoFocus style={INP} placeholder="e.g. Dental checkup, Eye test…" value={apptForm.type} onChange={e=>setApptForm(f=>({...f,type:e.target.value}))} /></Field>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
+            <ModalTitle>{apptEditId ? 'Edit Appointment' : 'Add Appointment'}</ModalTitle>
+            <Field label="Appointment / reason *"><input autoFocus style={INP} placeholder="e.g. Dental checkup, Eye test…" value={apptForm.type} onChange={e=>setApptForm(f=>({...f,type:e.target.value}))} /></Field>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <Field label="For"><select style={{...INP,appearance:'none'}} value={apptForm.who} onChange={e=>setApptForm(f=>({...f,who:e.target.value}))}>{WHO_NAMES.map(w=><option key={w}>{w}</option>)}</select></Field>
               <Field label="Date *"><input type="date" style={INP} value={apptForm.date} onChange={e=>setApptForm(f=>({...f,date:e.target.value}))} /></Field>
             </div>
-            <ModalActions onCancel={() => setApptModal(false)} submitLabel="Save appointment" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <Field label="Doctor / provider"><input style={INP} placeholder="Dr. name" value={apptForm.doctor} onChange={e=>setApptForm(f=>({...f,doctor:e.target.value}))} /></Field>
+              <Field label="Time"><input type="time" style={INP} value={apptForm.time} onChange={e=>setApptForm(f=>({...f,time:e.target.value}))} /></Field>
+            </div>
+            <Field label="Location / clinic"><input style={INP} placeholder="e.g. Apollo Hospital, Bangkok" value={apptForm.location} onChange={e=>setApptForm(f=>({...f,location:e.target.value}))} /></Field>
+            <Field label="Notes"><textarea style={{...INP,resize:'vertical',minHeight:52}} placeholder="Any prep instructions or notes…" value={apptForm.notes} onChange={e=>setApptForm(f=>({...f,notes:e.target.value}))} /></Field>
+            <ModalActions onCancel={() => { setApptModal(false); setApptEditId(null); setApptForm(EMPTY_APPT); }} submitLabel={apptEditId ? 'Save changes' : 'Save appointment'} />
           </form>
         </Overlay>
       )}
@@ -993,9 +1219,10 @@ export default function HealthWellness() {
             <Field label="Dose / Strength"><input style={INP} placeholder="e.g. 500mg, 1 tablet · 2000 IU" value={medForm.dose} onChange={e=>setMedForm(f=>({...f,dose:e.target.value}))} /></Field>
             <Field label="Time"><TogglePills options={['Morning','Evening','Both']} value={medForm.time} onChange={v=>setMedForm(f=>({...f,time:v}))} /></Field>
             <Field label="For"><TogglePills options={WHO_NAMES} value={medForm.who} onChange={v=>setMedForm(f=>({...f,who:v}))} /></Field>
+            <Field label="Prescribing doctor"><input style={INP} placeholder="Dr. name" value={medForm.doctor} onChange={e=>setMedForm(f=>({...f,doctor:e.target.value}))} /></Field>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <Field label="Prescribing doctor"><input style={INP} placeholder="Dr. name" value={medForm.doctor} onChange={e=>setMedForm(f=>({...f,doctor:e.target.value}))} /></Field>
               <Field label="Start date"><input type="date" style={INP} value={medForm.startDate} onChange={e=>setMedForm(f=>({...f,startDate:e.target.value}))} /></Field>
+              <Field label="End date"><input type="date" style={INP} min={medForm.startDate || undefined} value={medForm.endDate} onChange={e=>setMedForm(f=>({...f,endDate:e.target.value}))} /></Field>
             </div>
             <Field label="Notes"><textarea style={{...INP,resize:'vertical',minHeight:60}} placeholder="e.g. Take with food, avoid alcohol…" value={medForm.notes} onChange={e=>setMedForm(f=>({...f,notes:e.target.value}))} /></Field>
             {prescriptions.length > 0 && (
@@ -1100,6 +1327,29 @@ export default function HealthWellness() {
               </div>
             )}
             <ModalActions onCancel={closeTrModal} submitLabel={trUploading ? 'Saving…' : 'Save test result'} disabled={trUploading} />
+          </form>
+        </Overlay>
+      )}
+
+      {/* ════════ ADD / EDIT HABIT MODAL ════════ */}
+      {habitModal && (
+        <Overlay onClose={() => { setHabitModal(false); setHabitEditId(null); setHabitForm(EMPTY_HABIT); }}>
+          <form onSubmit={handleHabitSubmit} style={MODAL_STYLE}>
+            <ModalTitle>{habitEditId ? 'Edit Habit' : 'Add Habit'}</ModalTitle>
+            <Field label="Habit name *">
+              <input autoFocus style={INP} placeholder="e.g. Meditate 10 minutes" value={habitForm.label} onChange={e=>setHabitForm(f=>({...f,label:e.target.value}))} />
+            </Field>
+            <Field label="Icon">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 6 }}>
+                {HABIT_EMOJIS.map(em => (
+                  <button key={em} type="button" onClick={() => setHabitForm(f=>({...f,icon:em}))}
+                    style={{ width: 36, height: 36, borderRadius: 9, border: `2px solid ${habitForm.icon===em?'#6366f1':'var(--border)'}`, background: habitForm.icon===em?'rgba(99,102,241,0.15)':'var(--surface-2)', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {em}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <ModalActions onCancel={() => { setHabitModal(false); setHabitEditId(null); setHabitForm(EMPTY_HABIT); }} submitLabel={habitEditId ? 'Save changes' : 'Add habit'} />
           </form>
         </Overlay>
       )}

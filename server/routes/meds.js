@@ -3,7 +3,6 @@ import db from '../db.js';
 
 const router = Router();
 
-// GET /api/meds?date=2026-06-13  — meds with today's done state merged in
 router.get('/', async (req, res) => {
   const date = req.query.date || new Date().toISOString().slice(0, 10);
   try {
@@ -11,8 +10,9 @@ router.get('/', async (req, res) => {
       `SELECT m.*, COALESCE(c.done, FALSE) AS done
        FROM medications m
        LEFT JOIN med_checkins c ON c.med_id = m.id AND c.checkin_date = $1
+       WHERE m.user_id = $2
        ORDER BY m.sort_order`,
-      [date]
+      [date, req.userId]
     );
     res.json(rows);
   } catch (e) {
@@ -20,18 +20,17 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/meds/:id/toggle?date=2026-06-13
 router.post('/:id/toggle', async (req, res) => {
   const { id } = req.params;
   const date = req.query.date || new Date().toISOString().slice(0, 10);
   try {
     const { rows } = await db.query(
-      `INSERT INTO med_checkins (med_id, checkin_date, done)
-       VALUES ($1, $2, TRUE)
+      `INSERT INTO med_checkins (med_id, checkin_date, done, user_id)
+       VALUES ($1, $2, TRUE, $3)
        ON CONFLICT (med_id, checkin_date)
        DO UPDATE SET done = NOT med_checkins.done
        RETURNING done`,
-      [id, date]
+      [id, date, req.userId]
     );
     res.json({ done: rows[0].done });
   } catch (e) {
@@ -40,22 +39,42 @@ router.post('/:id/toggle', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { name, dose, time, sort_order = 99, who = 'Jagdeep', doctor = '', notes = '', start_date = '', prescription_id = null } = req.body;
+  const { name, dose, time, sort_order = 99, who = null, doctor = null, notes = null, start_date = null, end_date = null, prescription_id = null } = req.body;
   try {
     const { rows } = await db.query(
-      `INSERT INTO medications (id, name, dose, time, sort_order, who, doctor, notes, start_date, prescription_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [`m${Date.now()}`, name, dose, time, sort_order, who, doctor, notes, start_date, prescription_id]
+      `INSERT INTO medications (name, dose, time, sort_order, who, doctor, notes, start_date, end_date, prescription_id, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [name, dose || null, time || null, sort_order, who || null, doctor || null, notes || null,
+       start_date || null, end_date || null, prescription_id, req.userId]
     );
     res.status(201).json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  const { name, dose, time, who, doctor, notes, start_date, end_date, prescription_id } = req.body;
+  try {
+    const { rows } = await db.query(
+      `UPDATE medications
+       SET name = $3, dose = $4, time = $5, who = $6, doctor = $7,
+           notes = $8, start_date = $9, end_date = $10, prescription_id = $11
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [req.params.id, req.userId, name, dose || null, time || null, who || null,
+       doctor || null, notes || null, start_date || null, end_date || null, prescription_id || null]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: 'Something went wrong' });
   }
 });
 
 router.delete('/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM medications WHERE id = $1', [req.params.id]);
+    await db.query('DELETE FROM medications WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

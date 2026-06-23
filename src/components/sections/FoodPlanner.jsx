@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { APP_TODAY } from '../../utils/dateUtils';
 import { parseRecipeText, extractTextFromPDF } from '../../utils/recipeParser';
 import { api } from '../../api/client';
+import { parseMealDbRecipe } from '../../utils/recipeUtils';
 
 const MEAL_SLOTS = ['Breakfast', 'Lunch', 'Dinner'];
 const SHORT_SLOT = { Breakfast: 'B', Lunch: 'L', Dinner: 'D' };
@@ -629,12 +630,776 @@ function ImportView({ dispatch }) {
   );
 }
 
+/* ── Discover & Cuisine Library ─────────────────────────── */
+
+function DiscoverView({ recipes, dispatch }) {
+  const [categories, setCategories] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [selectedArea, setSelectedArea] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Drawer states
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [drawerRecipe, setDrawerRecipe] = useState(null);
+  const [drawerError, setDrawerError] = useState('');
+  const [notification, setNotification] = useState('');
+  const [showPlanPicker, setShowPlanPicker] = useState(false);
+  const [planDate, setPlanDate] = useState(() => {
+    return new Date(APP_TODAY).toISOString().slice(0, 10);
+  });
+  const [planSlot, setPlanSlot] = useState('Breakfast');
+
+  // Load categories and areas on mount
+  useEffect(() => {
+    let isMounted = true;
+    Promise.all([api.getRecipeCategories(), api.getRecipeAreas()])
+      .then(([cats, ars]) => {
+        if (!isMounted) return;
+        setCategories(cats || []);
+        setAreas(ars || []);
+        // Set default category to first available if everything is empty
+        if (cats && cats.length > 0 && selectedCategory === 'All' && selectedArea === 'All' && !searchQuery) {
+          setSelectedCategory(cats[0]);
+        }
+      })
+      .catch(err => {
+        if (isMounted) setError(err.message || 'Failed to load filters');
+      });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Fetch recipes when debounced query, area, category, or categories list changes
+  useEffect(() => {
+    let isMounted = true;
+
+    if (debouncedQuery.trim()) {
+      setLoading(true);
+      setError('');
+      api.searchRecipes(debouncedQuery)
+        .then(res => {
+          if (!isMounted) return;
+          setResults(res || []);
+          setLoading(false);
+        })
+        .catch(err => {
+          if (!isMounted) return;
+          setError(err.message || 'Search failed');
+          setLoading(false);
+        });
+    } else {
+      // Normal filtering
+      if (selectedArea !== 'All') {
+        setLoading(true);
+        setError('');
+        api.getRecipesByArea(selectedArea)
+          .then(res => {
+            if (!isMounted) return;
+            setResults(res || []);
+            setLoading(false);
+          })
+          .catch(err => {
+            if (!isMounted) return;
+            setError(err.message || 'Failed to fetch by area');
+            setLoading(false);
+          });
+      } else if (selectedCategory !== 'All') {
+        setLoading(true);
+        setError('');
+        api.getRecipesByCategory(selectedCategory)
+          .then(res => {
+            if (!isMounted) return;
+            setResults(res || []);
+            setLoading(false);
+          })
+          .catch(err => {
+            if (!isMounted) return;
+            setError(err.message || 'Failed to fetch by category');
+            setLoading(false);
+          });
+      } else {
+        // Fallback to first category if both are All and search is empty
+        if (categories.length > 0) {
+          setSelectedCategory(categories[0]);
+        } else {
+          setResults([]);
+        }
+      }
+    }
+
+    return () => { isMounted = false; };
+  }, [debouncedQuery, selectedArea, selectedCategory, categories]);
+
+  // Frontend filter for search results
+  const displayedResults = useMemo(() => {
+    let filtered = results;
+    if (debouncedQuery.trim()) {
+      if (selectedArea !== 'All') {
+        filtered = filtered.filter(r => r.area === selectedArea);
+      }
+      if (selectedCategory !== 'All') {
+        filtered = filtered.filter(r => r.category === selectedCategory);
+      }
+    }
+    return filtered;
+  }, [results, debouncedQuery, selectedArea, selectedCategory]);
+
+  const handleSelectArea = (area) => {
+    setSelectedArea(area);
+    if (!searchQuery) {
+      setSelectedCategory('All');
+    }
+  };
+
+  const handleSelectCategory = (cat) => {
+    setSelectedCategory(cat);
+    if (!searchQuery) {
+      setSelectedArea('All');
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSelectedArea('All');
+    if (categories.length > 0) {
+      setSelectedCategory(categories[0]);
+    } else {
+      setSelectedCategory('All');
+    }
+  };
+
+  const openDrawer = (recipeId) => {
+    setDrawerOpen(true);
+    setDrawerLoading(true);
+    setDrawerRecipe(null);
+    setDrawerError('');
+    setShowPlanPicker(false);
+    setNotification('');
+
+    api.getRecipeDetail(recipeId)
+      .then(res => {
+        setDrawerRecipe(res);
+        setDrawerLoading(false);
+      })
+      .catch(err => {
+        setDrawerError(err.message || 'Failed to load recipe details');
+        setDrawerLoading(false);
+      });
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    // Keep the recipe visible during the transition, clear it later
+    setTimeout(() => {
+      setDrawerRecipe(null);
+      setDrawerError('');
+    }, 300);
+  };
+
+  const handleSaveToLibrary = () => {
+    if (!drawerRecipe) return;
+    const isSaved = recipes.some(r => r.sourceId === drawerRecipe.idMeal);
+    if (isSaved) return;
+
+    const parsed = parseMealDbRecipe(drawerRecipe);
+    dispatch({ type: 'ADD_RECIPE', recipe: parsed });
+    setNotification('Saved to Recipe Library!');
+    setTimeout(() => setNotification(''), 3000);
+  };
+
+  const handleAddToMealPlan = (e) => {
+    e.preventDefault();
+    if (!drawerRecipe) return;
+
+    // Save to library first if it doesn't exist there
+    let existingRecipe = recipes.find(r => r.sourceId === drawerRecipe.idMeal);
+    let recipeId;
+
+    if (!existingRecipe) {
+      const parsed = parseMealDbRecipe(drawerRecipe);
+      recipeId = parsed.id;
+      dispatch({ type: 'ADD_RECIPE', recipe: parsed });
+    } else {
+      recipeId = existingRecipe.id;
+    }
+
+    const key = `${planDate}-${planSlot.toLowerCase()}`;
+    dispatch({ type: 'SET_MEAL', key, recipeId });
+
+    setShowPlanPicker(false);
+    setNotification('Successfully added to Meal Plan!');
+    setTimeout(() => setNotification(''), 3000);
+  };
+
+  // Check if current drawer recipe is already saved
+  const isCurrentRecipeSaved = drawerRecipe
+    ? recipes.some(r => r.sourceId === drawerRecipe.idMeal)
+    : false;
+
+  // Pulse animation CSS injection
+  const pulseStyle = `
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+    .skeleton-pulse {
+      animation: pulse 1.5s infinite ease-in-out;
+      background: var(--surface-2);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  `;
+
+  return (
+    <div>
+      <style dangerouslySetInnerHTML={{ __html: pulseStyle }} />
+
+      {/* Search Input */}
+      <div style={{ position: 'relative', marginBottom: 20 }}>
+        <input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search global recipes by name (e.g., chicken, beef, chocolate)..."
+          style={{
+            width: '100%',
+            padding: '12px 16px 12px 42px',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            color: 'var(--text)',
+            fontFamily: 'inherit',
+            fontSize: 15,
+            boxSizing: 'border-box',
+          }}
+        />
+        <svg
+          style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }}
+          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+        >
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        {searchQuery && (
+          <button
+            onClick={handleClearSearch}
+            style={{
+              position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)',
+              padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Cuisine / Area Filters */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)', marginBottom: 8 }}>
+          Cuisine
+        </div>
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          <button
+            onClick={() => handleSelectArea('All')}
+            style={{
+              padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
+              background: selectedArea === 'All' ? 'var(--accent)' : 'var(--surface)',
+              color: selectedArea === 'All' ? '#fff' : 'var(--text-2)',
+              fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              whiteSpace: 'nowrap', transition: 'all .15s',
+            }}
+          >
+            All Cuisines
+          </button>
+          {areas.map(area => (
+            <button
+              key={area}
+              onClick={() => handleSelectArea(area)}
+              style={{
+                padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
+                background: selectedArea === area ? 'var(--accent)' : 'var(--surface)',
+                color: selectedArea === area ? '#fff' : 'var(--text-2)',
+                fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                whiteSpace: 'nowrap', transition: 'all .15s',
+              }}
+            >
+              {area}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Category Filters */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)', marginBottom: 8 }}>
+          Category
+        </div>
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+          <button
+            onClick={() => handleSelectCategory('All')}
+            style={{
+              padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
+              background: selectedCategory === 'All' ? 'var(--accent)' : 'var(--surface)',
+              color: selectedCategory === 'All' ? '#fff' : 'var(--text-2)',
+              fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              whiteSpace: 'nowrap', transition: 'all .15s',
+            }}
+          >
+            All Categories
+          </button>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => handleSelectCategory(cat)}
+              style={{
+                padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
+                background: selectedCategory === cat ? 'var(--accent)' : 'var(--surface)',
+                color: selectedCategory === cat ? '#fff' : 'var(--text-2)',
+                fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                whiteSpace: 'nowrap', transition: 'all .15s',
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Error display */}
+      {error && (
+        <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.1)', color: '#fca5a5', fontSize: 14, marginBottom: 16 }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {/* Recipe Grid */}
+      {loading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ background: 'var(--surface)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 220 }}>
+              <div className="skeleton-pulse" style={{ height: 130, width: '100%' }} />
+              <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="skeleton-pulse" style={{ height: 14, width: '85%', borderRadius: 4 }} />
+                <div className="skeleton-pulse" style={{ height: 14, width: '55%', borderRadius: 4 }} />
+                <div style={{ flex: 1 }} />
+                <div className="skeleton-pulse" style={{ height: 18, width: 70, borderRadius: 99 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : displayedResults.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-3)' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>No recipes found</div>
+          <div style={{ fontSize: 13 }}>Try different filters or search keywords.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+          {displayedResults.map(r => (
+            <div
+              key={r.id}
+              onClick={() => openDrawer(r.id)}
+              style={{
+                background: 'var(--surface)',
+                borderRadius: 14,
+                border: '1px solid var(--border)',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                height: 230,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.12)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {/* Thumbnail */}
+              <div style={{ height: 125, width: '100%', overflow: 'hidden', background: 'var(--surface-2)', position: 'relative' }}>
+                <img
+                  src={r.thumbnail}
+                  alt={r.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Card Body */}
+              <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div
+                  style={{
+                    fontSize: 13.5,
+                    fontWeight: 700,
+                    lineHeight: 1.3,
+                    color: 'var(--text)',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    marginBottom: 6,
+                  }}
+                >
+                  {r.name}
+                </div>
+
+                {/* Badges */}
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {r.category && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: 'rgba(132,204,22,0.15)', color: '#84cc16' }}>
+                      {r.category}
+                    </span>
+                  )}
+                  {r.area && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: 'var(--surface-2)', color: 'var(--text-3)' }}>
+                      {r.area}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Sliding Drawer */}
+      <div>
+        {/* Backdrop Overlay */}
+        <div
+          onClick={closeDrawer}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(4px)',
+            opacity: drawerOpen ? 1 : 0,
+            pointerEvents: drawerOpen ? 'auto' : 'none',
+            transition: 'opacity 300ms ease',
+            zIndex: 150,
+          }}
+        />
+
+        {/* Drawer Panel */}
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            maxWidth: 550,
+            background: 'var(--surface-solid, var(--surface))',
+            borderLeft: '1px solid var(--border-strong, var(--border))',
+            boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.25)',
+            transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
+            transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+            zIndex: 160,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {drawerLoading ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)' }}>
+              <div className="skeleton-pulse" style={{ width: 48, height: 48, borderRadius: 99, marginBottom: 16 }} />
+              <div style={{ fontSize: 14 }}>Loading recipe details...</div>
+            </div>
+          ) : drawerError ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Failed to load recipe</div>
+              <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 20 }}>{drawerError}</div>
+              <button
+                onClick={closeDrawer}
+                style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Close Drawer
+              </button>
+            </div>
+          ) : drawerRecipe ? (
+            <>
+              {/* Drawer Hero Image */}
+              <div style={{ position: 'relative', height: 220, width: '100%', flexShrink: 0, background: 'var(--surface-2)' }}>
+                <img
+                  src={drawerRecipe.strMealThumb}
+                  alt={drawerRecipe.strMeal}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                {/* Gradient Overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%)' }} />
+
+                {/* Close Button */}
+                <button
+                  onClick={closeDrawer}
+                  style={{
+                    position: 'absolute', top: 16, right: 16,
+                    width: 36, height: 36, borderRadius: 18,
+                    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+                    border: 'none', color: '#fff', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.7)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+
+                {/* Title overlay */}
+                <div style={{ position: 'absolute', bottom: 16, left: 20, right: 20 }}>
+                  <div style={{ fontFamily: "'Newsreader', serif", fontSize: 24, fontWeight: 600, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)', lineHeight: 1.2 }}>
+                    {drawerRecipe.strMeal}
+                  </div>
+                </div>
+              </div>
+
+              {/* Scrollable details */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+                {/* Notification Area */}
+                {notification && (
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', fontSize: 13.5, fontWeight: 600, marginBottom: 16 }}>
+                    ✓ {notification}
+                  </div>
+                )}
+
+                {/* Tags and Links */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                  {drawerRecipe.strCategory && (
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 99, background: 'rgba(132,204,22,0.15)', color: '#84cc16' }}>
+                      {drawerRecipe.strCategory}
+                    </span>
+                  )}
+                  {drawerRecipe.strArea && (
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 99, background: 'var(--surface-2)', color: 'var(--text-3)' }}>
+                      {drawerRecipe.strArea}
+                    </span>
+                  )}
+                  <div style={{ flex: 1 }} />
+                  {drawerRecipe.strYoutube && (
+                    <a
+                      href={drawerRecipe.strYoutube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '6px 14px',
+                        borderRadius: 99,
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      Watch Video
+                    </a>
+                  )}
+                </div>
+
+                {/* Ingredients */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)', marginBottom: 10, borderBottom: '1px solid var(--border)', paddingBottom: 6 }}>
+                    Ingredients
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {(drawerRecipe.ingredients || []).map((ing, i) => (
+                      <div key={i} style={{ display: 'flex', borderBottom: '1px solid var(--border)', padding: '8px 0', fontSize: 13.5, color: 'var(--text-2)' }}>
+                        <div style={{ width: '30%', fontWeight: 600, color: 'var(--text)', paddingRight: 8 }}>
+                          {ing.measure}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          {ing.ingredient}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)', marginBottom: 12, borderBottom: '1px solid var(--border)', paddingBottom: 6 }}>
+                    Instructions
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {((drawerRecipe.strInstructions || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean)).map((step, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 14 }}>
+                        <div style={{
+                          width: 24, height: 24, borderRadius: 99,
+                          background: 'rgba(132,204,22,0.15)', color: '#84cc16',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 12, fontWeight: 700, flexShrink: 0, marginTop: 1
+                        }}>
+                          {i + 1}
+                        </div>
+                        <div style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5, flex: 1 }}>
+                          {step}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Footer Actions */}
+              <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', background: 'var(--surface-solid, var(--surface))', flexShrink: 0 }}>
+                {showPlanPicker ? (
+                  <form onSubmit={handleAddToMealPlan} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 10 }}>
+                      <div>
+                        <label style={{ fontSize: 11, color: 'var(--text-3)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Slot</label>
+                        <select
+                          value={planSlot}
+                          onChange={e => setPlanSlot(e.target.value)}
+                          style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontFamily: 'inherit', fontSize: 13.5 }}
+                        >
+                          <option>Breakfast</option>
+                          <option>Lunch</option>
+                          <option>Dinner</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, color: 'var(--text-3)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Date</label>
+                        <input
+                          type="date"
+                          value={planDate}
+                          onChange={e => setPlanDate(e.target.value)}
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowPlanPicker(false)}
+                        style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-2)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ flex: 2, padding: '9px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Confirm Add
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                      onClick={handleSaveToLibrary}
+                      disabled={isCurrentRecipeSaved}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: 10,
+                        border: '1px solid var(--border)',
+                        background: isCurrentRecipeSaved ? 'var(--surface-2)' : 'var(--surface)',
+                        color: isCurrentRecipeSaved ? 'var(--text-3)' : 'var(--text)',
+                        fontFamily: 'inherit',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: isCurrentRecipeSaved ? 'default' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={e => {
+                        if (!isCurrentRecipeSaved) e.currentTarget.style.background = 'var(--surface-2)';
+                      }}
+                      onMouseLeave={e => {
+                        if (!isCurrentRecipeSaved) e.currentTarget.style.background = 'var(--surface)';
+                      }}
+                    >
+                      {isCurrentRecipeSaved ? (
+                        <>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                          Saved
+                        </>
+                      ) : (
+                        'Save to Library'
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowPlanPicker(true)}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: 10,
+                        border: 'none',
+                        background: 'var(--accent)',
+                        color: '#fff',
+                        fontFamily: 'inherit',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'opacity 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    >
+                      Add to Meal Plan
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Food Planner ──────────────────────────────────── */
 
 export default function FoodPlanner() {
   const { state, dispatch } = useAppStore();
   const mob = state.isMobile;
   const [view, setView] = useState('plan');
+
+  useEffect(() => {
+    if (localStorage.getItem('open-food-discover') === 'true') {
+      setView('discover');
+      localStorage.removeItem('open-food-discover');
+    }
+  }, []);
 
   const recipes  = state.recipes  || [];
   const mealPlan = state.mealPlan || {};
@@ -676,11 +1441,13 @@ export default function FoodPlanner() {
         <ViewBtn label="Meal Plan"      active={view === 'plan'}    onClick={() => setView('plan')} />
         <ViewBtn label="Recipes"        active={view === 'recipes'} onClick={() => setView('recipes')} />
         <ViewBtn label="Import Recipe"  active={view === 'import'}  onClick={() => setView('import')} />
+        <ViewBtn label="Discover"       active={view === 'discover'} onClick={() => setView('discover')} />
       </div>
 
       {view === 'plan'    && <MealPlanView recipes={recipes} mealPlan={mealPlan} dispatch={dispatch} shopList={shopList} />}
       {view === 'recipes' && <RecipesView  recipes={recipes} dispatch={dispatch} />}
       {view === 'import'  && <ImportView   dispatch={dispatch} />}
+      {view === 'discover'&& <DiscoverView recipes={recipes} dispatch={dispatch} />}
     </div>
   );
 }

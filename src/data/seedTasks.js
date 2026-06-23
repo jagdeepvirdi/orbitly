@@ -8,7 +8,7 @@ export const SEED_WORK_TASKS = [
 ];
 
 export const SEED_PERSONAL_TASKS = [
-  { id: 'p1', title: "Book Anaya's dentist appointment", priority: 'High', status: 'todo', due: 'Today', recurring: false, overdue: false },
+  { id: 'p1', title: 'Book dentist appointment', priority: 'High', status: 'todo', due: 'Today', recurring: false, overdue: false },
   { id: 'p2', title: 'Renew gym membership', priority: 'Low', status: 'todo', due: '12 Jun', recurring: false, overdue: false },
   { id: 'p3', title: 'Order groceries for the weekend', priority: 'Normal', status: 'todo', due: 'Sat', recurring: false, overdue: false },
   { id: 'p4', title: 'Call the electrician', priority: 'Normal', status: 'done', due: '10 Jun', recurring: false, overdue: false },

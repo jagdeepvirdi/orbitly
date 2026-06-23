@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { FESTIVALS_DATA } from '../../data/festivals';
-import { SIKH_EVENTS } from '../../data/sikhCalendar';
+import { useState, useMemo, useEffect } from 'react';
 import { INDIAN_HOLIDAYS, THAI_HOLIDAYS } from '../../data/holidayCalendar';
+import { CHRISTIAN_HOLIDAYS } from '../../data/christianHolidays';
+import { JAIN_HOLIDAYS } from '../../data/jainHolidays';
 import { APP_TODAY } from '../../utils/dateUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -51,11 +51,13 @@ function toItems(arr, cat) {
 // ─── Category styles ──────────────────────────────────────────────────────────
 
 const CAT_STYLE = {
-  gurpurab: { bg: 'linear-gradient(120deg,rgba(212,175,55,0.14),rgba(99,102,241,0.06))',  border: 'rgba(212,175,55,0.35)', label: 'Gurpurab',        color: '#fde68a' },
-  shahidi:  { bg: 'linear-gradient(120deg,rgba(239,68,68,0.10),rgba(168,85,247,0.06))',   border: 'rgba(239,68,68,0.28)',  label: 'Shaheedi Diwas',  color: '#fca5a5' },
-  cultural: { bg: 'linear-gradient(120deg,rgba(245,158,11,0.12),rgba(212,175,55,0.06))',  border: 'rgba(245,158,11,0.28)', label: 'Cultural',         color: '#fcd34d' },
-  indian:   { bg: 'linear-gradient(120deg,rgba(255,153,51,0.12),rgba(19,136,8,0.06))',    border: 'rgba(255,153,51,0.32)', label: '🇮🇳 Indian',       color: '#fdba74' },
-  thai:     { bg: 'linear-gradient(120deg,rgba(220,38,38,0.10),rgba(30,64,175,0.06))',    border: 'rgba(220,38,38,0.22)',  label: '🇹🇭 Thai',         color: '#fca5a5' },
+  gurpurab:  { bg: 'linear-gradient(120deg,rgba(212,175,55,0.14),rgba(99,102,241,0.06))',  border: 'rgba(212,175,55,0.35)', label: 'Gurpurab',        color: '#fde68a' },
+  shahidi:   { bg: 'linear-gradient(120deg,rgba(239,68,68,0.10),rgba(168,85,247,0.06))',   border: 'rgba(239,68,68,0.28)',  label: 'Shaheedi Diwas',  color: '#fca5a5' },
+  cultural:  { bg: 'linear-gradient(120deg,rgba(245,158,11,0.12),rgba(212,175,55,0.06))',  border: 'rgba(245,158,11,0.28)', label: 'Cultural',         color: '#fcd34d' },
+  indian:    { bg: 'linear-gradient(120deg,rgba(255,153,51,0.12),rgba(19,136,8,0.06))',    border: 'rgba(255,153,51,0.32)', label: '🇮🇳 Indian',       color: '#fdba74' },
+  thai:      { bg: 'linear-gradient(120deg,rgba(220,38,38,0.10),rgba(30,64,175,0.06))',    border: 'rgba(220,38,38,0.22)',  label: '🇹🇭 Thai',         color: '#fca5a5' },
+  christian: { bg: 'linear-gradient(120deg,rgba(59,130,246,0.12),rgba(147,197,253,0.06))', border: 'rgba(59,130,246,0.30)', label: '✝️ Christian',     color: '#93c5fd' },
+  jain:      { bg: 'linear-gradient(120deg,rgba(167,139,250,0.12),rgba(196,181,253,0.06))',border: 'rgba(167,139,250,0.30)',label: '🔱 Jain',           color: '#c4b5fd' },
 };
 
 // ─── Filter pill ──────────────────────────────────────────────────────────────
@@ -131,18 +133,34 @@ function FestivalCard({ item }) {
 function FestivalsTab() {
   const [filter,   setFilter]   = useState('all');
   const [showPast, setShowPast] = useState(false);
+  const [dbRows,   setDbRows]   = useState([]);
 
-  // Build all items from static sources
-  const sikhItems     = SIKH_EVENTS.map(e => ({ ...e, desc: null }));
-  const culturalItems = FESTIVALS_DATA.map(f => {
-    const d = f.date;
-    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    return { ...f, desc: null, dateStr: ds };
-  });
-  const indianItems   = toItems(INDIAN_HOLIDAYS, 'indian');
-  const thaiItems     = toItems(THAI_HOLIDAYS, 'thai');
+  // Load all festivals (sikh + indian cultural) from the DB
+  useEffect(() => {
+    fetch('/api/festivals')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => [])
+      .then(rows => setDbRows(Array.isArray(rows) ? rows : []));
+  }, []);
 
-  // Merge & deduplicate: FESTIVALS_DATA cultural items take priority over INDIAN_HOLIDAYS duplicates
+  // DB rows → display items
+  const sikhItems = dbRows
+    .filter(r => r.calendar === 'sikh')
+    .map(r => ({ name: r.name, date: parseDate(r.event_date), cat: r.cat, emoji: r.emoji, action: r.action, reminder: r.reminder, desc: r.description }));
+
+  const culturalItems = dbRows
+    .filter(r => r.calendar === 'indian')
+    .map(r => {
+      const d = parseDate(r.event_date);
+      const ds = r.event_date.slice(0, 10);
+      return { name: r.name, date: d, dateStr: ds, cat: r.cat, emoji: r.emoji, action: r.action, reminder: r.reminder, desc: r.description };
+    });
+  const indianItems    = toItems(INDIAN_HOLIDAYS, 'indian');
+  const thaiItems      = toItems(THAI_HOLIDAYS, 'thai');
+  const christianItems = toItems(CHRISTIAN_HOLIDAYS, 'christian');
+  const jainItems      = toItems(JAIN_HOLIDAYS, 'jain');
+
+  // Merge & deduplicate: DB cultural items take priority over INDIAN_HOLIDAYS duplicates
   // Compare on original ISO dateStr to avoid timezone-shift bugs
   const culturalKeys = new Set(
     culturalItems
@@ -158,11 +176,13 @@ function FestivalsTab() {
 
   const all = useMemo(() => {
     const CAT_GROUPS = {
-      sikh:   ['gurpurab', 'shahidi', 'cultural'],
-      indian: ['indian'],
-      thai:   ['thai'],
+      sikh:      ['gurpurab', 'shahidi', 'cultural'],
+      indian:    ['indian'],
+      thai:      ['thai'],
+      christian: ['christian'],
+      jain:      ['jain'],
     };
-    let items = [...sikhItems, ...culturalItems, ...deduped, ...thaiItems];
+    let items = [...sikhItems, ...culturalItems, ...deduped, ...thaiItems, ...christianItems, ...jainItems];
     if (filter !== 'all') {
       const allowed = CAT_GROUPS[filter] || [];
       items = items.filter(i => allowed.includes(i.cat));
@@ -175,23 +195,27 @@ function FestivalsTab() {
   }, [filter, showPast]);
 
   const count = (cats) => {
-    const base = [...sikhItems, ...culturalItems, ...deduped, ...thaiItems];
+    const base = [...sikhItems, ...culturalItems, ...deduped, ...thaiItems, ...christianItems, ...jainItems];
     return base.filter(i => cats.includes(i.cat) && daysFrom(i.date) >= 0).length;
   };
 
-  const sikhCount   = count(['gurpurab','shahidi','cultural']);
-  const indianCount = count(['indian']);
-  const thaiCount   = count(['thai']);
+  const sikhCount      = count(['gurpurab','shahidi','cultural']);
+  const indianCount    = count(['indian']);
+  const thaiCount      = count(['thai']);
+  const christianCount = count(['christian']);
+  const jainCount      = count(['jain']);
 
   return (
     <div>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Pill label={`All upcoming`}              active={filter === 'all'}    onClick={() => setFilter('all')} />
-          <Pill label={`🪯 Sikh (${sikhCount})`}   active={filter === 'sikh'}   onClick={() => setFilter('sikh')} />
-          <Pill label={`🇮🇳 Indian (${indianCount})`} active={filter === 'indian'} onClick={() => setFilter('indian')} />
-          <Pill label={`🇹🇭 Thai (${thaiCount})`}  active={filter === 'thai'}   onClick={() => setFilter('thai')} />
+          <Pill label={`All upcoming`}                   active={filter === 'all'}       onClick={() => setFilter('all')} />
+          <Pill label={`🪯 Sikh (${sikhCount})`}        active={filter === 'sikh'}      onClick={() => setFilter('sikh')} />
+          <Pill label={`🇮🇳 Indian (${indianCount})`}   active={filter === 'indian'}    onClick={() => setFilter('indian')} />
+          <Pill label={`🇹🇭 Thai (${thaiCount})`}       active={filter === 'thai'}      onClick={() => setFilter('thai')} />
+          <Pill label={`✝️ Christian (${christianCount})`} active={filter === 'christian'} onClick={() => setFilter('christian')} />
+          <Pill label={`🔱 Jain (${jainCount})`}        active={filter === 'jain'}      onClick={() => setFilter('jain')} />
         </div>
         <button
           onClick={() => setShowPast(p => !p)}

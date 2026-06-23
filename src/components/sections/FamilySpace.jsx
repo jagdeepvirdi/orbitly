@@ -862,14 +862,12 @@ function MomentCard({ m, onEdit, onDelete, fmtDate }) {
 // ─── Family Wall ──────────────────────────────────────────────────────────────
 
 function FamilyWall({ state, dispatch }) {
-  const [shopInput,    setShopInput]    = useState('');
   const [moments,      setMoments]      = useState([]);
   const [momLoading,   setMomLoading]   = useState(true);
   const [momModal,     setMomModal]     = useState(null);
   const [terms,        setTerms]        = useState([]);
   const [termsLoading, setTermsLoading] = useState(true);
   const [termModal,    setTermModal]    = useState(null); // null | 'new' | term-object
-  const shopDone = state.shopList.filter(i => i.done).length;
 
   useEffect(() => {
     api.getMoments()
@@ -882,17 +880,6 @@ function FamilyWall({ state, dispatch }) {
       .finally(() => setTermsLoading(false));
   }, []);
 
-  async function handleAddShop() {
-    const v = shopInput.trim();
-    if (!v) return;
-    setShopInput('');
-    try {
-      const row = await api.addShopItem(v);
-      dispatch({ type: 'ADD_SHOP', shopItem: row });
-    } catch {
-      dispatch({ type: 'ADD_SHOP', shopItem: { id: 's' + Date.now(), item: v, done: false } });
-    }
-  }
 
   async function handleSaveTerm(form) {
     if (termModal === 'new') {
@@ -942,12 +929,12 @@ function FamilyWall({ state, dispatch }) {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12,1fr)', gap: 18, alignItems: 'start' }}>
-      {/* Jasleen's school year */}
-      <section style={{ gridColumn: 'span 7', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
+      {/* School year tracker */}
+      <section style={{ gridColumn: 'span 12', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <span style={{ fontSize: 20 }}>📚</span>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>Jasleen's School Year</span>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>School Year</span>
           </div>
           <button onClick={() => setTermModal('new')}
             style={{ padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, background: 'var(--accent)', color: '#fff' }}>
@@ -983,28 +970,6 @@ function FamilyWall({ state, dispatch }) {
             </div>
           );
         })}
-      </section>
-
-      {/* Shopping list */}
-      <section style={{ gridColumn: 'span 5', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <span style={{ fontSize: 18 }}>🛒</span>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>Shopping List</span>
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{shopDone}/{state.shopList.length}</span>
-        </div>
-        {state.shopList.map(item => (
-          <CheckRow key={item.id} done={item.done} onToggle={() => {
-            dispatch({ type: 'TOGGLE_SHOP', id: item.id });
-            api.toggleShopItem(item.id, !item.done).catch(() => {});
-          }} label={item.item} accent="#6366f1" />
-        ))}
-        <div style={{ display: 'flex', gap: 9, marginTop: 13 }}>
-          <input type="text" value={shopInput} onChange={e => setShopInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddShop()} placeholder="Add item…"
-            style={{ flex: 1, padding: '10px 13px', borderRadius: 11, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'inherit', fontSize: 13.5, outline: 'none' }} />
-          <button onClick={handleAddShop} style={{ padding: '10px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, background: 'var(--accent)', color: '#fff' }}>+</button>
-        </div>
       </section>
 
       {/* Family moments */}

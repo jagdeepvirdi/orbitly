@@ -1,0 +1,58 @@
+// Today reference: 2026-06-17
+// lastDone dates chosen to give a realistic spread of statuses on first load.
+export const SEED_CHORES = [
+  {
+    id: 'ch1',
+    name: 'AC Cleaning',
+    emoji: '❄️',
+    category: 'Cooling',
+    frequencyDays: 180,
+    lastDone: '2026-01-17',
+    notes: 'Full service — filter wash, coil clean, drain flush',
+  },
+  {
+    id: 'ch2',
+    name: 'Water Filter Change',
+    emoji: '💧',
+    category: 'Water',
+    frequencyDays: 90,
+    lastDone: '2026-03-19',
+    notes: 'Replace under-sink cartridge',
+  },
+  {
+    id: 'ch3',
+    name: 'Pest Control',
+    emoji: '🪲',
+    category: 'Cleaning',
+    frequencyDays: 180,
+    lastDone: '2025-12-20',
+    notes: 'Schedule with building management 2 weeks in advance',
+  },
+  {
+    id: 'ch4',
+    name: 'Kitchen Deep Clean',
+    emoji: '🍳',
+    category: 'Cleaning',
+    frequencyDays: 30,
+    lastDone: '2026-05-14',
+    notes: 'Behind stove, inside oven, under fridge, exhaust fan grease filter',
+  },
+  {
+    id: 'ch5',
+    name: 'Washing Machine Drum Clean',
+    emoji: '🫧',
+    category: 'Appliances',
+    frequencyDays: 30,
+    lastDone: '2026-05-19',
+    notes: 'Use drum-cleaner tablet on hot cycle',
+  },
+  {
+    id: 'ch6',
+    name: 'Fridge Clean & Defrost',
+    emoji: '🧊',
+    category: 'Appliances',
+    frequencyDays: 90,
+    lastDone: '2026-03-21',
+    notes: '',
+  },
+];

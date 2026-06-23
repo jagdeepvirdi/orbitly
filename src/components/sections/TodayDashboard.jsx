@@ -16,23 +16,6 @@ const CAT_LABELS = {
   health: 'Health', sports: 'Sports', festival: 'Festival', recurring: 'Recurring',
 };
 
-const FAMILY_FEED = [
-  {
-    name: 'Namtan', role: 'Partner', initials: 'NT', accent: USERS.wife.accent,
-    items: [
-      { label: 'Yoga class', time: '07:00', dot: '#f43f5e' },
-      { label: 'Cycle day 14 · fertile window', time: 'All day', dot: '#fb7185' },
-      { label: 'Grocery run', time: '17:00', dot: '#f59e0b' },
-    ],
-  },
-  {
-    name: 'Jasleen', role: 'Child', initials: 'JL', accent: USERS.daughter.accent,
-    items: [
-      { label: 'School · Maths test', time: '09:30', dot: '#f59e0b' },
-      { label: 'Piano lesson', time: '16:00', dot: '#a855f7' },
-    ],
-  },
-];
 
 function Card({ children, span, style = {} }) {
   return (
@@ -102,6 +85,37 @@ export default function TodayDashboard() {
 
   const workTasks = state.workTasks.filter(t => t.status !== 'done').slice(0, 3);
   const personalTasks = state.personalTasks.filter(t => t.status !== 'done').slice(0, 3);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const enabledFeedIds = (state.icsFeeds || [])
+    .filter(f => f.enabled)
+    .map(f => f.id);
+  const customEvents = (state.importedCalEvents || [])
+    .filter(e => enabledFeedIds.includes(e.importBatch));
+  const upcomingIcsEvents = customEvents
+    .filter(e => e.date && e.date >= todayStr)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.time || '').localeCompare(b.time || '');
+    })
+    .slice(0, 3);
+
+  const getFeedName = (feedId) => {
+    const feed = (state.icsFeeds || []).find(f => f.id === feedId);
+    return feed ? feed.name : 'Calendar Feed';
+  };
+
+  function formatEventDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    const date = new Date(y, m - 1, d);
+    const today = new Date();
+    if (date.toDateString() === today.toDateString()) return 'TODAY ';
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (date.toDateString() === tomorrow.toDateString()) return 'TOMORROW ';
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
 
   function handleComplete() {
     dispatch({ type: 'COMPLETE_TIMER' });
@@ -523,45 +537,114 @@ export default function TodayDashboard() {
           ))}
         </Card>
 
-        {/* FAMILY FEED */}
+        {/* FAMILY FEED / CONNECTIONS STATUS */}
         <Card span={5}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
-              <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-2)' }}>Family Feed</span>
+              <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-2)' }}>
+                {upcomingIcsEvents.length > 0 ? 'Feed Events' : 'Family Feed'}
+              </span>
             </div>
             <button
-              onClick={() => dispatch({ type: 'SET_SECTION', section: 'family' })}
+              onClick={() => {
+                if (upcomingIcsEvents.length > 0) {
+                  dispatch({ type: 'SET_SECTION', section: 'settings' });
+                  dispatch({ type: 'SET_SETTINGS_TAB', tab: 'connections' });
+                } else {
+                  dispatch({ type: 'SET_SECTION', section: 'family' });
+                }
+              }}
               style={{ fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-            >Open →</button>
+            >
+              {upcomingIcsEvents.length > 0 ? 'Manage →' : 'Open →'}
+            </button>
           </div>
-          {FAMILY_FEED.map((f, fi) => (
-            <div key={fi} style={{ marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
-                <div style={{
-                  width: 26, height: 26, borderRadius: 8, background: f.accent,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700, color: '#fff',
-                }}>
-                  {f.initials}
-                </div>
-                <div style={{ fontSize: 13.5, fontWeight: 600 }}>{f.name}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-3)' }}>{f.role}</div>
-              </div>
-              {f.items.map((it, ii) => (
-                <div key={ii} style={{
-                  display: 'flex', alignItems: 'center', gap: 9,
-                  padding: '5px 0 5px 35px', fontSize: 13, color: 'var(--text-2)',
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: it.dot, flex: '0 0 6px' }} />
-                  <span style={{ flex: 1 }}>{it.label}</span>
-                  <span style={{ fontSize: 11.5, color: 'var(--text-3)', fontVariantNumeric: 'tabular-nums' }}>{it.time}</span>
-                </div>
-              ))}
+
+          {upcomingIcsEvents.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {upcomingIcsEvents.map(event => {
+                const dateParts = formatEventDate(event.date).split(' ');
+                return (
+                  <div key={event.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 10, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.18)', flexShrink: 0 }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)' }}>
+                        {dateParts[0]}
+                      </span>
+                      {dateParts[1] && (
+                        <span style={{ fontSize: 9, fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-3)', marginTop: 1 }}>
+                          {dateParts[1]}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={event.title}>
+                        {event.title}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                        <span style={{ fontSize: 10, padding: '2px 6px', background: 'var(--surface-3)', color: 'var(--text-2)', borderRadius: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.02em' }}>
+                          {getFeedName(event.importBatch)}
+                        </span>
+                        {event.time && (
+                          <span style={{ fontSize: 11, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+                            ⏰ {event.time}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          ) : (state.familyMembers && state.familyMembers.length > 0) ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', gap: 12, textAlign: 'center' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.7">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 5 }}>Family connected</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-3)', lineHeight: 1.5 }}>
+                  Wife / family space is active. View shared chores and shopping lists.
+                </div>
+              </div>
+              <button
+                onClick={() => { dispatch({ type: 'SET_SECTION', section: 'family' }); }}
+                style={{
+                  marginTop: 4, padding: '9px 18px', borderRadius: 11, cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                  background: 'var(--accent)', color: '#fff', border: 'none',
+                }}
+              >
+                Go to Family Space &rarr;
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px', gap: 12, textAlign: 'center' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.7">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 5 }}>Your family orbit is empty</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-3)', lineHeight: 1.5 }}>
+                  Connect your partner or family members to see their shared activity here.
+                </div>
+              </div>
+              <button
+                onClick={() => { dispatch({ type: 'SET_SECTION', section: 'settings' }); dispatch({ type: 'SET_SETTINGS_TAB', tab: 'connections' }); }}
+                style={{
+                  marginTop: 4, padding: '9px 18px', borderRadius: 11, cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                  background: 'var(--accent)', color: '#fff', border: 'none',
+                }}
+              >Connect family &rarr;</button>
+            </div>
+          )}
         </Card>
 
       </div>

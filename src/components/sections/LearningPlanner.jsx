@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { PHASE_NAMES, EXAM_DATE, EST_COMPLETION_DATE } from '../../data/certPlan';
 import { fireConfetti } from '../../hooks/useConfetti';
-import { fmtShortDate, addWorkdayToISO } from '../../utils/dateUtils';
+import { fmtShortDate, addWorkdayToISO, todayISO } from '../../utils/dateUtils';
 import { api } from '../../api/client';
-
-const API = 'http://localhost:3003';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -25,11 +23,7 @@ function rowToLocal(row) {
 
 async function patchCourse(id, fields) {
   try {
-    await fetch(`${API}/api/courses/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fields),
-    });
+    await api.updateCourse(id, fields);
   } catch { /* offline */ }
 }
 
@@ -72,10 +66,7 @@ function phaseLabel(planId, phaseIdx) {
   return `Phase ${phaseIdx + 1}`;
 }
 
-function todayISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+// todayISO helper imported from dateUtils
 
 // ── Mini progress ring ────────────────────────────────────────────────────────
 
@@ -1525,24 +1516,19 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
     setImporting(true); setImportErr(''); setImportResult(null); setSelectedCourses(new Set());
     try {
       const isUrl = val.startsWith('http');
-      const r = await fetch(`${API}/api/courses/ai-import`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isUrl ? { url: val } : { name: val }),
-      });
-      const json = await r.json();
-      if (!r.ok) {
-        if (json.geminiQuotaExceeded) setGeminiQuotaExceeded(true);
-        if (json.ollamaTimedOut)      setOllamaTimedOut(true);
-        throw new Error(json.error || 'AI extraction failed');
-      }
+      const json = await api.aiImportCourse(isUrl ? { url: val } : { name: val });
       setGeminiQuotaExceeded(false);
       setOllamaTimedOut(false);
-      // Pre-select all courses in a bundle
       if (json.data?.type === 'bundle' && Array.isArray(json.data.courses)) {
         setSelectedCourses(new Set(json.data.courses.map((_, i) => i)));
       }
       setImportResult(json);
-    } catch (e) { setImportErr(e.message || 'AI extraction failed'); }
+    } catch (e) {
+      const msg = e.message || '';
+      if (msg.includes('geminiQuotaExceeded')) setGeminiQuotaExceeded(true);
+      if (msg.includes('ollamaTimedOut'))      setOllamaTimedOut(true);
+      setImportErr(msg || 'AI extraction failed');
+    }
     finally { setImporting(false); }
   }
 
@@ -1557,11 +1543,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
       setAddingBundle(true);
       for (const course of toAdd) {
         try {
-          const r = await fetch(`${API}/api/courses`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: course.name, phase: course.phase ?? 0, total: course.sessions ?? 5, url: sourceUrl, plan_id: plan.id }),
-          });
-          const row = await r.json();
+          const row = await api.createCourse({ name: course.name, phase: course.phase ?? 0, total: course.sessions ?? 5, url: sourceUrl, plan_id: plan.id });
           dispatch({ type: 'ADD_COURSE', course: rowToLocal(row) });
         } catch {
           dispatch({ type: 'ADD_COURSE', course: {
@@ -1575,11 +1557,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
     } else {
       const { name, sessions, phase } = data;
       try {
-        const r = await fetch(`${API}/api/courses`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phase: phase ?? 0, total: sessions ?? 5, url: sourceUrl, plan_id: plan.id }),
-        });
-        const row = await r.json();
+        const row = await api.createCourse({ name, phase: phase ?? 0, total: sessions ?? 5, url: sourceUrl, plan_id: plan.id });
         dispatch({ type: 'ADD_COURSE', course: rowToLocal(row) });
       } catch {
         dispatch({ type: 'ADD_COURSE', course: {
@@ -1598,11 +1576,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
     const total = parseInt(manualForm.sessions, 10) || 5;
     const url   = manualForm.url.trim();
     try {
-      const r = await fetch(`${API}/api/courses`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phase, total, url: url || null, plan_id: plan.id }),
-      });
-      const row = await r.json();
+      const row = await api.createCourse({ name, phase, total, url: url || null, plan_id: plan.id });
       dispatch({ type: 'ADD_COURSE', course: rowToLocal(row) });
     } catch {
       dispatch({ type: 'ADD_COURSE', course: { id: `c${Date.now()}`, name, phase, total, done: 0, next: 'TBD', nextISO: null, url, planId: plan.id } });
@@ -1615,7 +1589,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
     if (!deleteTarget) return;
     setDeleteBusy(true);
     try {
-      await fetch(`${API}/api/courses/${deleteTarget.id}`, { method: 'DELETE' });
+      await api.deleteCourse(deleteTarget.id);
     } catch { /* offline — still remove locally */ }
     dispatch({ type: 'DELETE_COURSE', id: deleteTarget.id });
     setDeleteTarget(null);
@@ -2188,16 +2162,22 @@ export default function LearningPlanner() {
   const [loadingPlans, setLoadingPlans] = useState(true);
 
   useEffect(() => {
+    const safe = fn => fn().catch(() => null);
+
     Promise.all([
-      fetch(`${API}/api/plans`).then(r         => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API}/api/courses`).then(r        => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API}/api/books`).then(r          => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API}/api/learning-events`).then(r => r.ok ? r.json() : []).catch(() => []),
+      safe(() => api.getPlans()),
+      safe(() => api.getCourses()),
+      safe(() => api.getBooks()),
+      safe(() => api.getLearningEvents()),
     ]).then(([planRows, courseRows, bookRows, eventRows]) => {
-      setPlans(planRows);
-      setBooks(bookRows);
-      setEvents(eventRows);
-      dispatch({ type: 'SYNC_COURSES', courses: courseRows.map(rowToLocal) });
+      if (planRows  !== null) setPlans(planRows);
+      if (bookRows  !== null) setBooks(bookRows);
+      if (eventRows !== null) setEvents(eventRows);
+      // Only sync courses when the DB actually has rows — an empty response must
+      // not wipe the CERT_COURSES fallback from the store's initial state.
+      if (courseRows !== null && courseRows.length > 0) {
+        dispatch({ type: 'SYNC_COURSES', courses: courseRows.map(rowToLocal) });
+      }
     }).finally(() => setLoadingPlans(false));
   }, []);
 

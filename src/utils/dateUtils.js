@@ -69,6 +69,22 @@ export function fmtShortDate(iso) {
 
 export function addWorkdayToISO(iso) {
   const [y, m, d] = iso.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  return nextWorkday(date).toISOString().slice(0, 10);
+  const next = nextWorkday(new Date(y, m - 1, d));
+  // Use local date parts to avoid UTC-vs-local offset issues (e.g. Bangkok UTC+7)
+  const yy = next.getFullYear();
+  const mm = String(next.getMonth() + 1).padStart(2, '0');
+  const dd = String(next.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+export function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function fmtApptDate(iso) {
+  if (!iso) return '';
+  try {
+    const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+    return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+  } catch { return String(iso); }
 }

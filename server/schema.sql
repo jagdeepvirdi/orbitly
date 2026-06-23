@@ -11,6 +11,7 @@ CREATE TABLE tasks (
   status      VARCHAR(20)  NOT NULL DEFAULT 'todo' CHECK (status IN ('todo','doing','done')),
   overdue     BOOLEAN      NOT NULL DEFAULT FALSE,
   recurring   BOOLEAN      NOT NULL DEFAULT FALSE,
+  user_id     TEXT         NOT NULL DEFAULT '',
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
@@ -20,7 +21,8 @@ CREATE TABLE medications (
   name        VARCHAR(200) NOT NULL,
   dose        VARCHAR(200),
   time        VARCHAR(20)  CHECK (time IN ('Morning','Evening')),
-  sort_order  SMALLINT     NOT NULL DEFAULT 0
+  sort_order  SMALLINT     NOT NULL DEFAULT 0,
+  user_id     TEXT         NOT NULL DEFAULT ''
 );
 
 -- Per-day check-off (one row per med per calendar date)
@@ -28,6 +30,7 @@ CREATE TABLE med_checkins (
   med_id      VARCHAR(50) NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
   checkin_date DATE        NOT NULL,
   done        BOOLEAN      NOT NULL DEFAULT FALSE,
+  user_id     TEXT         NOT NULL DEFAULT '',
   PRIMARY KEY (med_id, checkin_date)
 );
 
@@ -36,13 +39,15 @@ CREATE TABLE habits (
   id          VARCHAR(50)  PRIMARY KEY,
   label       VARCHAR(200) NOT NULL,
   icon        VARCHAR(10),
-  sort_order  SMALLINT     NOT NULL DEFAULT 0
+  sort_order  SMALLINT     NOT NULL DEFAULT 0,
+  user_id     TEXT         NOT NULL DEFAULT ''
 );
 
 CREATE TABLE habit_checkins (
   habit_id    VARCHAR(50) NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
   checkin_date DATE        NOT NULL,
   done        BOOLEAN      NOT NULL DEFAULT FALSE,
+  user_id     TEXT         NOT NULL DEFAULT '',
   PRIMARY KEY (habit_id, checkin_date)
 );
 
@@ -53,6 +58,7 @@ CREATE TABLE appointments (
   type        VARCHAR(300),
   appt_date   VARCHAR(60),
   done        BOOLEAN      NOT NULL DEFAULT FALSE,
+  user_id     TEXT         NOT NULL DEFAULT '',
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
@@ -73,14 +79,15 @@ CREATE TABLE courses (
   done        SMALLINT     NOT NULL DEFAULT 0,
   next        VARCHAR(60),
   next_iso    VARCHAR(10),
-  sort_order  SMALLINT     NOT NULL DEFAULT 0
+  sort_order  SMALLINT     NOT NULL DEFAULT 0,
+  user_id     TEXT         NOT NULL DEFAULT ''
 );
 
 -- ─── Family ─────────────────────────────────────────────────────────────────────
 CREATE TABLE family_groups (
   id    VARCHAR(50) PRIMARY KEY,
   label VARCHAR(200) NOT NULL,
-  side  VARCHAR(10)  NOT NULL CHECK (side IN ('sahmbi','virdi')),
+  side  VARCHAR(10)  NOT NULL,
   emoji VARCHAR(10)
 );
 
@@ -88,7 +95,7 @@ CREATE TABLE family_members (
   id         VARCHAR(60)  PRIMARY KEY,
   real_name  VARCHAR(150) NOT NULL,
   pet_name   VARCHAR(150),
-  side       VARCHAR(10)  NOT NULL CHECK (side IN ('sahmbi','virdi')),
+  side       VARCHAR(10)  NOT NULL,
   group_id   VARCHAR(50)  REFERENCES family_groups(id),
   relation   VARCHAR(150),
   bday_month SMALLINT     CHECK (bday_month BETWEEN 1 AND 12),
@@ -126,7 +133,8 @@ CREATE TABLE finance_subscriptions (
   amount      NUMERIC(10,2),
   currency    VARCHAR(5),
   billing_day SMALLINT       CHECK (billing_day BETWEEN 1 AND 31),
-  cycle       VARCHAR(20)    NOT NULL DEFAULT 'monthly'
+  cycle       VARCHAR(20)    NOT NULL DEFAULT 'monthly',
+  user_id     TEXT           NOT NULL DEFAULT ''
 );
 
 CREATE TABLE finance_loans (
@@ -135,7 +143,8 @@ CREATE TABLE finance_loans (
   bank     VARCHAR(200),
   emi      NUMERIC(12,2),
   currency VARCHAR(5),
-  due_day  SMALLINT      CHECK (due_day BETWEEN 1 AND 31)
+  due_day  SMALLINT      CHECK (due_day BETWEEN 1 AND 31),
+  user_id  TEXT          NOT NULL DEFAULT ''
 );
 
 CREATE TABLE finance_credit_cards (
@@ -144,7 +153,8 @@ CREATE TABLE finance_credit_cards (
   bank          VARCHAR(200),
   statement_day SMALLINT     CHECK (statement_day BETWEEN 1 AND 31),
   due_day       SMALLINT     CHECK (due_day       BETWEEN 1 AND 31),
-  currency      VARCHAR(5)
+  currency      VARCHAR(5),
+  user_id       TEXT         NOT NULL DEFAULT ''
 );
 
 CREATE TABLE finance_bills (
@@ -156,7 +166,8 @@ CREATE TABLE finance_bills (
   generation_day SMALLINT     CHECK (generation_day BETWEEN 1 AND 31),
   due_day        SMALLINT     CHECK (due_day        BETWEEN 1 AND 31),
   amount         NUMERIC(10,2),
-  currency       VARCHAR(5)
+  currency       VARCHAR(5),
+  user_id        TEXT         NOT NULL DEFAULT ''
 );
 
 -- Tracks whether a finance item was paid in a given calendar month
@@ -165,6 +176,7 @@ CREATE TABLE finance_paid (
   item_id    VARCHAR(50)  NOT NULL,
   paid_month DATE         NOT NULL,  -- stored as first day of month e.g. 2026-06-01
   paid       BOOLEAN      NOT NULL DEFAULT FALSE,
+  user_id    TEXT         NOT NULL DEFAULT '',
   PRIMARY KEY (item_type, item_id, paid_month)
 );
 
@@ -189,41 +201,44 @@ CREATE TABLE sikh_events (
   reminder   VARCHAR(120)
 );
 
--- ─── Sports ─────────────────────────────────────────────────────────────────────
-CREATE TABLE f1_calendar (
-  id      SERIAL       PRIMARY KEY,
-  round   SMALLINT,
-  gp      VARCHAR(200),
-  circuit VARCHAR(200),
-  race_date DATE,
-  season  SMALLINT     NOT NULL DEFAULT 2026
+CREATE TABLE IF NOT EXISTS user_calendars (
+  user_id     VARCHAR(50) NOT NULL,
+  calendar_id VARCHAR(50) NOT NULL,
+  enabled     BOOLEAN NOT NULL DEFAULT true,
+  updated_at  TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (user_id, calendar_id)
 );
 
-CREATE TABLE f1_drivers (
-  id     SERIAL      PRIMARY KEY,
-  pos    SMALLINT,
-  name   VARCHAR(120),
-  team   VARCHAR(120),
-  pts    SMALLINT,
-  color  VARCHAR(20),
-  season SMALLINT    NOT NULL DEFAULT 2026
+-- Indexes for user_id columns
+CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_medications_user_id ON medications(user_id);
+CREATE INDEX idx_med_checkins_user_id ON med_checkins(user_id);
+CREATE INDEX idx_habits_user_id ON habits(user_id);
+CREATE INDEX idx_habit_checkins_user_id ON habit_checkins(user_id);
+CREATE INDEX idx_appointments_user_id ON appointments(user_id);
+CREATE INDEX idx_courses_user_id ON courses(user_id);
+CREATE INDEX idx_finance_subscriptions_user_id ON finance_subscriptions(user_id);
+CREATE INDEX idx_finance_loans_user_id ON finance_loans(user_id);
+CREATE INDEX idx_finance_credit_cards_user_id ON finance_credit_cards(user_id);
+CREATE INDEX idx_finance_bills_user_id ON finance_bills(user_id);
+CREATE INDEX idx_finance_paid_user_id ON finance_paid(user_id);
+
+-- Performance indexes
+CREATE INDEX idx_med_checkins_date ON med_checkins(checkin_date);
+CREATE INDEX idx_habit_checkins_date ON habit_checkins(checkin_date);
+CREATE INDEX idx_tasks_list_status ON tasks(list, status);
+CREATE INDEX idx_courses_plan_id ON courses(plan_id);
+CREATE INDEX idx_festivals_date ON festivals(event_date);
+CREATE INDEX idx_family_members_group_id ON family_members(group_id);
+CREATE INDEX idx_finance_paid_month ON finance_paid(paid_month);
+
+CREATE TABLE IF NOT EXISTS user_sport_subscriptions (
+  user_id    VARCHAR(50) NOT NULL,
+  sport_id   VARCHAR(50) NOT NULL,
+  leagues    JSONB NOT NULL DEFAULT '[]'::jsonb,
+  added_at   TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (user_id, sport_id)
 );
 
-CREATE TABLE cricket_matches (
-  id         VARCHAR(20)  PRIMARY KEY,
-  match      VARCHAR(200),
-  series     VARCHAR(200),
-  venue      VARCHAR(200),
-  match_date DATE,
-  status     VARCHAR(20)  CHECK (status IN ('live','upcoming','done')),
-  score      VARCHAR(200)
-);
+CREATE INDEX idx_user_sport_subscriptions_user_id ON user_sport_subscriptions(user_id);
 
-CREATE TABLE football_fixtures (
-  id         VARCHAR(20)  PRIMARY KEY,
-  match      VARCHAR(200),
-  stage      VARCHAR(200),
-  teams      VARCHAR(200),
-  match_date DATE,
-  status     VARCHAR(20)  CHECK (status IN ('live','upcoming','done'))
-);

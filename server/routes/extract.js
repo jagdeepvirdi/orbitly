@@ -1,7 +1,18 @@
 import { Router }   from 'express';
-import { PDFParse } from 'pdf-parse';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
+});
 
 const OLLAMA_URL   = process.env.OLLAMA_URL           || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_VISION_MODEL   || 'gemma3:4b';
@@ -35,13 +46,8 @@ function geminiReset() {
 // ── PDF text extraction ───────────────────────────────────────────────────────
 async function extractPDFText(base64) {
   const buffer = Buffer.from(base64, 'base64');
-  const parser = new PDFParse({ data: buffer });
-  try {
-    const result = await parser.getText();
-    return result.text.trim();
-  } finally {
-    await parser.destroy().catch(() => {});
-  }
+  const result = await pdfParse(buffer);
+  return result.text.trim();
 }
 
 // ── Text truncation (prevents Ollama timeout on large PDFs) ──────────────────
@@ -359,8 +365,12 @@ router.get('/status', async (req, res) => {
 });
 
 // ── Main extract route ────────────────────────────────────────────────────────
-router.post('/', async (req, res) => {
+router.post('/', aiLimiter, async (req, res) => {
   const { fileBase64, mimeType = 'image/jpeg', extractType } = req.body;
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+  if (!allowedMimeTypes.includes(mimeType)) {
+    return res.status(400).json({ error: `Unsupported mimeType: ${mimeType}. Supported types: ${allowedMimeTypes.join(', ')}` });
+  }
   if (!fileBase64 || !extractType) {
     return res.status(400).json({ error: 'Missing fileBase64 or extractType' });
   }
@@ -452,7 +462,7 @@ router.post('/', async (req, res) => {
 });
 
 // ── Interpretation route (second AI call for out-of-range blood results) ──────
-router.post('/interpret', async (req, res) => {
+router.post('/interpret', aiLimiter, async (req, res) => {
   const { tests } = req.body; // [{ name, value, unit, status }]
   if (!Array.isArray(tests) || tests.length === 0) {
     return res.status(400).json({ error: 'tests array required' });

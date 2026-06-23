@@ -1,10 +1,23 @@
 import { Router } from 'express';
-import { exec } from 'child_process';
+import { randomUUID } from 'crypto';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
+import { isIP } from 'net';
+import dns from 'dns';
+import rateLimit from 'express-rate-limit';
 import db from '../db.js';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const router = Router();
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
+});
 
 const OLLAMA_URL   = process.env.OLLAMA_URL           || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_VISION_MODEL  || 'gemma3:4b';
@@ -177,9 +190,9 @@ Return ONLY the JSON object, no markdown, no explanation.`;
 router.get('/', async (req, res) => {
   try {
     const { plan_id } = req.query;
-    let q = 'SELECT * FROM courses';
-    const params = [];
-    if (plan_id) { q += ' WHERE plan_id = $1'; params.push(Number(plan_id)); }
+    let q = 'SELECT * FROM courses WHERE user_id = $1';
+    const params = [req.userId];
+    if (plan_id) { q += ' AND plan_id = $2'; params.push(Number(plan_id)); }
     q += ' ORDER BY phase, sort_order';
     const { rows } = await db.query(q, params);
     res.json(rows);
@@ -194,12 +207,12 @@ router.patch('/:id', async (req, res) => {
   const updates = fields.filter(f => req.body[f] !== undefined);
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
 
-  const set  = updates.map((f, i) => `${f} = $${i + 2}`).join(', ');
+  const set  = updates.map((f, i) => `${f} = $${i + 3}`).join(', ');
   const vals = updates.map(f => req.body[f]);
   try {
     const { rows } = await db.query(
-      `UPDATE courses SET ${set} WHERE id = $1 RETURNING *`,
-      [id, ...vals]
+      `UPDATE courses SET ${set} WHERE id = $1 AND user_id = $2 RETURNING *`,
+      [id, req.userId, ...vals]
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
@@ -207,6 +220,53 @@ router.patch('/:id', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// Helper to check if an IP is private/loopback/link-local (SSRF prevention)
+function isPrivateIP(ip) {
+  if (!ip) return false;
+  if (ip.startsWith('127.') || ip.startsWith('10.') || ip.startsWith('192.168.') || ip.startsWith('169.254.') || ip === '0.0.0.0') {
+    return true;
+  }
+  const parts = ip.split('.');
+  if (parts.length === 4) {
+    const first = parseInt(parts[0], 10);
+    const second = parseInt(parts[1], 10);
+    if (first === 172 && second >= 16 && second <= 31) {
+      return true;
+    }
+  }
+  if (ip === '::1' || ip === '::' || ip.toLowerCase().startsWith('fe80:') || ip.toLowerCase().startsWith('fc00:') || ip.toLowerCase().startsWith('fd00:')) {
+    return true;
+  }
+  return false;
+}
+
+// Helper to validate url format and prevent SSRF
+async function validateUrlForSsrf(urlString) {
+  const parsed = new URL(urlString);
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('Only HTTP and HTTPS protocols are allowed');
+  }
+  const hostname = parsed.hostname;
+  
+  if (isIP(hostname)) {
+    if (isPrivateIP(hostname)) {
+      throw new Error('Access to private/local network address is blocked');
+    }
+  } else {
+    try {
+      const addresses = await dns.promises.lookup(hostname, { all: true });
+      for (const addr of addresses) {
+        if (isPrivateIP(addr.address)) {
+          throw new Error('Domain resolves to a private/local network address');
+        }
+      }
+    } catch (dnsErr) {
+      throw new Error(`DNS lookup failed for hostname: ${hostname}`);
+    }
+  }
+  return parsed.toString();
+}
 
 // Helper to fetch url with curl fallback if Cloudflare blocks standard fetch
 async function fetchPage(url) {
@@ -228,8 +288,17 @@ async function fetchPage(url) {
     console.warn(`[courses/ai-import] Standard fetch failed/blocked: ${e.message}. Trying curl fallback...`);
     try {
       const isWin = process.platform === 'win32';
-      const curlCmd = `curl.exe -s -L ${isWin ? '--ssl-no-revoke' : ''} -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" "${url}"`;
-      const { stdout } = await execAsync(curlCmd, { maxBuffer: 10 * 1024 * 1024 });
+      const args = [
+        '-s', '-L',
+        '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+      ];
+      if (isWin) {
+        args.push('--ssl-no-revoke');
+      }
+      args.push(url);
+      
+      const curlBin = isWin ? 'curl.exe' : 'curl';
+      const { stdout } = await execFileAsync(curlBin, args, { maxBuffer: 10 * 1024 * 1024 });
       if (stdout.includes('Just a moment...') || stdout.includes('cloudflare-challenge')) {
         throw new Error('Cloudflare block detected on curl fallback', { cause: e });
       }
@@ -242,18 +311,19 @@ async function fetchPage(url) {
 }
 
 // POST /ai-import — extract course info from URL or name using Ollama/Gemini
-router.post('/ai-import', async (req, res) => {
+router.post('/ai-import', aiLimiter, async (req, res) => {
   const { url, name } = req.body;
   if (!url && !name) return res.status(400).json({ error: 'Provide url or name' });
 
   let text = name || '';
   if (url) {
     try {
-      const html = await fetchPage(url);
-      text = name ? `Course hint: ${name}\n\n${extractPageText(html, url)}` : extractPageText(html, url);
+      const validatedUrl = await validateUrlForSsrf(url);
+      const html = await fetchPage(validatedUrl);
+      text = name ? `Course hint: ${name}\n\n${extractPageText(html, validatedUrl)}` : extractPageText(html, validatedUrl);
     } catch (e) {
-      console.warn('[courses/ai-import] URL fetch failed:', e.message, '— using name only');
-      text = name || url;
+      console.warn('[courses/ai-import] URL fetch failed:', e.message);
+      return res.status(400).json({ error: e.message });
     }
   }
 
@@ -383,7 +453,7 @@ router.post('/ai-import', async (req, res) => {
 // DELETE /:id — remove a course from DB
 router.delete('/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
+    await db.query('DELETE FROM courses WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -394,7 +464,7 @@ router.delete('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const { name, phase = 0, total = 5, sort_order, url = null, plan_id = 1 } = req.body;
   if (!name) return res.status(400).json({ error: 'name required' });
-  const id = `c${Date.now()}`;
+  const id = `c-${randomUUID()}`;
   let order = sort_order;
   if (order === undefined) {
     const { rows } = await db.query('SELECT COALESCE(MAX(sort_order),0)+1 AS next FROM courses WHERE plan_id=$1', [plan_id]);
@@ -402,9 +472,9 @@ router.post('/', async (req, res) => {
   }
   try {
     const { rows } = await db.query(
-      `INSERT INTO courses (id, name, phase, total, done, next, next_iso, sort_order, url, plan_id)
-       VALUES ($1, $2, $3, $4, 0, 'TBD', NULL, $5, $6, $7) RETURNING *`,
-      [id, name, phase, total, order, url, plan_id]
+      `INSERT INTO courses (id, name, phase, total, done, next, next_iso, sort_order, url, plan_id, user_id)
+       VALUES ($1, $2, $3, $4, 0, 'TBD', NULL, $5, $6, $7, $8) RETURNING *`,
+      [id, name, phase, total, order, url, plan_id, req.userId]
     );
     res.status(201).json(rows[0]);
   } catch (e) {

@@ -16,10 +16,24 @@ function lsSet(key, data, ttlMs) {
   } catch {}
 }
 
+let _tokenGetter = null;
+
+export function setTokenGetter(fn) {
+  _tokenGetter = fn;
+}
+
+async function getAuthToken() {
+  if (!_tokenGetter) return null;
+  try { return await _tokenGetter(); } catch { return null; }
+}
+
 async function apiFetch(path, cacheKey, ttlMs) {
   const cached = lsGet(cacheKey);
   if (cached) return cached;
-  const res = await fetch(`/api${path}`);
+  const token = await getAuthToken();
+  const headers = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`/api${path}`, { headers });
   if (!res.ok) throw new Error(`API ${res.status}`);
   const data = await res.json();
   if (ttlMs) lsSet(cacheKey, data, ttlMs);
@@ -29,7 +43,9 @@ async function apiFetch(path, cacheKey, ttlMs) {
 const H = 3600_000;
 
 async function req(method, path, body) {
+  const token = await getAuthToken();
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(`/api${path}`, opts);
   if (!res.ok) throw new Error(`API ${res.status}`);
@@ -59,6 +75,8 @@ export const api = {
   cricketMatches:    () => apiFetch('/cricket/matches', 'cricket-matches', 15 * 60_000),
   footballMatches:   (comps) => apiFetch(`/football/matches?competitions=${comps}`, `football-${comps}`, H),
   footballStandings: (comp) => apiFetch(`/football/standings/${comp}`, `football-standings-${comp}`, 3 * H),
+  nbaGames:          () => apiFetch('/nba/games?days=7', 'nba-games', H),
+  getSportsCatalog:  () => get('/sports/catalog'),
 
   // ── Tasks ─────────────────────────────────────────────────────
   getTasks:      ()           => get('/tasks'),
@@ -70,17 +88,26 @@ export const api = {
   getMeds:       (date)       => get(`/meds?date=${date}`),
   toggleMed:     (id, date)   => post(`/meds/${id}/toggle?date=${date}`),
   createMed:     (body)       => post('/meds', body),
+  updateMed:     (id, body)   => req('PUT', `/meds/${id}`, body),
   deleteMed:     (id)         => del(`/meds/${id}`),
 
   // ── Habits ────────────────────────────────────────────────────
   getHabits:     (date)       => get(`/habits?date=${date}`),
   toggleHabit:   (id, date)   => post(`/habits/${id}/toggle?date=${date}`),
+  createHabit:   (body)       => post('/habits', body),
+  updateHabit:   (id, body)   => req('PUT', `/habits/${id}`, body),
+  deleteHabit:   (id)         => del(`/habits/${id}`),
 
   // ── Appointments ──────────────────────────────────────────────
   getAppts:      ()           => get('/appointments'),
   createAppt:    (body)       => post('/appointments', body),
+  updateApptFull:(id, body)   => req('PUT', `/appointments/${id}`, body),
   updateAppt:    (id, body)   => patch(`/appointments/${id}`, body),
   deleteAppt:    (id)         => del(`/appointments/${id}`),
+
+  // ── User profile ──────────────────────────────────────────────
+  getProfile:    ()           => get('/profile'),
+  updateProfile: (body)       => req('PUT', '/profile', body),
 
   // ── Shopping list ─────────────────────────────────────────────
   getShopping:   ()           => get('/shopping'),
@@ -110,6 +137,7 @@ export const api = {
   getCourses:    (planId)     => get(planId ? `/courses?plan_id=${planId}` : '/courses'),
   updateCourse:  (id, body)   => patch(`/courses/${id}`, body),
   createCourse:  (body)       => post('/courses', body),
+  deleteCourse:  (id)         => del(`/courses/${id}`),
   aiImportCourse:(body)       => post('/courses/ai-import', body),
 
   // ── Sports refresh ────────────────────────────────────────────
@@ -124,6 +152,10 @@ export const api = {
       if (k && k.startsWith(LS_PREFIX + 'football-')) localStorage.removeItem(k);
     }
     await fetch('/api/football/refresh', { method: 'POST' });
+  },
+  nbaRefresh: async () => {
+    localStorage.removeItem(LS_PREFIX + 'nba-games');
+    await fetch('/api/nba/refresh', { method: 'POST' });
   },
 
   // ── Family ───────────────────────────────────────────────────
@@ -170,6 +202,42 @@ export const api = {
   getPaid:       (month)      => get(`/finance/paid?month=${month}`),
   togglePaid:    (type, id, month) => post(`/finance/paid/${type}/${id}?month=${month}`),
 
+  // ── Holidays (multi-calendar) ─────────────────────────────────
+  getMultiHolidays: (year, calendars) => {
+    const sorted = [...calendars].sort().join(',');
+    return apiFetch(
+      `/holidays/multi?year=${year}&calendars=${encodeURIComponent(sorted)}`,
+      `holidays-multi-${year}-${sorted}`,
+      24 * H
+    );
+  },
+
+  // ── Calendar subscriptions ────────────────────────────────────
+  getCalendarSubscriptions: () => get('/calendars/subscriptions'),
+  setCalendarSubscription: (calendarId, enabled) => post('/calendars/subscriptions', { calendarId, enabled }),
+
+  // ── Sports subscriptions ──────────────────────────────────────
+  getSportSubscriptions: () => get('/sports/subscriptions'),
+  setSportSubscription: (sport, leagues) => post('/sports/subscriptions', { sport, leagues }),
+  deleteSportSubscription: (sport) => del(`/sports/subscriptions/${sport}`),
+
+
+  // ── Household & Invites ───────────────────────────────────────────────
+  getHousehold:      ()          => get('/household'),
+  createInvite:      (body)      => post('/household/invite', body),
+  getInviteInfo:     (token)     => get(`/household/invite/${token}`),
+  acceptInvite:      (token)     => post(`/household/invite/${token}/accept`),
+  getPendingInvites: ()          => get('/household/invites'),
+
   // ── Festivals ─────────────────────────────────────────────────
   getFestivals:  ()           => get('/festivals'),
+
+  // ── Recipes ───────────────────────────────────────────────────
+  getRecipeAreas:    ()           => get('/recipes/areas'),
+  getRecipesByArea:  (area)       => get(`/recipes/by-area?area=${encodeURIComponent(area)}`),
+  getRecipesByCategory: (cat)     => get(`/recipes/by-category?category=${encodeURIComponent(cat)}`),
+  getRecipeCategories: ()          => get('/recipes/categories'),
+  searchRecipes:     (q)          => get(`/recipes/search?q=${encodeURIComponent(q)}`),
+  getRecipeDetail:   (id)         => get(`/recipes/detail?id=${encodeURIComponent(id)}`),
+  fetchProxyIcs:     (url)        => get('/calendars/proxy-ics?url=' + encodeURIComponent(url)),
 };

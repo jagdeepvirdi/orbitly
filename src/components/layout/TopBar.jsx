@@ -5,13 +5,14 @@ import { APP_TODAY, formatDate } from '../../utils/dateUtils';
 
 const SECTION_LABELS = {
   today: 'Today', calendar: 'Calendar', learning: 'Learning', tasks: 'Tasks',
-  health: 'Health', birthdays: 'Birthdays & Anniversaries', finance: 'Finance', festivals: 'Festivals', sports: 'Sports', family: 'Family', settings: 'Settings',
+  health: 'Health', birthdays: 'Birthdays & Anniversaries', finance: 'Finance', festivals: 'Festivals', sports: 'Sports',
+  hobby: 'Hobby', food: 'Food', home: 'Home', family: 'Family', settings: 'Settings',
 };
 
 function useAiStatus() {
   const [status, setStatus] = useState(null); // null = unknown
   useEffect(() => {
-    fetch('http://localhost:3003/api/extract/status')
+    fetch('/api/extract/status')
       .then(r => r.json())
       .then(setStatus)
       .catch(() => setStatus({ anyActive: false, ollama: { active: false }, gemini: { active: false } }));
@@ -21,7 +22,7 @@ function useAiStatus() {
 
 export default function TopBar() {
   const { state, dispatch } = useAppStore();
-  const allUsers = Object.values(USERS);
+  const user = USERS[state.userId] || USERS.jagdeep;
   const aiStatus = useAiStatus();
 
   return (
@@ -131,29 +132,25 @@ export default function TopBar() {
           <span style={{
             position: 'absolute', top: 8, right: 9,
             width: 7, height: 7, borderRadius: '50%',
-            background: '#f43f5e', border: '2px solid var(--surface-solid)',
+            background: 'var(--accent)', border: '2px solid var(--surface-solid)',
           }} />
         </button>
 
-        {/* User avatars */}
+        {/* User avatar */}
         <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 4 }}>
-          {allUsers.map((u, i) => (
-            <button
-              key={u.id}
-              onClick={() => dispatch({ type: 'SET_USER', id: u.id })}
-              title={u.name}
-              style={{
-                width: 34, height: 34, borderRadius: '50%',
-                border: `2px solid ${u.id === state.userId ? u.accent : 'var(--surface-solid)'}`,
-                background: u.accent, color: '#fff',
-                fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                marginLeft: -8, zIndex: 10 - i,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              {u.initials}
-            </button>
-          ))}
+          <div
+            title={user.name}
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              border: `2px solid ${user.accent}`,
+              background: user.accent, color: '#fff',
+              fontSize: 12, fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 0 0 3px var(--surface-solid)`,
+            }}
+          >
+            {user.initials}
+          </div>
         </div>
       </div>
     </div>

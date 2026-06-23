@@ -49,3 +49,17 @@ export const FOOTBALL_FIXTURES = [
   { id: 'fb2', match: 'FIFA World Cup 2026', stage: 'Group B · Matchday 1', teams: 'France vs Uruguay', date: '12 Jun 2026', year: 2026, month: 5, day: 12, status: 'upcoming' },
   { id: 'fb3', match: 'FIFA World Cup 2026', stage: 'Group C · Matchday 1', teams: 'England vs Tunisia', date: '13 Jun 2026', year: 2026, month: 5, day: 13, status: 'upcoming' },
 ];
+
+export const NBA_FIXTURES = [
+  { id: 'nba1', match: 'Boston Celtics vs Dallas Mavericks', stage: 'NBA Finals - Game 1', teams: 'Celtics vs Mavericks', date: '18 Jun 2026', year: 2026, month: 5, day: 18, status: 'upcoming', homeTeam: 'Boston Celtics', awayTeam: 'Dallas Mavericks', score: '' },
+  { id: 'nba2', match: 'Boston Celtics vs Dallas Mavericks', stage: 'NBA Finals - Game 2', teams: 'Celtics vs Mavericks', date: '21 Jun 2026', year: 2026, month: 5, day: 21, status: 'upcoming', homeTeam: 'Boston Celtics', awayTeam: 'Dallas Mavericks', score: '' },
+  { id: 'nba3', match: 'Boston Celtics vs Dallas Mavericks', stage: 'NBA Finals - Game 3', teams: 'Celtics vs Mavericks', date: '24 Jun 2026', year: 2026, month: 5, day: 24, status: 'upcoming', homeTeam: 'Boston Celtics', awayTeam: 'Dallas Mavericks', score: '' }
+];
+
+export const TENNIS_TOURNAMENTS = [
+  { id: 'ten1', name: 'Australian Open', venue: 'Melbourne, Australia', date: '12 Jan – 25 Jan 2026', status: 'done', winner: 'Jannik Sinner / Aryna Sabalenka' },
+  { id: 'ten2', name: 'Roland Garros (French Open)', venue: 'Paris, France', date: '24 May – 7 Jun 2026', status: 'done', winner: 'Carlos Alcaraz / Iga Swiatek' },
+  { id: 'ten3', name: 'Wimbledon', venue: 'London, United Kingdom', date: '29 Jun – 12 Jul 2026', status: 'upcoming' },
+  { id: 'ten4', name: 'US Open', venue: 'New York, USA', date: '31 Aug – 13 Sep 2026', status: 'upcoming' }
+];
+
