@@ -191,8 +191,7 @@ function FestivalsTab() {
       .map(i => ({ ...i, _days: daysFrom(i.date) }))
       .filter(i => showPast || i._days >= 0)
       .sort((a, b) => a._days - b._days);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, showPast]);
+  }, [filter, showPast, dbRows]);
 
   const count = (cats) => {
     const base = [...sikhItems, ...culturalItems, ...deduped, ...thaiItems, ...christianItems, ...jainItems];
