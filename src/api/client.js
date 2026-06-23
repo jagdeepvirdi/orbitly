@@ -237,6 +237,9 @@ export const api = {
 
   // ── Festivals ─────────────────────────────────────────────────
   getFestivals:  ()           => get('/festivals'),
+  getPinnedFestivals: ()      => get('/festivals/pinned'),
+  pinFestival:   (festivalId) => post('/festivals/pinned', { festivalId }),
+  unpinFestival: (festivalId) => del(`/festivals/pinned/${festivalId}`),
 
   // ── Recipes ───────────────────────────────────────────────────
   getRecipeAreas:    ()           => get('/recipes/areas'),

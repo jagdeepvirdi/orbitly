@@ -509,7 +509,22 @@ async function runMigrations() {
                        WHERE household_id = (
                          SELECT h.id FROM households h
                          JOIN household_members hm ON hm.household_id = h.id
-                         WHERE hm.user_id = 'jagdeep' LIMIT 1))`
+                         WHERE hm.user_id = 'jagdeep' LIMIT 1))`,
+    // Phase 26: user pinned festivals mapping table
+    `CREATE TABLE IF NOT EXISTS user_pinned_festivals (
+       user_id     VARCHAR(50) NOT NULL,
+       festival_id INTEGER NOT NULL REFERENCES festivals(id) ON DELETE CASCADE,
+       created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       PRIMARY KEY (user_id, festival_id)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_user_pinned_festivals_user ON user_pinned_festivals(user_id)`,
+    // Phase 26.2: user festivals mapping table
+    `CREATE TABLE IF NOT EXISTS user_festivals (
+       user_id     VARCHAR(50) NOT NULL,
+       festival_id INTEGER NOT NULL REFERENCES festivals(id) ON DELETE CASCADE,
+       PRIMARY KEY (user_id, festival_id)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_user_festivals_user ON user_festivals(user_id)`
   ];
   for (const sql of sqls) {
     try { await db.query(sql); } catch (e) { console.warn('[migrate]', e.message.slice(0, 80)); }

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import { syncUserFestivals } from './festivalSync.js';
 
 const router = Router();
 
@@ -32,8 +33,13 @@ router.post('/subscriptions', async (req, res) => {
        ON CONFLICT (user_id, calendar_id) DO UPDATE SET enabled = $3`,
       [req.userId, calendarId, enabled]
     );
+    
+    // Sync mapped festivals immediately
+    await syncUserFestivals(req.userId);
+    
     res.json({ ok: true });
   } catch (e) {
+    console.error('[subscriptions] POST error:', e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });

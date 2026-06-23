@@ -209,6 +209,14 @@ CREATE TABLE IF NOT EXISTS user_calendars (
   PRIMARY KEY (user_id, calendar_id)
 );
 
+CREATE TABLE IF NOT EXISTS user_festivals (
+  user_id     VARCHAR(50) NOT NULL,
+  festival_id INTEGER NOT NULL REFERENCES festivals(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, festival_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_festivals_user ON user_festivals(user_id);
+
 -- Indexes for user_id columns
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX idx_medications_user_id ON medications(user_id);

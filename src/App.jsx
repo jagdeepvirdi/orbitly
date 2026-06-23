@@ -68,7 +68,8 @@ function AppDataLoader({ dispatch, state }) {
       api.getSportSubscriptions(),
       api.getHousehold(),
       api.getProfile(),
-    ]).then(([tasks, meds, habits, appts, shopping, courses, paid, rawMembers, rawGroups, rawEvents, calSubs, sportSubs, household, profile]) => {
+      api.getPinnedFestivals(),
+    ]).then(([tasks, meds, habits, appts, shopping, courses, paid, rawMembers, rawGroups, rawEvents, calSubs, sportSubs, household, profile, pinnedFestivals]) => {
       const data = {};
       if (tasks.status === 'fulfilled') {
         data.workTasks     = tasks.value.work     || [];
@@ -98,6 +99,7 @@ function AppDataLoader({ dispatch, state }) {
         data.courses = courses.value.map(row => ({
           id:      row.id,
           name:    row.name,
+          nameEn:  row.name,
           phase:   row.phase,
           total:   row.total,
           done:    row.done,
@@ -131,7 +133,10 @@ function AppDataLoader({ dispatch, state }) {
       if (household.status === 'fulfilled' && household.value.householdId) {
         data.householdId = household.value.householdId;
       }
-
+      if (pinnedFestivals.status === 'fulfilled' && Array.isArray(pinnedFestivals.value)) {
+        data.pinnedFestivals = pinnedFestivals.value;
+      }
+ 
       if (Object.keys(data).length) {
         dispatch({ type: 'BOOTSTRAP', data });
       }

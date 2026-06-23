@@ -90,6 +90,7 @@ function createInitialState() {
   subscribedCalendars: ['IN', 'TH', 'hindu', 'sikh'], // enabled calendar packs
   icsFeeds: [],
   householdId: null,     // loaded from DB on mount — not persisted locally
+  pinnedFestivals: [],   // loaded from DB on mount — not persisted locally
   };
 }
 
@@ -150,6 +151,12 @@ function reducer(state, action) {
   switch (action.type) {
     case 'SET_USER':
       return { ...state, userId: action.id };
+    case 'SET_PINNED_FESTIVALS':
+      return { ...state, pinnedFestivals: action.ids };
+    case 'PIN_FESTIVAL':
+      return { ...state, pinnedFestivals: [...state.pinnedFestivals, action.id] };
+    case 'UNPIN_FESTIVAL':
+      return { ...state, pinnedFestivals: state.pinnedFestivals.filter(id => id !== action.id) };
     case 'SET_SECTION':
       return { ...state, section: action.section };
     case 'TOGGLE_THEME':

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useAppStore, CAT, PRIORITY } from '../../store/appStore';
+import { useState, useMemo, useEffect } from 'react';
+import { useAppStore, CAT } from '../../store/appStore';
 import { USERS } from '../../data/users';
 import { APP_TODAY, daysAway, fmtTimer, formatDate } from '../../utils/dateUtils';
 import { F1_CALENDAR, CRICKET_MATCHES, FOOTBALL_FIXTURES } from '../../data/sportsData';
@@ -48,18 +48,47 @@ export default function TodayDashboard() {
   const { state, dispatch } = useAppStore();
   useTimer();
 
+  const [dbFestivals, setDbFestivals] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/festivals')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => [])
+      .then(rows => setDbFestivals(Array.isArray(rows) ? rows : []));
+  }, []);
+
+  const pinnedUpcoming = useMemo(() => {
+    const activeSubs = state.subscribedCalendars || [];
+    const pinnedIds = state.pinnedFestivals || [];
+    
+    return dbFestivals
+      .filter(f => {
+        if (!pinnedIds.includes(f.id)) return false;
+        const packId = f.calendar === 'indian' ? 'IN' : (f.calendar === 'thai' ? 'TH' : f.calendar);
+        if (f.calendar !== 'custom' && f.calendar && !activeSubs.includes(packId)) return false;
+        
+        const [y, m, d] = f.event_date.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        const days = Math.round((date - new Date(APP_TODAY.getFullYear(), APP_TODAY.getMonth(), APP_TODAY.getDate())) / 86400000);
+        return days >= 0 && days <= 30;
+      })
+      .map(f => {
+        const [y, m, d] = f.event_date.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        const days = Math.round((date - new Date(APP_TODAY.getFullYear(), APP_TODAY.getMonth(), APP_TODAY.getDate())) / 86400000);
+        return { ...f, dateObj: date, days };
+      })
+      .sort((a, b) => a.days - b.days);
+  }, [dbFestivals, state.pinnedFestivals, state.subscribedCalendars]);
+
   const user = USERS[state.userId];
   const allTasks = state.workTasks.concat(state.personalTasks);
   const taskLeft = allTasks.filter(t => t.status !== 'done').length;
   const medsPending = state.meds.filter(m => !m.done).length;
 
-  const timerPct = ((3600 - state.timer) / 3600) * 100;
   const timerDash = 351.8 * (1 - state.timer / 3600);
   const timerText = fmtTimer(state.timer);
   const timerState = state.timerRunning ? 'Focusing' : (state.timer === 0 ? 'Complete' : 'Paused');
-
-  const incompleteMeds = state.meds.filter(m => !m.done).length;
-  const totalMeds = state.meds.length;
 
   const hour = APP_TODAY.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : hour < 21 ? 'Good evening' : 'Good night';
@@ -503,6 +532,66 @@ export default function TodayDashboard() {
             </div>
           </div>
         </section>
+
+        {/* PINNED FESTIVAL ALERTS */}
+        {pinnedUpcoming.length > 0 && (
+          <section style={{
+            gridColumn: mob ? 'span 12' : 'span 5', borderRadius: 22, padding: 24,
+            position: 'relative', overflow: 'hidden',
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.14), rgba(168,85,247,0.08))',
+            border: '1px solid rgba(139,92,246,0.25)',
+          }}>
+            <div style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.15 }}>
+              <svg width="130" height="130" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#c084fc', marginBottom: 6 }}>
+                Pinned Alert
+              </div>
+              <h3 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 24, margin: '2px 0' }}>
+                {pinnedUpcoming[0].emoji} {pinnedUpcoming[0].name}
+              </h3>
+              <div style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 12 }}>
+                {pinnedUpcoming[0].dateObj.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 12 }}>
+                <span style={{ fontSize: 38, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#c084fc' }}>
+                  {pinnedUpcoming[0].days === 0 ? 'Today!' : pinnedUpcoming[0].days}
+                </span>
+                {pinnedUpcoming[0].days > 0 && <span style={{ fontSize: 14, color: 'var(--text-2)' }}>days away</span>}
+              </div>
+              
+              {pinnedUpcoming[0].action && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px',
+                  background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12,
+                  fontSize: 12.5, color: '#c3dafe', fontWeight: 500, marginBottom: pinnedUpcoming.length > 1 ? 14 : 0
+                }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2"><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 7h20v5H2z"/></svg>
+                  {pinnedUpcoming[0].action}
+                </div>
+              )}
+              
+              {pinnedUpcoming.length > 1 && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Also upcoming:</div>
+                  {pinnedUpcoming.slice(1, 3).map((f, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                      <span style={{ color: 'var(--text-2)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: 160 }}>
+                        {f.emoji} {f.name}
+                      </span>
+                      <span style={{ fontWeight: 600, color: '#c084fc', flexShrink: 0 }}>
+                        {f.days === 0 ? 'Today' : `${f.days}d`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* UPCOMING 48H */}
         <Card span={7}>

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { APP_TODAY } from '../../utils/dateUtils';
+import { api } from '../../api/client';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ const CAT_STYLE = {
   indian:        { bg: 'linear-gradient(120deg,rgba(255,153,51,0.12),rgba(19,136,8,0.06))',    border: 'rgba(255,153,51,0.32)', label: '🇮🇳 Indian',       color: '#fdba74' },
   thai:          { bg: 'linear-gradient(120deg,rgba(220,38,38,0.10),rgba(30,64,175,0.06))',    border: 'rgba(220,38,38,0.22)',  label: '🇹🇭 Thai',         color: '#fca5a5' },
   christian:     { bg: 'linear-gradient(120deg,rgba(59,130,246,0.12),rgba(147,197,253,0.06))', border: 'rgba(59,130,246,0.30)', label: '✝️ Christian',     color: '#93c5fd' },
-  jain:          { bg: 'linear-gradient(120deg,rgba(167,139,250,0.12),rgba(19,136,8,0.06))',   border: 'rgba(167,139,250,0.30)',label: '🔱 Jain',           color: '#c4b5fd' },
+  jain:          { bg: 'linear-gradient(120deg,rgba(167,139,250,0.12),rgba(196,181,253,0.06))',border: 'rgba(167,139,250,0.30)',label: '🔱 Jain',           color: '#c4b5fd' },
   hindu:         { bg: 'linear-gradient(120deg,rgba(245,158,11,0.12),rgba(212,175,55,0.06))',  border: 'rgba(245,158,11,0.28)', label: '🕉️ Hindu',          color: '#fcd34d' },
   islamic:       { bg: 'linear-gradient(120deg,rgba(52,211,153,0.12),rgba(16,185,129,0.06))',  border: 'rgba(52,211,153,0.30)', label: '☪️ Islamic',        color: '#a7f3d0' },
   'thai-buddhist':{ bg: 'linear-gradient(120deg,rgba(167,139,250,0.12),rgba(19,136,8,0.06))',   border: 'rgba(167,139,250,0.30)',label: '🙏 Buddhist',      color: '#c4b5fd' },
@@ -64,7 +65,7 @@ function Pill({ label, active, onClick }) {
 
 // ─── Festival card ────────────────────────────────────────────────────────────
 
-function FestivalCard({ item }) {
+function FestivalCard({ item, isPinned, onTogglePin }) {
   const days = daysFrom(item.date);
   const cs   = CAT_STYLE[item.cat] || CAT_STYLE.custom;
   const rakhi = item.name === 'Raksha Bandhan' && days > 0 && days <= 21;
@@ -73,10 +74,27 @@ function FestivalCard({ item }) {
     <div style={{ borderRadius: 20, padding: '20px 20px 16px', border: `1px solid ${cs.border}`, background: cs.bg, display: 'flex', flexDirection: 'column', gap: 0, opacity: days < 0 ? 0.55 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 7, marginBottom: 5, width: '100%' }}>
             <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.07)', color: cs.color }}>
               {cs.label}
             </span>
+            <button 
+              onClick={() => onTogglePin(item.id)} 
+              title={isPinned ? "Unpin from Today Dashboard" : "Pin to Today Dashboard"}
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                padding: '2px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: isPinned ? '#fcd34d' : 'var(--text-3)',
+                opacity: isPinned ? 1 : 0.4,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => { if (!isPinned) e.currentTarget.style.opacity = 0.8; }}
+              onMouseLeave={(e) => { if (!isPinned) e.currentTarget.style.opacity = 0.4; }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </button>
           </div>
           <h3 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 18, margin: 0, lineHeight: 1.25 }}>
             {item.emoji} {item.name}
@@ -119,12 +137,12 @@ function FestivalCard({ item }) {
 // ─── Main festivals tab ───────────────────────────────────────────────────────
 
 function FestivalsTab() {
-  const { state } = useAppStore();
+  const { state, dispatch } = useAppStore();
   const [filter, setFilter] = useState('all');
   const [showPast, setShowPast] = useState(false);
   const [dbRows, setDbRows] = useState([]);
 
-  const activeSubs = state.subscribedCalendars || [];
+  const activeSubs = useMemo(() => state.subscribedCalendars || [], [state.subscribedCalendars]);
 
   // Load all festivals from the DB
   useEffect(() => {
@@ -170,6 +188,12 @@ function FestivalsTab() {
   const availableTabs = useMemo(() => {
     const tabs = [{ id: 'all', label: 'All upcoming', count: filteredEvents.filter(e => e._days >= 0).length }];
 
+    // Show Pinned tab if user has pinned elements
+    const pinnedCount = filteredEvents.filter(e => (state.pinnedFestivals || []).includes(e.id) && e._days >= 0).length;
+    if (pinnedCount > 0) {
+      tabs.push({ id: 'pinned', label: `⭐ Pinned (${pinnedCount})`, count: pinnedCount });
+    }
+
     if (activeSubs.includes('sikh')) {
       const count = filteredEvents.filter(e => e.calendar === 'sikh' && e._days >= 0).length;
       tabs.push({ id: 'sikh', label: `🪯 Sikh (${count})`, count });
@@ -204,25 +228,43 @@ function FestivalsTab() {
     }
 
     return tabs;
-  }, [filteredEvents, activeSubs]);
+  }, [filteredEvents, activeSubs, state.pinnedFestivals]);
 
-  // Reset tab filter if the selected calendar is unsubscribed
-  useEffect(() => {
-    if (!availableTabs.some(t => t.id === filter)) {
-      setFilter('all');
-    }
-  }, [availableTabs, filter]);
+  const activeFilter = availableTabs.some(t => t.id === filter) ? filter : 'all';
 
   // Get displayed events for the active tab
   const displayedEvents = useMemo(() => {
     let items = filteredEvents;
-    if (filter !== 'all') {
-      items = items.filter(e => e.calendar === filter);
+    if (activeFilter !== 'all') {
+      if (activeFilter === 'pinned') {
+        items = items.filter(e => (state.pinnedFestivals || []).includes(e.id));
+      } else {
+        items = items.filter(e => e.calendar === activeFilter);
+      }
     }
     return items
       .filter(e => showPast || e._days >= 0)
       .sort((a, b) => a._days - b._days);
-  }, [filteredEvents, filter, showPast]);
+  }, [filteredEvents, activeFilter, showPast, state.pinnedFestivals]);
+
+  const handleTogglePin = async (festivalId) => {
+    const isPinned = (state.pinnedFestivals || []).includes(festivalId);
+    if (isPinned) {
+      dispatch({ type: 'UNPIN_FESTIVAL', id: festivalId });
+      try {
+        await api.unpinFestival(festivalId);
+      } catch (e) {
+        console.error('Failed to unpin festival:', e);
+      }
+    } else {
+      dispatch({ type: 'PIN_FESTIVAL', id: festivalId });
+      try {
+        await api.pinFestival(festivalId);
+      } catch (e) {
+        console.error('Failed to pin festival:', e);
+      }
+    }
+  };
 
   return (
     <div>
@@ -233,7 +275,7 @@ function FestivalsTab() {
             <Pill
               key={tab.id}
               label={tab.label}
-              active={filter === tab.id}
+              active={activeFilter === tab.id}
               onClick={() => setFilter(tab.id)}
             />
           ))}
@@ -252,7 +294,14 @@ function FestivalsTab() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px,1fr))', gap: 13 }}>
-          {displayedEvents.map((item, i) => <FestivalCard key={item.id || i} item={item} />)}
+          {displayedEvents.map((item) => (
+            <FestivalCard 
+              key={item.id} 
+              item={item} 
+              isPinned={(state.pinnedFestivals || []).includes(item.id)}
+              onTogglePin={handleTogglePin}
+            />
+          ))}
         </div>
       )}
     </div>
