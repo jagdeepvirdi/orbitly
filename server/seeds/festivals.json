@@ -1,0 +1,3232 @@
+[
+  {
+    "name": "Epiphany",
+    "event_date": "2026-01-06",
+    "cat": "christian",
+    "emoji": "⭐",
+    "action": "Church service",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ash Wednesday",
+    "event_date": "2026-02-18",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Mark beginning of Lent",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Good Friday",
+    "event_date": "2026-04-03",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": "3 days before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Sunday",
+    "event_date": "2026-04-05",
+    "cat": "christian",
+    "emoji": "🐣",
+    "action": "Family Easter gathering",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Monday",
+    "event_date": "2026-04-06",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ascension Day",
+    "event_date": "2026-05-14",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Pentecost",
+    "event_date": "2026-05-24",
+    "cat": "christian",
+    "emoji": "🕊️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "All Saints Day",
+    "event_date": "2026-11-01",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Visit church / cemetery",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Eve",
+    "event_date": "2026-12-24",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Midnight Mass",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Day",
+    "event_date": "2026-12-25",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Family gathering",
+    "reminder": "2 weeks before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "St. Stephen's Day",
+    "event_date": "2026-12-26",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Epiphany",
+    "event_date": "2027-01-06",
+    "cat": "christian",
+    "emoji": "⭐",
+    "action": "Church service",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ash Wednesday",
+    "event_date": "2027-02-10",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Mark beginning of Lent",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Good Friday",
+    "event_date": "2027-03-26",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": "3 days before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Sunday",
+    "event_date": "2027-03-28",
+    "cat": "christian",
+    "emoji": "🐣",
+    "action": "Family Easter gathering",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Monday",
+    "event_date": "2027-03-29",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ascension Day",
+    "event_date": "2027-05-06",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Pentecost",
+    "event_date": "2027-05-16",
+    "cat": "christian",
+    "emoji": "🕊️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "All Saints Day",
+    "event_date": "2027-11-01",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Visit church / cemetery",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Eve",
+    "event_date": "2027-12-24",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Midnight Mass",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Day",
+    "event_date": "2027-12-25",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Family gathering",
+    "reminder": "2 weeks before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "St. Stephen's Day",
+    "event_date": "2027-12-26",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Epiphany",
+    "event_date": "2028-01-06",
+    "cat": "christian",
+    "emoji": "⭐",
+    "action": "Church service",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ash Wednesday",
+    "event_date": "2028-03-01",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Mark beginning of Lent",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Good Friday",
+    "event_date": "2028-04-14",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": "3 days before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Sunday",
+    "event_date": "2028-04-16",
+    "cat": "christian",
+    "emoji": "🐣",
+    "action": "Family Easter gathering",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Monday",
+    "event_date": "2028-04-17",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ascension Day",
+    "event_date": "2028-05-25",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Pentecost",
+    "event_date": "2028-06-04",
+    "cat": "christian",
+    "emoji": "🕊️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "All Saints Day",
+    "event_date": "2028-11-01",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Visit church / cemetery",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Eve",
+    "event_date": "2028-12-24",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Midnight Mass",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Day",
+    "event_date": "2028-12-25",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Family gathering",
+    "reminder": "2 weeks before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "St. Stephen's Day",
+    "event_date": "2028-12-26",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Epiphany",
+    "event_date": "2029-01-06",
+    "cat": "christian",
+    "emoji": "⭐",
+    "action": "Church service",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ash Wednesday",
+    "event_date": "2029-02-14",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Mark beginning of Lent",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Good Friday",
+    "event_date": "2029-03-30",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": "3 days before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Sunday",
+    "event_date": "2029-04-01",
+    "cat": "christian",
+    "emoji": "🐣",
+    "action": "Family Easter gathering",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Monday",
+    "event_date": "2029-04-02",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ascension Day",
+    "event_date": "2029-05-10",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Pentecost",
+    "event_date": "2029-05-20",
+    "cat": "christian",
+    "emoji": "🕊️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "All Saints Day",
+    "event_date": "2029-11-01",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Visit church / cemetery",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Eve",
+    "event_date": "2029-12-24",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Midnight Mass",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Day",
+    "event_date": "2029-12-25",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Family gathering",
+    "reminder": "2 weeks before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "St. Stephen's Day",
+    "event_date": "2029-12-26",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Epiphany",
+    "event_date": "2030-01-06",
+    "cat": "christian",
+    "emoji": "⭐",
+    "action": "Church service",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ash Wednesday",
+    "event_date": "2030-03-06",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Mark beginning of Lent",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Good Friday",
+    "event_date": "2030-04-19",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": "3 days before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Sunday",
+    "event_date": "2030-04-21",
+    "cat": "christian",
+    "emoji": "🐣",
+    "action": "Family Easter gathering",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Easter Monday",
+    "event_date": "2030-04-22",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Ascension Day",
+    "event_date": "2030-05-30",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Pentecost",
+    "event_date": "2030-06-09",
+    "cat": "christian",
+    "emoji": "🕊️",
+    "action": "Church service",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "All Saints Day",
+    "event_date": "2030-11-01",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Visit church / cemetery",
+    "reminder": "1 day before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Eve",
+    "event_date": "2030-12-24",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Midnight Mass",
+    "reminder": "1 week before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Christmas Day",
+    "event_date": "2030-12-25",
+    "cat": "christian",
+    "emoji": "🎄",
+    "action": "Family gathering",
+    "reminder": "2 weeks before",
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "St. Stephen's Day",
+    "event_date": "2030-12-26",
+    "cat": "christian",
+    "emoji": "✝️",
+    "action": "Public holiday",
+    "reminder": null,
+    "calendar": "christian",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti (Jain)",
+    "event_date": "2026-01-14",
+    "cat": "jain",
+    "emoji": "🪁",
+    "action": "Community gathering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Mahavir Jayanti",
+    "event_date": "2026-02-16",
+    "cat": "jain",
+    "emoji": "🙏",
+    "action": "Temple visit, procession",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana begins",
+    "event_date": "2026-03-03",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Begin 8-day fast",
+    "reminder": "1 week before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana Parva",
+    "event_date": "2026-03-10",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Samvatsari — seek forgiveness",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2026-04-09",
+    "cat": "jain",
+    "emoji": "✨",
+    "action": "Fast / offering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana (Digambara)",
+    "event_date": "2026-08-22",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Das Lakshana Parva begins",
+    "reminder": "1 week before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Das Lakshana ends",
+    "event_date": "2026-09-05",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Kshamavani — forgiveness",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Diwali (Jain)",
+    "event_date": "2026-10-21",
+    "cat": "jain",
+    "emoji": "🪔",
+    "action": "Nirvana of Lord Mahavira",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Kartik Purnima",
+    "event_date": "2026-11-08",
+    "cat": "jain",
+    "emoji": "🌕",
+    "action": "Temple visit",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti (Jain)",
+    "event_date": "2027-01-14",
+    "cat": "jain",
+    "emoji": "🪁",
+    "action": "Community gathering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Mahavir Jayanti",
+    "event_date": "2027-04-07",
+    "cat": "jain",
+    "emoji": "🙏",
+    "action": "Temple visit, procession",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2027-03-22",
+    "cat": "jain",
+    "emoji": "✨",
+    "action": "Fast / offering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana begins",
+    "event_date": "2027-08-21",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Begin 8-day fast",
+    "reminder": "1 week before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Samvatsari",
+    "event_date": "2027-08-28",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Seek forgiveness",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Diwali (Jain)",
+    "event_date": "2027-10-09",
+    "cat": "jain",
+    "emoji": "🪔",
+    "action": "Nirvana of Lord Mahavira",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Kartik Purnima",
+    "event_date": "2027-11-27",
+    "cat": "jain",
+    "emoji": "🌕",
+    "action": "Temple visit",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti (Jain)",
+    "event_date": "2028-01-15",
+    "cat": "jain",
+    "emoji": "🪁",
+    "action": "Community gathering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Mahavir Jayanti",
+    "event_date": "2028-03-26",
+    "cat": "jain",
+    "emoji": "🙏",
+    "action": "Temple visit, procession",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2028-05-09",
+    "cat": "jain",
+    "emoji": "✨",
+    "action": "Fast / offering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana begins",
+    "event_date": "2028-09-08",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Begin 8-day fast",
+    "reminder": "1 week before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Samvatsari",
+    "event_date": "2028-09-15",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Seek forgiveness",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Diwali (Jain)",
+    "event_date": "2028-10-27",
+    "cat": "jain",
+    "emoji": "🪔",
+    "action": "Nirvana of Lord Mahavira",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Kartik Purnima",
+    "event_date": "2028-11-15",
+    "cat": "jain",
+    "emoji": "🌕",
+    "action": "Temple visit",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti (Jain)",
+    "event_date": "2029-01-14",
+    "cat": "jain",
+    "emoji": "🪁",
+    "action": "Community gathering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Mahavir Jayanti",
+    "event_date": "2029-04-14",
+    "cat": "jain",
+    "emoji": "🙏",
+    "action": "Temple visit, procession",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2029-04-28",
+    "cat": "jain",
+    "emoji": "✨",
+    "action": "Fast / offering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana begins",
+    "event_date": "2029-08-28",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Begin 8-day fast",
+    "reminder": "1 week before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Samvatsari",
+    "event_date": "2029-09-04",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Seek forgiveness",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Diwali (Jain)",
+    "event_date": "2029-10-17",
+    "cat": "jain",
+    "emoji": "🪔",
+    "action": "Nirvana of Lord Mahavira",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Kartik Purnima",
+    "event_date": "2029-11-04",
+    "cat": "jain",
+    "emoji": "🌕",
+    "action": "Temple visit",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti (Jain)",
+    "event_date": "2030-01-14",
+    "cat": "jain",
+    "emoji": "🪁",
+    "action": "Community gathering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Mahavir Jayanti",
+    "event_date": "2030-04-04",
+    "cat": "jain",
+    "emoji": "🙏",
+    "action": "Temple visit, procession",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2030-05-17",
+    "cat": "jain",
+    "emoji": "✨",
+    "action": "Fast / offering",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Paryushana begins",
+    "event_date": "2030-09-17",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Begin 8-day fast",
+    "reminder": "1 week before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Samvatsari",
+    "event_date": "2030-09-24",
+    "cat": "jain",
+    "emoji": "📿",
+    "action": "Seek forgiveness",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Diwali (Jain)",
+    "event_date": "2030-11-05",
+    "cat": "jain",
+    "emoji": "🪔",
+    "action": "Nirvana of Lord Mahavira",
+    "reminder": "3 days before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "Kartik Purnima",
+    "event_date": "2030-11-23",
+    "cat": "jain",
+    "emoji": "🌕",
+    "action": "Temple visit",
+    "reminder": "1 day before",
+    "calendar": "jain",
+    "description": null
+  },
+  {
+    "name": "New Year's Day",
+    "event_date": "2026-01-01",
+    "cat": "indian",
+    "emoji": "🎊",
+    "action": "Start the year fresh",
+    "reminder": "1 day before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Lohri",
+    "event_date": "2026-01-13",
+    "cat": "indian",
+    "emoji": "🔥",
+    "action": "Arrange bonfire & gachak",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2026-01-14",
+    "cat": "indian",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Pongal",
+    "event_date": "2026-01-14",
+    "cat": "indian",
+    "emoji": "🍚",
+    "action": "Prepare pongal dish & kolam",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Republic Day",
+    "event_date": "2026-01-26",
+    "cat": "indian",
+    "emoji": "🇮🇳",
+    "action": "Watch the parade",
+    "reminder": "1 day before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Maha Shivaratri",
+    "event_date": "2026-02-26",
+    "cat": "indian",
+    "emoji": "🙏",
+    "action": "Fast & temple visit",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Holi",
+    "event_date": "2026-03-14",
+    "cat": "indian",
+    "emoji": "🎨",
+    "action": "Buy colours & plan gathering",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Fitr",
+    "event_date": "2026-03-30",
+    "cat": "indian",
+    "emoji": "☪️",
+    "action": "Send Eid wishes & sweets",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Ram Navami",
+    "event_date": "2026-04-06",
+    "cat": "indian",
+    "emoji": "🙏",
+    "action": "Temple visit & fast",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Baisakhi",
+    "event_date": "2026-04-14",
+    "cat": "indian",
+    "emoji": "🌾",
+    "action": "Celebrate harvest & Gurudwara visit",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Hanuman Jayanti",
+    "event_date": "2026-04-25",
+    "cat": "indian",
+    "emoji": "🐒",
+    "action": "Temple visit & prasad",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Buddha Purnima",
+    "event_date": "2026-05-12",
+    "cat": "indian",
+    "emoji": "☸️",
+    "action": "Meditate & light candles",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Adha",
+    "event_date": "2026-06-07",
+    "cat": "indian",
+    "emoji": "🐑",
+    "action": "Send greetings",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Guru Purnima",
+    "event_date": "2026-07-10",
+    "cat": "indian",
+    "emoji": "🙏",
+    "action": "Honor your teachers",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Independence Day",
+    "event_date": "2026-08-15",
+    "cat": "indian",
+    "emoji": "🇮🇳",
+    "action": "Flag hoisting ceremony",
+    "reminder": "1 day before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Janmashtami",
+    "event_date": "2026-08-16",
+    "cat": "indian",
+    "emoji": "🥛",
+    "action": "Fast & midnight puja",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Ganesh Chaturthi",
+    "event_date": "2026-08-19",
+    "cat": "indian",
+    "emoji": "🐘",
+    "action": "Bring Ganesh idol home",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Raksha Bandhan",
+    "event_date": "2026-08-28",
+    "cat": "indian",
+    "emoji": "🎀",
+    "action": "Order rakhis · prepare return gifts",
+    "reminder": "3 weeks before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Gandhi Jayanti",
+    "event_date": "2026-10-02",
+    "cat": "indian",
+    "emoji": "🕊️",
+    "action": "Day of reflection",
+    "reminder": "1 day before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Navratri begins",
+    "event_date": "2026-10-15",
+    "cat": "indian",
+    "emoji": "💃",
+    "action": "Arrange dandiya & decorations",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Dhanteras",
+    "event_date": "2026-10-18",
+    "cat": "indian",
+    "emoji": "🪙",
+    "action": "Buy gold or new item for the home",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2026-10-20",
+    "cat": "indian",
+    "emoji": "🪔",
+    "action": "Prepare diyas, sweets & fireworks",
+    "reminder": "2 weeks before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Bhai Dooj",
+    "event_date": "2026-10-22",
+    "cat": "indian",
+    "emoji": "🤝",
+    "action": "Celebrate sibling bond",
+    "reminder": "1 day before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Dussehra",
+    "event_date": "2026-10-24",
+    "cat": "indian",
+    "emoji": "🏹",
+    "action": "Arrange Ramlila viewing",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Karva Chauth",
+    "event_date": "2026-10-29",
+    "cat": "indian",
+    "emoji": "🌕",
+    "action": "Order bangles & mehendi",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Guru Nanak Jayanti",
+    "event_date": "2026-11-05",
+    "cat": "indian",
+    "emoji": "✨",
+    "action": "Visit Gurudwara for Gurpurab",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Christmas",
+    "event_date": "2026-12-25",
+    "cat": "indian",
+    "emoji": "🎄",
+    "action": "Exchange gifts & Christmas cake",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "New Year's Day",
+    "event_date": "2027-01-01",
+    "cat": "indian",
+    "emoji": "🎊",
+    "action": "Welcome 2027",
+    "reminder": "1 day before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Lohri",
+    "event_date": "2027-01-13",
+    "cat": "indian",
+    "emoji": "🔥",
+    "action": "Arrange bonfire & gachak",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2027-01-14",
+    "cat": "indian",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Holi",
+    "event_date": "2027-03-03",
+    "cat": "indian",
+    "emoji": "🎨",
+    "action": "Buy colours & plan gathering",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Baisakhi",
+    "event_date": "2027-04-14",
+    "cat": "indian",
+    "emoji": "🌾",
+    "action": "Celebrate harvest & Gurudwara visit",
+    "reminder": "3 days before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Raksha Bandhan",
+    "event_date": "2027-08-28",
+    "cat": "indian",
+    "emoji": "🎀",
+    "action": "Order rakhis · prepare return gifts",
+    "reminder": "3 weeks before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2027-11-09",
+    "cat": "indian",
+    "emoji": "🪔",
+    "action": "Prepare diyas, sweets & fireworks",
+    "reminder": "2 weeks before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "Christmas",
+    "event_date": "2027-12-25",
+    "cat": "indian",
+    "emoji": "🎄",
+    "action": "Exchange gifts & Christmas cake",
+    "reminder": "1 week before",
+    "calendar": "indian",
+    "description": null
+  },
+  {
+    "name": "New Year's Day",
+    "event_date": "2026-01-01",
+    "cat": "thai",
+    "emoji": "🎊",
+    "action": "Thai New Year celebrations begin",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Makha Bucha Day",
+    "event_date": "2026-02-12",
+    "cat": "thai",
+    "emoji": "🕯️",
+    "action": "Temple visit & candlelight procession",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Chakri Memorial Day",
+    "event_date": "2026-04-06",
+    "cat": "thai",
+    "emoji": "👑",
+    "action": "Royal commemoration ceremonies",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Songkran Festival",
+    "event_date": "2026-04-13",
+    "cat": "thai",
+    "emoji": "💦",
+    "action": "Thai New Year water festival – Day 1",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Songkran Festival – Day 2",
+    "event_date": "2026-04-14",
+    "cat": "thai",
+    "emoji": "💦",
+    "action": "Water festival celebrations continue",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Songkran Festival – Day 3",
+    "event_date": "2026-04-15",
+    "cat": "thai",
+    "emoji": "💦",
+    "action": "Final day of water festival",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Labour Day",
+    "event_date": "2026-05-01",
+    "cat": "thai",
+    "emoji": "⚒️",
+    "action": "Workers' holiday",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Coronation Day",
+    "event_date": "2026-05-04",
+    "cat": "thai",
+    "emoji": "👑",
+    "action": "Royal celebration",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Visakha Bucha Day",
+    "event_date": "2026-05-11",
+    "cat": "thai",
+    "emoji": "🌸",
+    "action": "Temple visit · most important Buddhist day",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Queen Suthida's Birthday",
+    "event_date": "2026-06-03",
+    "cat": "thai",
+    "emoji": "👸",
+    "action": "Royal birthday celebration",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Asalha Bucha Day",
+    "event_date": "2026-07-10",
+    "cat": "thai",
+    "emoji": "🕯️",
+    "action": "Temple visit & Buddhist observance",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Buddhist Lent Day (Khao Phansa)",
+    "event_date": "2026-07-11",
+    "cat": "thai",
+    "emoji": "🙏",
+    "action": "Start of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "HM King Vajiralongkorn's Birthday",
+    "event_date": "2026-07-28",
+    "cat": "thai",
+    "emoji": "👑",
+    "action": "Royal birthday · national holiday",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "HM Queen Sirikit's Birthday · Mother's Day",
+    "event_date": "2026-08-12",
+    "cat": "thai",
+    "emoji": "🌺",
+    "action": "Give mother a jasmine garland",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "King Bhumibol Memorial Day",
+    "event_date": "2026-10-13",
+    "cat": "thai",
+    "emoji": "🖤",
+    "action": "Solemn national commemoration",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Chulalongkorn Day",
+    "event_date": "2026-10-23",
+    "cat": "thai",
+    "emoji": "👑",
+    "action": "Royal ceremony at Royal Plaza",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Loy Krathong Festival",
+    "event_date": "2026-11-02",
+    "cat": "thai",
+    "emoji": "🏮",
+    "action": "Float krathong · watch fireworks & lanterns",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "National Day · Father's Day",
+    "event_date": "2026-12-05",
+    "cat": "thai",
+    "emoji": "🎗️",
+    "action": "Give father a yellow marigold",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Constitution Day",
+    "event_date": "2026-12-10",
+    "cat": "thai",
+    "emoji": "📜",
+    "action": "Constitutional ceremonies",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "New Year's Eve",
+    "event_date": "2026-12-31",
+    "cat": "thai",
+    "emoji": "🎉",
+    "action": "Countdown celebrations",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "New Year's Day",
+    "event_date": "2027-01-01",
+    "cat": "thai",
+    "emoji": "🎊",
+    "action": "Welcome 2027",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Songkran Festival",
+    "event_date": "2027-04-13",
+    "cat": "thai",
+    "emoji": "💦",
+    "action": "Thai New Year water festival – Day 1",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Songkran Festival – Day 2",
+    "event_date": "2027-04-14",
+    "cat": "thai",
+    "emoji": "💦",
+    "action": "Water festival celebrations continue",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Songkran Festival – Day 3",
+    "event_date": "2027-04-15",
+    "cat": "thai",
+    "emoji": "💦",
+    "action": "Final day of water festival",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "HM King Vajiralongkorn's Birthday",
+    "event_date": "2027-07-28",
+    "cat": "thai",
+    "emoji": "👑",
+    "action": "Royal birthday · national holiday",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Mother's Day",
+    "event_date": "2027-08-12",
+    "cat": "thai",
+    "emoji": "🌺",
+    "action": "Give mother a jasmine garland",
+    "reminder": "1 week before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Chulalongkorn Day",
+    "event_date": "2027-10-23",
+    "cat": "thai",
+    "emoji": "👑",
+    "action": "Royal ceremony",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Loy Krathong Festival",
+    "event_date": "2027-11-21",
+    "cat": "thai",
+    "emoji": "🏮",
+    "action": "Float krathong · watch fireworks & lanterns",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "National Day · Father's Day",
+    "event_date": "2027-12-05",
+    "cat": "thai",
+    "emoji": "🎗️",
+    "action": "Give father a yellow marigold",
+    "reminder": "3 days before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Constitution Day",
+    "event_date": "2027-12-10",
+    "cat": "thai",
+    "emoji": "📜",
+    "action": "Constitutional ceremonies",
+    "reminder": "1 day before",
+    "calendar": "thai",
+    "description": null
+  },
+  {
+    "name": "Guru Gobind Singh Ji Gurpurab",
+    "date": "2026-01-05",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "556th Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth"
+  },
+  {
+    "name": "Lohri",
+    "date": "2026-01-13",
+    "cat": "cultural",
+    "emoji": "🔥",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Punjabi harvest celebration — bonfires, folk songs & community gathering"
+  },
+  {
+    "name": "Maghi (Muktsar Sahibi)",
+    "date": "2026-01-14",
+    "cat": "shahidi",
+    "emoji": "⚔️",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Commemorates the 40 Muktas (liberated ones) who laid down their lives for Guru Gobind Singh Ji at Muktsar"
+  },
+  {
+    "name": "Hola Mohalla",
+    "date": "2026-03-14",
+    "cat": "cultural",
+    "emoji": "🎯",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Martial arts, poetry & music festival established by Guru Gobind Singh Ji at Anandpur Sahib — day after Holi"
+  },
+  {
+    "name": "Baisakhi — Khalsa Sajna Diwas",
+    "date": "2026-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "327th anniversary of the creation of the Khalsa Panth by Guru Gobind Singh Ji (1699)"
+  },
+  {
+    "name": "Martyrdom of Guru Arjan Dev Ji",
+    "date": "2026-06-16",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — First Sikh martyr, the 5th Guru, compiled the original Sri Guru Granth Sahib"
+  },
+  {
+    "name": "Guru Har Krishan Ji Gurpurab",
+    "date": "2026-07-23",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Birth of the 8th Sikh Guru, known as \"Bala Pir\" — became Guru at age 5"
+  },
+  {
+    "name": "Sri Guru Granth Sahib Ji Gurgaddi Diwas",
+    "date": "2026-09-01",
+    "cat": "gurpurab",
+    "emoji": "📖",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Installation of Sri Guru Granth Sahib as the eternal living Guru of the Sikhs (1708)"
+  },
+  {
+    "name": "Bandi Chhor Diwas",
+    "date": "2026-10-20",
+    "cat": "gurpurab",
+    "emoji": "🔓",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort — coincides with Diwali"
+  },
+  {
+    "name": "Guru Nanak Dev Ji Gurpurab",
+    "date": "2026-11-05",
+    "cat": "gurpurab",
+    "emoji": "✨",
+    "action": null,
+    "reminder": "2 weeks before",
+    "calendar": "sikh",
+    "description": "557th Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism (1469)"
+  },
+  {
+    "name": "Martyrdom of Guru Tegh Bahadur Ji",
+    "date": "2026-11-24",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — The 9th Guru sacrificed his life to protect the freedom of religion (1675)"
+  },
+  {
+    "name": "Shaheedi Diwas — Chaar Sahibzaade",
+    "date": "2026-12-26",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Martyrdom of the four sons of Guru Gobind Singh Ji and Mata Gujri Ji — Fatehgarh Sahib Smaagam"
+  },
+  {
+    "name": "Guru Gobind Singh Ji Gurpurab",
+    "date": "2027-01-02",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "557th Parkash Purb — Birth of the 10th Sikh Guru"
+  },
+  {
+    "name": "Lohri",
+    "date": "2027-01-13",
+    "cat": "cultural",
+    "emoji": "🔥",
+    "action": null,
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Punjabi harvest celebration — bonfires, folk songs & community gathering"
+  },
+  {
+    "name": "Hola Mohalla",
+    "date": "2027-03-04",
+    "cat": "cultural",
+    "emoji": "🎯",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Martial arts, poetry & music festival at Anandpur Sahib"
+  },
+  {
+    "name": "Baisakhi — Khalsa Sajna Diwas",
+    "date": "2027-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": null,
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "328th anniversary of the creation of the Khalsa Panth"
+  },
+  {
+    "name": "Vaisakhi / Khalsa Sajna Diwas",
+    "event_date": "2026-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": "Celebrate harvest festival",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": null
+  },
+  {
+    "name": "Guru Arjan Dev Ji Shaheedi Diwas",
+    "event_date": "2026-06-16",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": "Observe Shaheedi Diwas",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
+  },
+  {
+    "name": "Bandi Chhor Divas",
+    "event_date": "2026-10-20",
+    "cat": "gurpurab",
+    "emoji": "🔓",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort"
+  },
+  {
+    "name": "Guru Gobind Singh Ji Gurpurab",
+    "event_date": "2027-01-05",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth"
+  },
+  {
+    "name": "Vaisakhi / Khalsa Sajna Diwas",
+    "event_date": "2027-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": "Celebrate harvest festival",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": null
+  },
+  {
+    "name": "Guru Arjan Dev Ji Shaheedi Diwas",
+    "event_date": "2027-06-06",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": "Observe Shaheedi Diwas",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
+  },
+  {
+    "name": "Bandi Chhor Divas",
+    "event_date": "2027-11-09",
+    "cat": "gurpurab",
+    "emoji": "🔓",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort"
+  },
+  {
+    "name": "Guru Nanak Dev Ji Gurpurab",
+    "event_date": "2027-11-25",
+    "cat": "gurpurab",
+    "emoji": "✨",
+    "action": "Visit Gurudwara for Gurpurab",
+    "reminder": "2 weeks before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism"
+  },
+  {
+    "name": "Guru Gobind Singh Ji Gurpurab",
+    "event_date": "2028-01-05",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth"
+  },
+  {
+    "name": "Hola Mohalla",
+    "event_date": "2028-03-22",
+    "cat": "cultural",
+    "emoji": "🎯",
+    "action": "Martial arts & poetry festival",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Martial arts, poetry & music festival established by Guru Gobind Singh Ji"
+  },
+  {
+    "name": "Vaisakhi / Khalsa Sajna Diwas",
+    "event_date": "2028-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": "Celebrate harvest festival",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": null
+  },
+  {
+    "name": "Guru Arjan Dev Ji Shaheedi Diwas",
+    "event_date": "2028-06-24",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": "Observe Shaheedi Diwas",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
+  },
+  {
+    "name": "Bandi Chhor Divas",
+    "event_date": "2028-10-28",
+    "cat": "gurpurab",
+    "emoji": "🔓",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort"
+  },
+  {
+    "name": "Guru Nanak Dev Ji Gurpurab",
+    "event_date": "2028-11-13",
+    "cat": "gurpurab",
+    "emoji": "✨",
+    "action": "Visit Gurudwara for Gurpurab",
+    "reminder": "2 weeks before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism"
+  },
+  {
+    "name": "Guru Gobind Singh Ji Gurpurab",
+    "event_date": "2029-01-05",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth"
+  },
+  {
+    "name": "Hola Mohalla",
+    "event_date": "2029-03-12",
+    "cat": "cultural",
+    "emoji": "🎯",
+    "action": "Martial arts & poetry festival",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Martial arts, poetry & music festival established by Guru Gobind Singh Ji"
+  },
+  {
+    "name": "Vaisakhi / Khalsa Sajna Diwas",
+    "event_date": "2029-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": "Celebrate harvest festival",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": null
+  },
+  {
+    "name": "Guru Arjan Dev Ji Shaheedi Diwas",
+    "event_date": "2029-06-13",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": "Observe Shaheedi Diwas",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
+  },
+  {
+    "name": "Bandi Chhor Divas",
+    "event_date": "2029-10-18",
+    "cat": "gurpurab",
+    "emoji": "🔓",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort"
+  },
+  {
+    "name": "Guru Nanak Dev Ji Gurpurab",
+    "event_date": "2029-11-03",
+    "cat": "gurpurab",
+    "emoji": "✨",
+    "action": "Visit Gurudwara for Gurpurab",
+    "reminder": "2 weeks before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism"
+  },
+  {
+    "name": "Guru Gobind Singh Ji Gurpurab",
+    "event_date": "2030-01-05",
+    "cat": "gurpurab",
+    "emoji": "👑",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth"
+  },
+  {
+    "name": "Hola Mohalla",
+    "event_date": "2030-03-02",
+    "cat": "cultural",
+    "emoji": "🎯",
+    "action": "Martial arts & poetry festival",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Martial arts, poetry & music festival established by Guru Gobind Singh Ji"
+  },
+  {
+    "name": "Vaisakhi / Khalsa Sajna Diwas",
+    "event_date": "2030-04-14",
+    "cat": "gurpurab",
+    "emoji": "🌾",
+    "action": "Celebrate harvest festival",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": null
+  },
+  {
+    "name": "Guru Arjan Dev Ji Shaheedi Diwas",
+    "event_date": "2030-06-03",
+    "cat": "shahidi",
+    "emoji": "🕯️",
+    "action": "Observe Shaheedi Diwas",
+    "reminder": "3 days before",
+    "calendar": "sikh",
+    "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
+  },
+  {
+    "name": "Bandi Chhor Divas",
+    "event_date": "2030-11-06",
+    "cat": "gurpurab",
+    "emoji": "🔓",
+    "action": "Gurpurab celebrations",
+    "reminder": "1 week before",
+    "calendar": "sikh",
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort"
+  },
+  {
+    "name": "Guru Nanak Dev Ji Gurpurab",
+    "event_date": "2030-11-22",
+    "cat": "gurpurab",
+    "emoji": "✨",
+    "action": "Visit Gurudwara for Gurpurab",
+    "reminder": "2 weeks before",
+    "calendar": "sikh",
+    "description": "Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism"
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2026-01-14",
+    "cat": "hindu",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Basant Panchami",
+    "event_date": "2026-02-03",
+    "cat": "hindu",
+    "emoji": "🌾",
+    "action": "Wear yellow & fly kites",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Maha Shivaratri",
+    "event_date": "2026-02-26",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Fast & temple visit",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ram Navami",
+    "event_date": "2026-04-06",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Temple visit & fast",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2026-04-22",
+    "cat": "hindu",
+    "emoji": "🕉️",
+    "action": null,
+    "reminder": null,
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Hanuman Jayanti",
+    "event_date": "2026-04-25",
+    "cat": "hindu",
+    "emoji": "🐒",
+    "action": "Temple visit & prasad",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Guru Purnima",
+    "event_date": "2026-07-10",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Honor your teachers",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Janmashtami",
+    "event_date": "2026-08-16",
+    "cat": "hindu",
+    "emoji": "🥛",
+    "action": "Fast & midnight puja",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ganesh Chaturthi",
+    "event_date": "2026-08-19",
+    "cat": "hindu",
+    "emoji": "🐘",
+    "action": "Bring Ganesh idol home",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Navratri begins",
+    "event_date": "2026-10-15",
+    "cat": "hindu",
+    "emoji": "💃",
+    "action": "Arrange dandiya & decorations",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dhanteras",
+    "event_date": "2026-10-18",
+    "cat": "hindu",
+    "emoji": "🪙",
+    "action": "Buy gold or new item for the home",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2026-10-20",
+    "cat": "hindu",
+    "emoji": "🪔",
+    "action": "Prepare diyas & sweets",
+    "reminder": "2 weeks before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Bhai Dooj",
+    "event_date": "2026-10-22",
+    "cat": "hindu",
+    "emoji": "🤝",
+    "action": "Celebrate sibling bond",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dussehra",
+    "event_date": "2026-10-24",
+    "cat": "hindu",
+    "emoji": "🏹",
+    "action": "Arrange Ramlila viewing",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Karva Chauth",
+    "event_date": "2026-10-29",
+    "cat": "hindu",
+    "emoji": "🌕",
+    "action": "Order bangles & mehendi",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2027-01-14",
+    "cat": "hindu",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Basant Panchami",
+    "event_date": "2027-01-22",
+    "cat": "hindu",
+    "emoji": "🌾",
+    "action": "Wear yellow & fly kites",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Maha Shivaratri",
+    "event_date": "2027-02-17",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Fast & temple visit",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ram Navami",
+    "event_date": "2027-03-26",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Temple visit & fast",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Hanuman Jayanti",
+    "event_date": "2027-04-13",
+    "cat": "hindu",
+    "emoji": "🐒",
+    "action": "Temple visit & prasad",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2027-05-10",
+    "cat": "hindu",
+    "emoji": "🕉️",
+    "action": null,
+    "reminder": null,
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Guru Purnima",
+    "event_date": "2027-07-29",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Honor your teachers",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Janmashtami",
+    "event_date": "2027-08-10",
+    "cat": "hindu",
+    "emoji": "🥛",
+    "action": "Fast & midnight puja",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ganesh Chaturthi",
+    "event_date": "2027-09-02",
+    "cat": "hindu",
+    "emoji": "🐘",
+    "action": "Bring Ganesh idol home",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Navratri begins",
+    "event_date": "2027-10-04",
+    "cat": "hindu",
+    "emoji": "💃",
+    "action": "Arrange dandiya & decorations",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dussehra",
+    "event_date": "2027-10-13",
+    "cat": "hindu",
+    "emoji": "🏹",
+    "action": "Arrange Ramlila viewing",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Karva Chauth",
+    "event_date": "2027-10-28",
+    "cat": "hindu",
+    "emoji": "🌕",
+    "action": "Order bangles & mehendi",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dhanteras",
+    "event_date": "2027-11-07",
+    "cat": "hindu",
+    "emoji": "🪙",
+    "action": "Buy gold or new item for the home",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2027-11-09",
+    "cat": "hindu",
+    "emoji": "🪔",
+    "action": "Prepare diyas & sweets",
+    "reminder": "2 weeks before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Bhai Dooj",
+    "event_date": "2027-11-11",
+    "cat": "hindu",
+    "emoji": "🤝",
+    "action": "Celebrate sibling bond",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2028-01-15",
+    "cat": "hindu",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Basant Panchami",
+    "event_date": "2028-02-10",
+    "cat": "hindu",
+    "emoji": "🌾",
+    "action": "Wear yellow & fly kites",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Maha Shivaratri",
+    "event_date": "2028-03-07",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Fast & temple visit",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ram Navami",
+    "event_date": "2028-04-14",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Temple visit & fast",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2028-04-29",
+    "cat": "hindu",
+    "emoji": "🕉️",
+    "action": null,
+    "reminder": null,
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Guru Purnima",
+    "event_date": "2028-07-17",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Honor your teachers",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Janmashtami",
+    "event_date": "2028-08-30",
+    "cat": "hindu",
+    "emoji": "🥛",
+    "action": "Fast & midnight puja",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ganesh Chaturthi",
+    "event_date": "2028-09-22",
+    "cat": "hindu",
+    "emoji": "🐘",
+    "action": "Bring Ganesh idol home",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Navratri begins",
+    "event_date": "2028-10-22",
+    "cat": "hindu",
+    "emoji": "💃",
+    "action": "Arrange dandiya & decorations",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dussehra",
+    "event_date": "2028-11-01",
+    "cat": "hindu",
+    "emoji": "🏹",
+    "action": "Arrange Ramlila viewing",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dhanteras",
+    "event_date": "2028-10-26",
+    "cat": "hindu",
+    "emoji": "🪙",
+    "action": "Buy gold or new item for the home",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2028-10-28",
+    "cat": "hindu",
+    "emoji": "🪔",
+    "action": "Prepare diyas & sweets",
+    "reminder": "2 weeks before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Bhai Dooj",
+    "event_date": "2028-10-30",
+    "cat": "hindu",
+    "emoji": "🤝",
+    "action": "Celebrate sibling bond",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2029-01-14",
+    "cat": "hindu",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Basant Panchami",
+    "event_date": "2029-01-30",
+    "cat": "hindu",
+    "emoji": "🌾",
+    "action": "Wear yellow & fly kites",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Maha Shivaratri",
+    "event_date": "2029-02-25",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Fast & temple visit",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ram Navami",
+    "event_date": "2029-04-04",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Temple visit & fast",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2029-05-19",
+    "cat": "hindu",
+    "emoji": "🕉️",
+    "action": null,
+    "reminder": null,
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Guru Purnima",
+    "event_date": "2029-07-06",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Honor your teachers",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Janmashtami",
+    "event_date": "2029-08-20",
+    "cat": "hindu",
+    "emoji": "🥛",
+    "action": "Fast & midnight puja",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ganesh Chaturthi",
+    "event_date": "2029-09-11",
+    "cat": "hindu",
+    "emoji": "🐘",
+    "action": "Bring Ganesh idol home",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Navratri begins",
+    "event_date": "2029-10-10",
+    "cat": "hindu",
+    "emoji": "💃",
+    "action": "Arrange dandiya & decorations",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dussehra",
+    "event_date": "2029-10-19",
+    "cat": "hindu",
+    "emoji": "🏹",
+    "action": "Arrange Ramlila viewing",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dhanteras",
+    "event_date": "2029-10-16",
+    "cat": "hindu",
+    "emoji": "🪙",
+    "action": "Buy gold or new item for the home",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2029-10-18",
+    "cat": "hindu",
+    "emoji": "🪔",
+    "action": "Prepare diyas & sweets",
+    "reminder": "2 weeks before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Bhai Dooj",
+    "event_date": "2029-10-20",
+    "cat": "hindu",
+    "emoji": "🤝",
+    "action": "Celebrate sibling bond",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Makar Sankranti",
+    "event_date": "2030-01-14",
+    "cat": "hindu",
+    "emoji": "🪁",
+    "action": "Fly kites & make til-gur sweets",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Basant Panchami",
+    "event_date": "2030-02-18",
+    "cat": "hindu",
+    "emoji": "🌾",
+    "action": "Wear yellow & fly kites",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Maha Shivaratri",
+    "event_date": "2030-03-16",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Fast & temple visit",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ram Navami",
+    "event_date": "2030-03-24",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Temple visit & fast",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Akshaya Tritiya",
+    "event_date": "2030-05-08",
+    "cat": "hindu",
+    "emoji": "🕉️",
+    "action": null,
+    "reminder": null,
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Guru Purnima",
+    "event_date": "2030-07-25",
+    "cat": "hindu",
+    "emoji": "🙏",
+    "action": "Honor your teachers",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Janmashtami",
+    "event_date": "2030-09-09",
+    "cat": "hindu",
+    "emoji": "🥛",
+    "action": "Fast & midnight puja",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Ganesh Chaturthi",
+    "event_date": "2030-09-30",
+    "cat": "hindu",
+    "emoji": "🐘",
+    "action": "Bring Ganesh idol home",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Navratri begins",
+    "event_date": "2030-10-28",
+    "cat": "hindu",
+    "emoji": "💃",
+    "action": "Arrange dandiya & decorations",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dussehra",
+    "event_date": "2030-11-07",
+    "cat": "hindu",
+    "emoji": "🏹",
+    "action": "Arrange Ramlila viewing",
+    "reminder": "1 week before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Dhanteras",
+    "event_date": "2030-11-04",
+    "cat": "hindu",
+    "emoji": "🪙",
+    "action": "Buy gold or new item for the home",
+    "reminder": "3 days before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Diwali",
+    "event_date": "2030-11-06",
+    "cat": "hindu",
+    "emoji": "🪔",
+    "action": "Prepare diyas & sweets",
+    "reminder": "2 weeks before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Bhai Dooj",
+    "event_date": "2030-11-08",
+    "cat": "hindu",
+    "emoji": "🤝",
+    "action": "Celebrate sibling bond",
+    "reminder": "1 day before",
+    "calendar": "hindu",
+    "description": null
+  },
+  {
+    "name": "Start of Ramadan (approx)",
+    "event_date": "2026-03-20",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Prepare for fasting month",
+    "reminder": "1 week before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Fitr (approx)",
+    "event_date": "2026-03-30",
+    "cat": "islamic",
+    "emoji": "☪️",
+    "action": "Send Eid wishes & sweets",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Adha (approx)",
+    "event_date": "2026-06-07",
+    "cat": "islamic",
+    "emoji": "🐑",
+    "action": "Send greetings",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Islamic New Year / Muharram 1 (approx)",
+    "event_date": "2026-06-27",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Ashura / Muharram 10 (approx)",
+    "event_date": "2026-07-06",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Mawlid al-Nabi (approx)",
+    "event_date": "2026-09-05",
+    "cat": "islamic",
+    "emoji": "✨",
+    "action": "Mawlid celebrations",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Start of Ramadan (approx)",
+    "event_date": "2027-03-09",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Prepare for fasting month",
+    "reminder": "1 week before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Fitr (approx)",
+    "event_date": "2027-03-19",
+    "cat": "islamic",
+    "emoji": "☪️",
+    "action": "Send Eid wishes & sweets",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Adha (approx)",
+    "event_date": "2027-05-27",
+    "cat": "islamic",
+    "emoji": "🐑",
+    "action": "Send greetings",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Islamic New Year / Muharram 1 (approx)",
+    "event_date": "2027-06-17",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Ashura / Muharram 10 (approx)",
+    "event_date": "2027-06-26",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Mawlid al-Nabi (approx)",
+    "event_date": "2027-08-25",
+    "cat": "islamic",
+    "emoji": "✨",
+    "action": "Mawlid celebrations",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Start of Ramadan (approx)",
+    "event_date": "2028-02-26",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Prepare for fasting month",
+    "reminder": "1 week before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Fitr (approx)",
+    "event_date": "2028-03-07",
+    "cat": "islamic",
+    "emoji": "☪️",
+    "action": "Send Eid wishes & sweets",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Adha (approx)",
+    "event_date": "2028-05-15",
+    "cat": "islamic",
+    "emoji": "🐑",
+    "action": "Send greetings",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Islamic New Year / Muharram 1 (approx)",
+    "event_date": "2028-06-05",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Ashura / Muharram 10 (approx)",
+    "event_date": "2028-06-14",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Mawlid al-Nabi (approx)",
+    "event_date": "2028-08-13",
+    "cat": "islamic",
+    "emoji": "✨",
+    "action": "Mawlid celebrations",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Start of Ramadan (approx)",
+    "event_date": "2029-02-14",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Prepare for fasting month",
+    "reminder": "1 week before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Fitr (approx)",
+    "event_date": "2029-02-24",
+    "cat": "islamic",
+    "emoji": "☪️",
+    "action": "Send Eid wishes & sweets",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Adha (approx)",
+    "event_date": "2029-05-04",
+    "cat": "islamic",
+    "emoji": "🐑",
+    "action": "Send greetings",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Islamic New Year / Muharram 1 (approx)",
+    "event_date": "2029-05-25",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Ashura / Muharram 10 (approx)",
+    "event_date": "2029-06-03",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Mawlid al-Nabi (approx)",
+    "event_date": "2029-08-02",
+    "cat": "islamic",
+    "emoji": "✨",
+    "action": "Mawlid celebrations",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Start of Ramadan (approx)",
+    "event_date": "2030-02-03",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Prepare for fasting month",
+    "reminder": "1 week before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Fitr (approx)",
+    "event_date": "2030-02-13",
+    "cat": "islamic",
+    "emoji": "☪️",
+    "action": "Send Eid wishes & sweets",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Eid ul-Adha (approx)",
+    "event_date": "2030-04-24",
+    "cat": "islamic",
+    "emoji": "🐑",
+    "action": "Send greetings",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Islamic New Year / Muharram 1 (approx)",
+    "event_date": "2030-05-15",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Ashura / Muharram 10 (approx)",
+    "event_date": "2030-05-24",
+    "cat": "islamic",
+    "emoji": "🌙",
+    "action": "Islamic New Year",
+    "reminder": "1 day before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Mawlid al-Nabi (approx)",
+    "event_date": "2030-07-22",
+    "cat": "islamic",
+    "emoji": "✨",
+    "action": "Mawlid celebrations",
+    "reminder": "3 days before",
+    "calendar": "islamic",
+    "description": null
+  },
+  {
+    "name": "Makha Bucha Day",
+    "event_date": "2026-02-12",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Candlelight procession",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Visakha Bucha Day",
+    "event_date": "2026-05-11",
+    "cat": "thai-buddhist",
+    "emoji": "🌸",
+    "action": "Temple visit · important Buddhist day",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Asalha Bucha Day",
+    "event_date": "2026-07-10",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Temple visit & Buddhist observance",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Khao Phansa (Buddhist Lent begins)",
+    "event_date": "2026-07-11",
+    "cat": "thai-buddhist",
+    "emoji": "🙏",
+    "action": "Start of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Ok Phansa (Buddhist Lent ends)",
+    "event_date": "2026-10-08",
+    "cat": "thai-buddhist",
+    "emoji": "🏮",
+    "action": "End of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Makha Bucha Day",
+    "event_date": "2027-03-03",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Candlelight procession",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Visakha Bucha Day",
+    "event_date": "2027-05-30",
+    "cat": "thai-buddhist",
+    "emoji": "🌸",
+    "action": "Temple visit · important Buddhist day",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Asalha Bucha Day",
+    "event_date": "2027-07-29",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Temple visit & Buddhist observance",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Khao Phansa (Buddhist Lent begins)",
+    "event_date": "2027-07-30",
+    "cat": "thai-buddhist",
+    "emoji": "🙏",
+    "action": "Start of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Ok Phansa (Buddhist Lent ends)",
+    "event_date": "2027-10-26",
+    "cat": "thai-buddhist",
+    "emoji": "🏮",
+    "action": "End of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Makha Bucha Day",
+    "event_date": "2028-02-21",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Candlelight procession",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Visakha Bucha Day",
+    "event_date": "2028-05-18",
+    "cat": "thai-buddhist",
+    "emoji": "🌸",
+    "action": "Temple visit · important Buddhist day",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Asalha Bucha Day",
+    "event_date": "2028-07-17",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Temple visit & Buddhist observance",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Khao Phansa (Buddhist Lent begins)",
+    "event_date": "2028-07-18",
+    "cat": "thai-buddhist",
+    "emoji": "🙏",
+    "action": "Start of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Ok Phansa (Buddhist Lent ends)",
+    "event_date": "2028-10-14",
+    "cat": "thai-buddhist",
+    "emoji": "🏮",
+    "action": "End of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Makha Bucha Day",
+    "event_date": "2029-03-12",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Candlelight procession",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Visakha Bucha Day",
+    "event_date": "2029-06-06",
+    "cat": "thai-buddhist",
+    "emoji": "🌸",
+    "action": "Temple visit · important Buddhist day",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Asalha Bucha Day",
+    "event_date": "2029-08-05",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Temple visit & Buddhist observance",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Khao Phansa (Buddhist Lent begins)",
+    "event_date": "2029-08-06",
+    "cat": "thai-buddhist",
+    "emoji": "🙏",
+    "action": "Start of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Ok Phansa (Buddhist Lent ends)",
+    "event_date": "2029-11-02",
+    "cat": "thai-buddhist",
+    "emoji": "🏮",
+    "action": "End of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Makha Bucha Day",
+    "event_date": "2030-03-01",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Candlelight procession",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Visakha Bucha Day",
+    "event_date": "2030-05-26",
+    "cat": "thai-buddhist",
+    "emoji": "🌸",
+    "action": "Temple visit · important Buddhist day",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Asalha Bucha Day",
+    "event_date": "2030-07-25",
+    "cat": "thai-buddhist",
+    "emoji": "🕯️",
+    "action": "Temple visit & Buddhist observance",
+    "reminder": "3 days before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Khao Phansa (Buddhist Lent begins)",
+    "event_date": "2030-07-26",
+    "cat": "thai-buddhist",
+    "emoji": "🙏",
+    "action": "Start of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  },
+  {
+    "name": "Ok Phansa (Buddhist Lent ends)",
+    "event_date": "2030-10-22",
+    "cat": "thai-buddhist",
+    "emoji": "🏮",
+    "action": "End of Buddhist Lent",
+    "reminder": "1 week before",
+    "calendar": "thai-buddhist",
+    "description": null
+  }
+]

@@ -35,7 +35,12 @@ import nbaRouter           from './routes/nba.js';
 import householdRouter     from './routes/household.js';
 import billingRouter       from './routes/billing.js';
 import profileRouter       from './routes/profile.js';
+import fs                  from 'fs';
+import path                from 'path';
+import { fileURLToPath }   from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Add missing columns that older schema installs don't have yet
 async function runMigrations() {
@@ -185,24 +190,8 @@ async function runMigrations() {
          ALTER TABLE festivals ADD CONSTRAINT festivals_name_date_unique UNIQUE (name, event_date);
        END IF;
      END $$`,
-    // Seed missing Indian/Thai festivals
-    `INSERT INTO festivals (name, event_date, cat, emoji, action, reminder) VALUES
-      ('Diwali',              '2026-10-20', 'indian',  '🪔',  'Prepare diyas & sweets',        '2 weeks before'),
-      ('Dussehra',            '2026-10-24', 'indian',  '🏹',  'Arrange Ramlila viewing',        '1 week before'),
-      ('Janmashtami',         '2026-08-16', 'indian',  '🙏',  'Fast & temple visit',            '3 days before'),
-      ('Ganesh Chaturthi',    '2026-08-19', 'indian',  '🐘',  'Bring Ganesh idol home',         '1 week before'),
-      ('Holi',                '2026-03-14', 'indian',  '🎨',  'Buy colours & plan gathering',   '3 days before'),
-      ('Baisakhi',            '2026-04-14', 'indian',  '🌾',  'Celebrate harvest festival',     '3 days before'),
-      ('Guru Nanak Jayanti',  '2026-11-05', 'indian',  '✨',  'Visit Gurudwara for Gurpurab',   '1 week before'),
-      ('Eid ul-Fitr (approx)','2026-03-30', 'indian',  '☪️', 'Send Eid wishes & sweets',       '3 days before'),
-      ('Lohri',               '2026-01-13', 'indian',  '🔥',  'Arrange bonfire & gachak',       '3 days before'),
-      ('Songkran',            '2026-04-13', 'thai',    '💦',  'Thai New Year celebrations',     '3 days before'),
-      ('Loy Krathong',        '2026-11-02', 'thai',    '🏮',  'Float krathong, watch fireworks','3 days before'),
-      ('Diwali',              '2027-11-09', 'indian',  '🪔',  'Prepare diyas & sweets',        '2 weeks before'),
-      ('Holi',                '2027-03-03', 'indian',  '🎨',  'Buy colours & plan gathering',   '3 days before'),
-      ('Lohri',               '2027-01-13', 'indian',  '🔥',  'Arrange bonfire & gachak',       '3 days before'),
-      ('Songkran',            '2027-04-13', 'thai',    '💦',  'Thai New Year celebrations',     '3 days before')
-     ON CONFLICT (name, event_date) DO NOTHING`,
+    // Seed missing Indian/Thai festivals (superseded by consolidated seeds/festivals.json)
+    `SELECT 1`,
     // Phase 19: user calendar subscriptions table
     `CREATE TABLE IF NOT EXISTS user_calendars (
        user_id    VARCHAR(50) NOT NULL,
@@ -525,6 +514,40 @@ async function runMigrations() {
   for (const sql of sqls) {
     try { await db.query(sql); } catch (e) { console.warn('[migrate]', e.message.slice(0, 80)); }
   }
+
+  // Seed the consolidated festivals from JSON
+  try {
+    const seedPath = path.join(__dirname, 'seeds/festivals.json');
+    if (fs.existsSync(seedPath)) {
+      const rawData = fs.readFileSync(seedPath, 'utf8');
+      const festivals = JSON.parse(rawData);
+      console.log(`[migrate] Seeding ${festivals.length} consolidated festivals...`);
+      
+      const valuePlaceholders = [];
+      const values = [];
+      let pIdx = 1;
+      for (const f of festivals) {
+        valuePlaceholders.push(`($${pIdx}, $${pIdx+1}, $${pIdx+2}, $${pIdx+3}, $${pIdx+4}, $${pIdx+5}, $${pIdx+6}, $${pIdx+7}, '')`);
+        values.push(f.name, f.event_date, f.cat, f.emoji, f.action, f.reminder, f.calendar, f.description);
+        pIdx += 8;
+      }
+      
+      if (values.length > 0) {
+        await db.query(
+          `INSERT INTO festivals (name, event_date, cat, emoji, action, reminder, calendar, description, user_id)
+           VALUES ${valuePlaceholders.join(',')}
+           ON CONFLICT (name, event_date) DO NOTHING`,
+          values
+        );
+      }
+      console.log(`[migrate] ✓ consolidated festivals seeded`);
+    } else {
+      console.warn(`[migrate] Seed file not found at: ${seedPath}`);
+    }
+  } catch (e) {
+    console.warn('[migrate] Failed to seed consolidated festivals:', e.message);
+  }
+
   // VACUUM cannot run inside a transaction — call it separately after all migrations.
   try {
     await db.query('VACUUM ANALYZE courses, family_groups, habits, medications');

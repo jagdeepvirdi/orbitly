@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getCache, setCache } from '../cache.js';
+import db from '../db.js';
 
 const router = Router();
 const TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -402,12 +403,25 @@ router.get('/multi', async (req, res) => {
   const results = [];
 
   for (const calId of calList) {
-    if (PACK_DATA[calId]) {
-      results.push(
-        ...PACK_DATA[calId]
-          .filter(h => h.date.startsWith(y))
-          .map(h => ({ date: h.date, name: h.name, nameEn: h.name, calendarId: calId, country: null }))
-      );
+    if (['christian', 'jain', 'hindu', 'sikh', 'islamic', 'thai-buddhist'].includes(calId)) {
+      try {
+        const { rows } = await db.query(
+          `SELECT name, event_date::text AS date FROM festivals
+           WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3 AND user_id = ''`,
+          [calId, `${y}-01-01`, `${y}-12-31`]
+        );
+        results.push(
+          ...rows.map(h => ({
+            date: h.date,
+            name: h.name,
+            nameEn: h.name,
+            calendarId: calId,
+            country: null
+          }))
+        );
+      } catch (e) {
+        console.error('[holidays/multi] DB error:', e);
+      }
       continue;
     }
     const cc = calId.toUpperCase();
@@ -424,7 +438,26 @@ router.get('/multi', async (req, res) => {
           official = raw.map(h => ({ date: h.date, name: h.localName, nameEn: h.name, country: cc, calendarId: cc }));
         }
       } catch {}
-      const custom = (CUSTOM_BY_COUNTRY[cc] || []).filter(h => h.date.startsWith(y));
+      
+      const dbCalName = cc === 'IN' ? 'indian' : (cc === 'TH' ? 'thai' : cc.toLowerCase());
+      let custom = [];
+      try {
+        const { rows } = await db.query(
+          `SELECT name, event_date::text AS date FROM festivals
+           WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3 AND user_id = ''`,
+          [dbCalName, `${y}-01-01`, `${y}-12-31`]
+        );
+        custom = rows.map(h => ({
+          date: h.date,
+          name: h.name,
+          nameEn: h.name,
+          country: cc,
+          calendarId: cc
+        }));
+      } catch (e) {
+        console.error('[holidays/multi] DB error:', e);
+      }
+
       const offKeys = new Set(official.map(h => `${h.date}:${h.nameEn.toLowerCase().slice(0, 12)}`));
       const extra = custom
         .filter(h => !offKeys.has(`${h.date}:${(h.nameEn || '').toLowerCase().slice(0, 12)}`))
@@ -434,7 +467,7 @@ router.get('/multi', async (req, res) => {
   }
 
   results.sort((a, b) => a.date.localeCompare(b.date));
-  setCache(cacheKey, results, 24 * H);
+  setCache(cacheKey, results, 24 * 60 * 60 * 1000);
   res.json(results);
 });
 
@@ -465,8 +498,23 @@ router.get('/:year/:country', async (req, res) => {
       }
     } catch {}
 
-    // Merge with our custom dataset for this country
-    const custom = (CUSTOM_BY_COUNTRY[cc] || []).filter(h => h.date.startsWith(year));
+    const dbCalName = cc === 'IN' ? 'indian' : (cc === 'TH' ? 'thai' : cc.toLowerCase());
+    let custom = [];
+    try {
+      const { rows } = await db.query(
+        `SELECT name, event_date::text AS date FROM festivals
+         WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3 AND user_id = ''`,
+        [dbCalName, `${year}-01-01`, `${year}-12-31`]
+      );
+      custom = rows.map(h => ({
+        date: h.date,
+        name: h.name,
+        nameEn: h.name,
+        country: cc
+      }));
+    } catch (e) {
+      console.error('[holidays/:year/:country] DB error:', e);
+    }
 
     // Deduplicate: skip custom entries that already have the same date+name in official
     const officialKeys = new Set(official.map(h => `${h.date}:${h.nameEn.toLowerCase().slice(0, 12)}`));
@@ -477,7 +525,7 @@ router.get('/:year/:country', async (req, res) => {
     setCache(key, data, TTL);
     res.json(data);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Something went wrong' });
   }
 });
 

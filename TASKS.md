@@ -1139,6 +1139,35 @@ The only historical bug was `LearningPlanner.jsx` bypassing `api/*` with a raw `
 
 ---
 
+## PHASE 25 — Festival & Holiday Unification
+
+> Goal: Consolidate all static holiday/festival data sources (scattered across frontend imports and backend routes) into the PostgreSQL `festivals` database table as the single source of truth, enabling full CRUD and dynamic views across all calendar instances.
+
+### 25.1 — Database Consolidation and Seeding
+- [x] Consolidate static arrays from `src/data/holidayCalendar.js`, `src/data/christianHolidays.js`, `src/data/jainHolidays.js`, `src/data/sikhCalendar.js`, and `server/routes/holidays.js` into a unified seed structure (JSON or SQL insert statements).
+- [x] Update `server/index.js` startup migration phase to seed the consolidated list into the `festivals` table under their respective `calendar` classifications (`indian`, `thai`, `sikh`, `christian`, `jain`, `islamic`, `hindu`) using an idempotent `ON CONFLICT (name, event_date) DO NOTHING`.
+
+### 25.2 — Frontend Refactoring (FestivalsRecurring.jsx)
+- [x] Remove all static calendar imports from `FestivalsRecurring.jsx`.
+- [x] Import `useAppStore` to access `state.subscribedCalendars` (representing enabled packs like `['IN', 'TH', 'hindu', 'sikh', ...]`).
+- [x] Eliminate client-side deduplication code and key comparisons.
+- [x] Refactor the component to load all view events directly from the fetched `dbRows` (`GET /api/festivals`).
+- [x] Filter both the visible pills/tabs and the event list so only holidays/festivals belonging to selected (subscribed) calendars are displayed. Unsubscribed calendars must have their tabs and events hidden.
+- [x] Delete the redundant frontend data files: `src/data/holidayCalendar.js`, `src/data/christianHolidays.js`, `src/data/jainHolidays.js`, and `src/data/sikhCalendar.js`.
+
+### 25.3 — Backend Route & Calendar Integration
+- [x] Update `/api/holidays/multi` route in `server/routes/holidays.js` to retrieve named pack calendars (`PACK_DATA` keys) from the `festivals` database table instead of hardcoded arrays.
+- [x] Retain the live Nager.Date public holidays fetch and merge logic in `/api/holidays/multi`, ensuring seamless integration of DB-stored events and public APIs.
+- [x] Verify that custom user-added festivals (`user_id = req.userId`) can optionally propagate to the main Calendar view, or ensure the query loads all relevant active calendars properly.
+
+### 25.4 — Validation & Verification
+- [x] Run `npm run build` and check for any compilation or import errors.
+- [x] Test the Festivals recurring views to ensure all tabs (Sikh, Indian, Thai, Christian, Jain) load and render correctly from the DB.
+- [x] Test that adding a custom festival immediately populates the lists without duplicates.
+- [x] Verify that CalendarView and TodayDashboard render holidays and events correctly.
+
+---
+
 ## Notes for Claude Code
 - Read `CLAUDE.md` fully before starting any phase
 - Read `Orbitly-handoff.zip/orbitly/project/Orbitly.dc.html` fully before starting Phase 2
