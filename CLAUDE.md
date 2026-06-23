@@ -154,6 +154,7 @@ Grid: `grid-template-columns: repeat(12, 1fr); gap: 18px`
 - Rakhi countdown (span 5): gradient gold/red card, days countdown, Rakhi Mode alert
 - Upcoming 48h (span 7): colored left-border event list
 - Family Feed (span 5): Simran + Anaya today items
+- Pinned Alert (span 5): upcoming pinned festivals within 30 days — emoji, name, date, days away, action reminder; overflow list for additional pinned items; hidden when nothing is pinned within 30 days
 
 Timer: counts down from 3600s. `setInterval` 1s. Shows MM:SS. SVG ring animates with `stroke-dashoffset`.
 Confetti: 90 colored divs with `om-confetti` keyframe animation on session complete.
@@ -199,10 +200,11 @@ Top bar shows: done count, overdue count (pulsing red dot)
 
 ### FESTIVALS & RECURRING
 Grid: `repeat(auto-fill, minmax(300px, 1fr))`
-Pre-loaded events (sorted by days away):
-- Indian: Raksha Bandhan (28 Aug), Navratri, Dussehra, Karva Chauth, Diwali, Guru Nanak Jayanti, Lohri, Holi, Baisakhi, Eid, Christmas, New Year
-- Thai: Loy Krathong, King's Birthday, Songkran, Makha Bucha
-- Birthdays: Jagdeep (15 Sep), Anaya (7 Aug), Simran (3 Nov), Anniversary (28 Jun)
+**Data source:** PostgreSQL `festivals` table — seeded from `server/seeds/festivals.json` (3232 entries) at server startup. No static frontend data files — the deleted files (`festivals.js`, `christianHolidays.js`, `jainHolidays.js`, `holidayCalendar.js`, `sikhCalendar.js`) have been removed.
+- `user_festivals` mapping table filters which festivals each user sees (auto-synced from `user_calendars` via `syncUserFestivals()` in `server/routes/festivalSync.js` on every GET)
+- New users default to `['IN','TH','hindu','sikh']` subscriptions
+- Filter tabs: All | ⭐ Pinned (if any) | Sikh | Indian | Thai | Christian | Jain | etc. (only tabs for subscribed calendars shown)
+- Each card has a ⭐ pin button → writes to `user_pinned_festivals`; pinned festivals appear on Today Dashboard "Pinned Alert" card
 Rakhi Mode: special red alert if days ≤ 21
 Urgency color: red if ≤7 days, amber if ≤21 days, grey otherwise
 
@@ -271,6 +273,26 @@ keyframes: {
 ```
 orbitly/
 ├── public/
+│   └── seeds/                # Static JSON seed files served at /seeds/*.json
+│       ├── family-virdi.json
+│       ├── family-sahmbi.json
+│       ├── family-custom.json
+│       ├── plan-anthropic-certification-plan.json
+│       ├── plan-google-ai-professional-certificate.json
+│       └── plan-associate-data-analyst-in-sql.json
+├── server/
+│   ├── middleware/
+│   │   ├── requireAuth.js    # Clerk JWT verification (standalone verifyToken from @clerk/backend v3)
+│   │   └── requireHousehold.js
+│   ├── routes/               # Express route handlers
+│   │   ├── festivals.js      # includes GET/POST/DELETE /pinned endpoints
+│   │   ├── festivalSync.js   # syncUserFestivals(userId) — syncs user_calendars → user_festivals
+│   │   └── ... (all other route files)
+│   ├── seeds/
+│   │   └── festivals.json    # 3232 festival/holiday entries — source of truth for festivals table
+│   ├── db.js
+│   ├── index.js              # Express server, migrations, festival seeding on startup
+│   └── schema.sql
 ├── src/
 │   ├── components/
 │   │   ├── layout/
@@ -298,9 +320,13 @@ orbitly/
 │   │   ├── users.js          # USERS constant
 │   │   ├── seedTasks.js      # initial work + personal tasks
 │   │   ├── seedMeds.js       # medication list
-│   │   ├── festivals.js      # all festival dates 2026–2030
 │   │   ├── certPlan.js       # Anthropic Academy plan with exact dates
 │   │   └── sportsData.js     # F1 calendar, cricket, football fixtures
+│   │   # NOTE: festivals.js, christianHolidays.js, jainHolidays.js,
+│   │   # holidayCalendar.js, sikhCalendar.js — DELETED (Phase 25).
+│   │   # All festival data now lives in server/seeds/festivals.json → DB.
+│   ├── api/
+│   │   └── client.js         # All API calls + auth token attachment via setTokenGetter
 │   ├── hooks/
 │   │   ├── useTimer.js       # countdown timer hook
 │   │   ├── useTheme.js       # dark/light toggle + CSS var injection
@@ -310,7 +336,8 @@ orbitly/
 │   ├── utils/
 │   │   ├── dateUtils.js      # addWorkdays, daysAway, isWeekend helpers
 │   │   └── calendarUtils.js  # buildMonthGrid, buildWeekCells
-│   ├── App.jsx
+│   ├── App.jsx               # Routes + AppDataLoader (bootstrap all API data on mount)
+│   ├── ClerkBridge.jsx       # Synchronously registers Clerk token getter (must NOT be in useEffect)
 │   ├── main.jsx
 │   └── index.css             # @import fonts + CSS custom properties
 ├── CLAUDE.md                 ← this file
@@ -325,17 +352,26 @@ orbitly/
 ## Development Commands
 ```bash
 npm install
-npm run dev        # Vite dev server → http://localhost:5173
+npm run dev        # Vite dev server → http://localhost:5177 + Express API on :3003
 npm run build      # Production build
 npm run preview    # Preview production build
 ```
 
 ---
 
+## Backend Architecture Notes
+The app has a full Node.js/Express backend (added in Phase 14+). Key points:
+- **Auth:** `server/middleware/requireAuth.js` uses standalone `verifyToken` from `@clerk/backend` v3 (NOT `clerkClient.verifyToken()` — that method does not exist in v3)
+- **ClerkBridge:** `src/ClerkBridge.jsx` MUST call `setTokenGetter(getToken)` synchronously in the component body, NOT inside `useEffect`. Moving it to useEffect causes a race condition where AppDataLoader's bootstrap fetches fire before the token getter is registered, resulting in 401s and empty state.
+- **Festival data:** All holiday/festival data lives in `server/seeds/festivals.json` → seeded into the `festivals` DB table on startup. Frontend no longer imports static calendar data files.
+- **`user_festivals`:** Auto-synced junction table mapping users to their subscribed festivals. `syncUserFestivals(userId)` runs on every `GET /api/festivals` call.
+
+---
+
 ## Do Not
-- Do not add a backend or database in v1 — all state is local
 - Do not use an icon library (lucide, heroicons, etc.) — inline SVG only
 - Do not use CSS modules or styled-components — Tailwind only
-- Do not add authentication — user switching is done via the sidebar user pill
 - Do not modify the design tokens — match the prototype exactly
 - Do not add features not in the prototype without asking first
+- Do not import static festival/holiday data files in frontend components — use `GET /api/festivals` instead
+- Do not call `clerkClient.verifyToken()` — it does not exist in `@clerk/backend` v3; use the standalone `verifyToken` export

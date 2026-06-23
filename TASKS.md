@@ -1168,6 +1168,54 @@ The only historical bug was `LearningPlanner.jsx` bypassing `api/*` with a raw `
 
 ---
 
+## PHASE 26 — Auth Hardening & Festival Personalization
+
+> AntiGravity commits: 8bf83c9, fafd526, 34decb5, 2233d88, 9e3edc2, 86e9538
+> Also includes the standalone `verifyToken` fix from requireAuth.js committed alongside Phase 24.3.
+
+### 26.1 — ClerkBridge race condition fix ✅ (commit 8bf83c9)
+- [x] Move `setTokenGetter(getToken)` out of `useEffect` and call it synchronously during render in `ClerkBridge.jsx`
+  - **Problem:** `AppDataLoader` fires its `useEffect` on mount before `ClerkBridge`'s `useEffect` runs, so all bootstrap fetches go out without a token → 401 → empty state. This caused Learning Plans and Family data to disappear after login.
+  - **Fix:** Call `setTokenGetter(getToken)` directly in the component body (synchronous, runs before any child effects). Keep `useEffect` only for the cleanup: `return () => setTokenGetter(null)`.
+
+### 26.2 — requireAuth: standalone verifyToken ✅ (committed with Phase 24 fix)
+- [x] Fixed `requireAuth.js` to use standalone `verifyToken()` exported from `@clerk/backend` v3
+  - **Problem:** `@clerk/backend` v3 does NOT expose `clerkClient.verifyToken()` — calling it threw `TypeError: clerkClient.verifyToken is not a function`, returning 401 on every authenticated request.
+  - **Fix:** `import { createClerkClient, verifyToken } from '@clerk/backend'` then `await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY, clockSkewInMs: 60_000 })`
+  - `authorizedParties` skipped in dev — Clerk dev-instance JWTs often omit `azp`; only enforced in production via `APP_URL` env var.
+
+### 26.3 — user_festivals mapping + festival sync ✅ (commit 86e9538)
+- [x] New `user_festivals` table: maps each user to the festivals from their subscribed calendars
+  - `PRIMARY KEY (user_id, festival_id)` — no duplicates
+  - Index: `idx_user_festivals_user`
+- [x] Created `server/routes/festivalSync.js`: `syncUserFestivals(userId)` function
+  - Reads `user_calendars` for active subscriptions; if none, inserts defaults (`['IN','TH','hindu','sikh']`)
+  - Maps calendar IDs (IN→indian, TH→thai) to DB `calendar` column values
+  - Diffs against current `user_festivals` to insert new / delete stale entries
+- [x] `GET /api/festivals` now calls `syncUserFestivals(req.userId)` then JOINs through `user_festivals` — each user sees only their subscribed festivals
+
+### 26.4 — Pinned festivals + Today Dashboard alerts ✅ (commit 86e9538)
+- [x] New `user_pinned_festivals` table (via migration in `server/index.js`): `user_id`, `festival_id`, `created_at`
+- [x] New REST endpoints in `server/routes/festivals.js`:
+  - `GET /api/festivals/pinned` — returns array of pinned `festival_id`s for the user
+  - `POST /api/festivals/pinned` — pins a festival (`{ festivalId }`)
+  - `DELETE /api/festivals/pinned/:festivalId` — unpins
+- [x] `src/api/client.js`: `getPinnedFestivals()`, `pinFestival(id)`, `unpinFestival(id)` added
+- [x] `src/App.jsx`: `api.getPinnedFestivals()` added to `Promise.allSettled` bootstrap; result dispatched as `data.pinnedFestivals`
+- [x] `src/store/appStore.js`: `pinnedFestivals: []` initial state + `SET_PINNED_FESTIVALS`, `PIN_FESTIVAL`, `UNPIN_FESTIVAL` reducers
+- [x] `FestivalsRecurring.jsx` → `FestivalCard`:
+  - Added ⭐ pin/unpin button in card header (gold when pinned, muted when not)
+  - `handleTogglePin(id)` — optimistic dispatch then API call; errors logged only
+  - New "⭐ Pinned (N)" filter tab appears dynamically when user has pinned events
+- [x] `TodayDashboard.jsx`: fetches pinned festivals on mount; shows "Pinned Alert" card (col-span-5) with upcoming pinned festival (emoji, name, date, days away, action) + overflow list; hidden when no pinned festivals are within 30 days
+
+### 26.5 — Festival UI polish ✅ (commits fafd526, 2233d88, 9e3edc2)
+- [x] FestivalsRecurring: fixed `activeSubs` wrapped in `useMemo` to stabilize dependency array (fafd526)
+- [x] `server/seeds/festivals.json`: corrected Sikh event key names (`gurpurab` field) (2233d88)
+- [x] Removed unused routes from festivals router (9e3edc2)
+
+---
+
 ## Notes for Claude Code
 - Read `CLAUDE.md` fully before starting any phase
 - Read `Orbitly-handoff.zip/orbitly/project/Orbitly.dc.html` fully before starting Phase 2
