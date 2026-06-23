@@ -7,10 +7,13 @@ import LoginPage from '../pages/LoginPage';
 // Only mounted inside a ClerkProvider tree.
 export function ClerkBridge() {
   const { getToken } = useAuth();
+  
+  // Set token getter synchronously during render to avoid race conditions with child components fetching on mount
+  setTokenGetter(getToken);
+
   useEffect(() => {
-    setTokenGetter(getToken);
     return () => setTokenGetter(null);
-  }, [getToken]);
+  }, []);
   return null;
 }
 
