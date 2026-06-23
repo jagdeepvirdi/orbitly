@@ -1571,163 +1571,163 @@
   },
   {
     "name": "Guru Gobind Singh Ji Gurpurab",
-    "date": "2026-01-05",
     "cat": "gurpurab",
     "emoji": "👑",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "556th Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth"
+    "description": "556th Parkash Purb — Birth of the 10th Sikh Guru, founder of the Khalsa Panth",
+    "event_date": "2026-01-05"
   },
   {
     "name": "Lohri",
-    "date": "2026-01-13",
     "cat": "cultural",
     "emoji": "🔥",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Punjabi harvest celebration — bonfires, folk songs & community gathering"
+    "description": "Punjabi harvest celebration — bonfires, folk songs & community gathering",
+    "event_date": "2026-01-13"
   },
   {
     "name": "Maghi (Muktsar Sahibi)",
-    "date": "2026-01-14",
     "cat": "shahidi",
     "emoji": "⚔️",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Commemorates the 40 Muktas (liberated ones) who laid down their lives for Guru Gobind Singh Ji at Muktsar"
+    "description": "Commemorates the 40 Muktas (liberated ones) who laid down their lives for Guru Gobind Singh Ji at Muktsar",
+    "event_date": "2026-01-14"
   },
   {
     "name": "Hola Mohalla",
-    "date": "2026-03-14",
     "cat": "cultural",
     "emoji": "🎯",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "Martial arts, poetry & music festival established by Guru Gobind Singh Ji at Anandpur Sahib — day after Holi"
+    "description": "Martial arts, poetry & music festival established by Guru Gobind Singh Ji at Anandpur Sahib — day after Holi",
+    "event_date": "2026-03-14"
   },
   {
     "name": "Baisakhi — Khalsa Sajna Diwas",
-    "date": "2026-04-14",
     "cat": "gurpurab",
     "emoji": "🌾",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "327th anniversary of the creation of the Khalsa Panth by Guru Gobind Singh Ji (1699)"
+    "description": "327th anniversary of the creation of the Khalsa Panth by Guru Gobind Singh Ji (1699)",
+    "event_date": "2026-04-14"
   },
   {
     "name": "Martyrdom of Guru Arjan Dev Ji",
-    "date": "2026-06-16",
     "cat": "shahidi",
     "emoji": "🕯️",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Shaheedi Diwas — First Sikh martyr, the 5th Guru, compiled the original Sri Guru Granth Sahib"
+    "description": "Shaheedi Diwas — First Sikh martyr, the 5th Guru, compiled the original Sri Guru Granth Sahib",
+    "event_date": "2026-06-16"
   },
   {
     "name": "Guru Har Krishan Ji Gurpurab",
-    "date": "2026-07-23",
     "cat": "gurpurab",
     "emoji": "👑",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Birth of the 8th Sikh Guru, known as \"Bala Pir\" — became Guru at age 5"
+    "description": "Birth of the 8th Sikh Guru, known as \"Bala Pir\" — became Guru at age 5",
+    "event_date": "2026-07-23"
   },
   {
     "name": "Sri Guru Granth Sahib Ji Gurgaddi Diwas",
-    "date": "2026-09-01",
     "cat": "gurpurab",
     "emoji": "📖",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Installation of Sri Guru Granth Sahib as the eternal living Guru of the Sikhs (1708)"
+    "description": "Installation of Sri Guru Granth Sahib as the eternal living Guru of the Sikhs (1708)",
+    "event_date": "2026-09-01"
   },
   {
     "name": "Bandi Chhor Diwas",
-    "date": "2026-10-20",
     "cat": "gurpurab",
     "emoji": "🔓",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort — coincides with Diwali"
+    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort — coincides with Diwali",
+    "event_date": "2026-10-20"
   },
   {
     "name": "Guru Nanak Dev Ji Gurpurab",
-    "date": "2026-11-05",
     "cat": "gurpurab",
     "emoji": "✨",
     "action": null,
     "reminder": "2 weeks before",
     "calendar": "sikh",
-    "description": "557th Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism (1469)"
+    "description": "557th Parkash Purb — Birth of Guru Nanak Dev Ji, founder of Sikhism (1469)",
+    "event_date": "2026-11-05"
   },
   {
     "name": "Martyrdom of Guru Tegh Bahadur Ji",
-    "date": "2026-11-24",
     "cat": "shahidi",
     "emoji": "🕯️",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Shaheedi Diwas — The 9th Guru sacrificed his life to protect the freedom of religion (1675)"
+    "description": "Shaheedi Diwas — The 9th Guru sacrificed his life to protect the freedom of religion (1675)",
+    "event_date": "2026-11-24"
   },
   {
     "name": "Shaheedi Diwas — Chaar Sahibzaade",
-    "date": "2026-12-26",
     "cat": "shahidi",
     "emoji": "🕯️",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "Martyrdom of the four sons of Guru Gobind Singh Ji and Mata Gujri Ji — Fatehgarh Sahib Smaagam"
+    "description": "Martyrdom of the four sons of Guru Gobind Singh Ji and Mata Gujri Ji — Fatehgarh Sahib Smaagam",
+    "event_date": "2026-12-26"
   },
   {
     "name": "Guru Gobind Singh Ji Gurpurab",
-    "date": "2027-01-02",
     "cat": "gurpurab",
     "emoji": "👑",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "557th Parkash Purb — Birth of the 10th Sikh Guru"
+    "description": "557th Parkash Purb — Birth of the 10th Sikh Guru",
+    "event_date": "2027-01-02"
   },
   {
     "name": "Lohri",
-    "date": "2027-01-13",
     "cat": "cultural",
     "emoji": "🔥",
     "action": null,
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": "Punjabi harvest celebration — bonfires, folk songs & community gathering"
+    "description": "Punjabi harvest celebration — bonfires, folk songs & community gathering",
+    "event_date": "2027-01-13"
   },
   {
     "name": "Hola Mohalla",
-    "date": "2027-03-04",
     "cat": "cultural",
     "emoji": "🎯",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "Martial arts, poetry & music festival at Anandpur Sahib"
+    "description": "Martial arts, poetry & music festival at Anandpur Sahib",
+    "event_date": "2027-03-04"
   },
   {
     "name": "Baisakhi — Khalsa Sajna Diwas",
-    "date": "2027-04-14",
     "cat": "gurpurab",
     "emoji": "🌾",
     "action": null,
     "reminder": "1 week before",
     "calendar": "sikh",
-    "description": "328th anniversary of the creation of the Khalsa Panth"
+    "description": "328th anniversary of the creation of the Khalsa Panth",
+    "event_date": "2027-04-14"
   },
   {
     "name": "Vaisakhi / Khalsa Sajna Diwas",
