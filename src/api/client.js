@@ -48,7 +48,11 @@ async function req(method, path, body) {
   if (token) opts.headers['Authorization'] = `Bearer ${token}`;
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(`/api${path}`, opts);
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    let detail = '';
+    try { detail = ': ' + ((await res.json()).error || ''); } catch {}
+    throw new Error(`API ${res.status}${detail}`);
+  }
   return res.json();
 }
 
@@ -120,6 +124,7 @@ export const api = {
   createPlan:    (body)       => post('/plans', body),
   updatePlan:    (id, body)   => req('PUT', `/plans/${id}`, body),
   deletePlan:    (id)         => del(`/plans/${id}`),
+  importPlan:    (data)       => post('/plans/import', data),
 
   // ── Books ─────────────────────────────────────────────────────
   getBooks:      (planId)     => get(planId ? `/books?plan_id=${planId}` : '/books'),
@@ -160,6 +165,7 @@ export const api = {
 
   // ── Family ───────────────────────────────────────────────────
   getFamilyGroups:  ()           => get('/family/groups'),
+  importFamily:     (data)       => post('/family/import', data),
   getFamilyMembers: ()           => get('/family/members'),
   getFamilyEvents:  ()           => get('/family/events'),
   getContact:    (memberId)      => get(`/family/contacts/${memberId}`),

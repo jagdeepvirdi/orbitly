@@ -566,6 +566,7 @@ app.use('/api/cricket',      cricketRouter);
 app.use('/api/football',     footballRouter);
 app.use('/api/nba',          nbaRouter);
 
+app.get('/', (_, res) => res.json({ ok: true, message: 'Orbitly API Server' }));
 app.get('/api/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
 
 // All routes below require authentication

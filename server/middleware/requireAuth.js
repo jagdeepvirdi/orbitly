@@ -1,4 +1,4 @@
-import { createClerkClient } from '@clerk/backend';
+import { createClerkClient, verifyToken } from '@clerk/backend';
 
 const DEV_USER_ID = 'jagdeep';
 
@@ -15,16 +15,23 @@ export default async function requireAuth(req, res, next) {
 
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
+    console.error('[requireAuth] no bearer token on', req.method, req.path);
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const token = authHeader.slice(7);
+
+  // Only enforce authorizedParties in production. Clerk dev-instance JWTs often omit
+  // the azp claim entirely; if authorizedParties is set and azp is absent, Clerk
+  // throws and every request returns 401. In prod, APP_URL is a real domain so azp
+  // will be present and the check is meaningful.
+  const isProd = process.env.NODE_ENV === 'production';
+  const authorizedParties = isProd && process.env.APP_URL ? [process.env.APP_URL] : undefined;
+
   try {
-    const payload = await clerkClient.verifyToken(token, {
-      // APP_URL is the frontend origin (e.g. http://localhost:5177 or https://orbitly.vercel.app).
-      // Clerk's JWT azp claim carries the origin, not the publishable key.
-      // Omitting authorizedParties in dev is safe — Clerk dev JWTs may not include azp at all.
-      ...(process.env.APP_URL && { authorizedParties: [process.env.APP_URL] }),
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+      ...(authorizedParties && { authorizedParties }),
       clockSkewInMs: 60_000,
     });
     req.userId = payload.sub;

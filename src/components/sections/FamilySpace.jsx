@@ -483,6 +483,9 @@ function DirectoryView({ state, dispatch }) {
   const [addEventGroup,  setAddEventGroup]  = useState(null);
   const [editEventData,  setEditEventData]  = useState(null);
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [importOpen,     setImportOpen]     = useState(false);
+  const [importing,      setImporting]      = useState(null);
+  const [importMsg,      setImportMsg]      = useState(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -584,6 +587,45 @@ function DirectoryView({ state, dispatch }) {
     setEvents(es => es.filter(e => e.id !== ev.id));
   }
 
+  const PRESETS = [
+    { id: 'virdi',  label: '🏠 Virdi Family',    desc: "Father's side",   file: '/seeds/family-virdi.json' },
+    { id: 'sahmbi', label: '🌸 Sahmbi Family',   desc: "Mother's side",   file: '/seeds/family-sahmbi.json' },
+    { id: 'custom', label: '✨ Bangkok Friends',  desc: 'Custom group',    file: '/seeds/family-custom.json' },
+  ];
+
+  async function handleImportPreset(preset) {
+    setImporting(preset.id);
+    setImportMsg(null);
+    try {
+      const data = await fetch(preset.file).then(r => r.json());
+      const res  = await api.importFamily(data.groups);
+      setImportMsg(`Imported ${res.groups} groups, ${res.members} members, ${res.events} events.`);
+      await loadAll();
+    } catch (e) {
+      setImportMsg('Import failed: ' + (e.message || 'Unknown error'));
+    } finally {
+      setImporting(null);
+    }
+  }
+
+  async function handleImportFile(file) {
+    setImporting('file');
+    setImportMsg(null);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const groups = data.groups || (Array.isArray(data) ? data : null);
+      if (!groups) throw new Error('JSON must have a "groups" array');
+      const res = await api.importFamily(groups);
+      setImportMsg(`Imported ${res.groups} groups, ${res.members} members, ${res.events} events.`);
+      await loadAll();
+    } catch (e) {
+      setImportMsg('Import failed: ' + (e.message || 'Unknown error'));
+    } finally {
+      setImporting(null);
+    }
+  }
+
   const SIDES = [
     { id: 'sahmbi', label: '🌸 Sahmbi Family', sub: "Mother's side" },
     { id: 'virdi',  label: '🏠 Virdi Family',  sub: "Father's side" },
@@ -607,7 +649,13 @@ function DirectoryView({ state, dispatch }) {
             </button>
           );
         })}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            onClick={() => { setImportOpen(true); setImportMsg(null); }}
+            style={{ padding: '10px 18px', borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, background: 'var(--surface)', color: 'var(--text-2)' }}
+          >
+            ↓ Import
+          </button>
           <button
             onClick={() => setAddGroupOpen(true)}
             style={{ padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, background: 'var(--accent)', color: '#fff' }}
@@ -719,6 +767,61 @@ function DirectoryView({ state, dispatch }) {
           onSave={(id, fields) => dispatch({ type: 'SET_FAMILY_CONTACT', id, fields })}
           onClose={() => setSelectedPerson(null)}
         />
+      )}
+
+      {importOpen && (
+        <ModalBase onClose={() => setImportOpen(false)} maxWidth={440}>
+          <div style={{ padding: '28px 28px 24px' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Import Family Data</div>
+            <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 20 }}>Load a preset or upload your own JSON file. Existing groups are updated, new ones are added.</div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Presets</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {PRESETS.map(p => (
+                <button
+                  key={p.id}
+                  disabled={!!importing}
+                  onClick={() => handleImportPreset(p)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', cursor: importing ? 'wait' : 'pointer', fontFamily: 'inherit', textAlign: 'left', opacity: importing && importing !== p.id ? 0.5 : 1 }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{p.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{p.desc}</div>
+                  </div>
+                  {importing === p.id ? (
+                    <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</span>
+                  ) : (
+                    <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Load →</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Upload JSON</div>
+            <label style={{ display: 'block', padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--border)', textAlign: 'center', cursor: 'pointer', color: 'var(--text-3)', fontSize: 13 }}>
+              {importing === 'file' ? 'Uploading…' : 'Click to choose file'}
+              <input
+                type="file"
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={e => e.target.files[0] && handleImportFile(e.target.files[0])}
+              />
+            </label>
+
+            {importMsg && (
+              <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: importMsg.startsWith('Import failed') ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)', color: importMsg.startsWith('Import failed') ? '#fca5a5' : '#34d399', fontSize: 13 }}>
+                {importMsg}
+              </div>
+            )}
+
+            <button
+              onClick={() => setImportOpen(false)}
+              style={{ marginTop: 18, width: '100%', padding: '11px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-2)', fontWeight: 600 }}
+            >
+              Close
+            </button>
+          </div>
+        </ModalBase>
       )}
     </div>
   );

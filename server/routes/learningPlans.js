@@ -44,6 +44,49 @@ router.put('/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Import preset ────────────────────────────────────────────────────────────
+// Accepts { plan: { title, ... }, courses: [{ key, name, phase, ... }] }
+// Always creates a new plan (no duplicate check — user can import the same
+// template multiple times and rename them independently).
+router.post('/import', async (req, res) => {
+  const { plan, courses: courseList = [] } = req.body;
+  if (!plan?.title) return res.status(400).json({ error: 'plan.title required' });
+
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows: [newPlan] } = await client.query(
+      `INSERT INTO learning_plans
+         (title, description, type, color, icon, exam_date, est_completion, cert_name, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [plan.title, plan.description || null, plan.type || 'certification',
+       plan.color || '#6366f1', plan.icon || '📚',
+       plan.exam_date || null, plan.est_completion || null,
+       plan.cert_name || null, req.userId]
+    );
+
+    for (const c of courseList) {
+      await client.query(
+        `INSERT INTO courses
+           (name, phase, total, done, next, next_iso, sort_order, url, plan_id, user_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        [c.name, c.phase ?? 0, c.total ?? 1, c.done ?? 0,
+         c.next || null, c.next_iso || null, c.sort_order ?? 0,
+         c.url || '', newPlan.id, req.userId]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ ok: true, plan: newPlan, courses: courseList.length });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (id === 1) return res.status(403).json({ error: 'Cannot delete the Anthropic Certification Plan' });

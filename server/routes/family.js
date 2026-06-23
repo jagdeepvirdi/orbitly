@@ -319,4 +319,69 @@ router.delete('/moments/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
 });
 
+// ── Import preset ────────────────────────────────────────────────────────────
+// Accepts { groups: [{ key, label, side, emoji, members: [...], events: [...] }] }
+// IDs are prefixed with the first 8 chars of household_id to keep them
+// unique per household while staying idempotent on re-import.
+router.post('/import', async (req, res) => {
+  const { groups } = req.body;
+  if (!Array.isArray(groups) || groups.length === 0)
+    return res.status(400).json({ error: 'groups array required' });
+
+  const prefix = req.householdId.slice(0, 8);
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+    let gc = 0, mc = 0, ec = 0;
+
+    for (const g of groups) {
+      const gid = `${prefix}-${g.key}`.slice(0, 50);
+      await client.query(
+        `INSERT INTO family_groups (id, label, side, emoji, household_id)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (id) DO UPDATE SET label=$2, emoji=$4`,
+        [gid, g.label, g.side || 'custom', g.emoji || '👥', req.householdId]
+      );
+      gc++;
+
+      for (const m of (g.members || [])) {
+        const mid = `${prefix}-${m.key}`.slice(0, 60);
+        await client.query(
+          `INSERT INTO family_members
+             (id, real_name, pet_name, relation, side, bday_month, bday_day, group_id, household_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+           ON CONFLICT (id) DO UPDATE
+             SET real_name=$2, pet_name=$3, relation=$4, bday_month=$6, bday_day=$7`,
+          [mid, m.real_name, m.pet_name || null, m.relation || null,
+           g.side || 'custom', m.bday_month || null, m.bday_day || null,
+           gid, req.householdId]
+        );
+        mc++;
+      }
+
+      for (const e of (g.events || [])) {
+        const eid = `${prefix}-${e.key}`.slice(0, 60);
+        await client.query(
+          `INSERT INTO family_events
+             (id, label, type, side, event_month, event_day, group_id, household_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+           ON CONFLICT (id) DO UPDATE
+             SET label=$2, type=$3, event_month=$5, event_day=$6`,
+          [eid, e.label, e.type, e.side || g.side || 'custom',
+           e.event_month, e.event_day, gid, req.householdId]
+        );
+        ec++;
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ ok: true, groups: gc, members: mc, events: ec });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;

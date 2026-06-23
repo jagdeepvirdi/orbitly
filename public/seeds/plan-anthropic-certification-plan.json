@@ -1,0 +1,159 @@
+{
+  "plan": {
+    "id": 1,
+    "title": "Anthropic Certification Plan",
+    "description": "Official Claude certification pathway by Anthropic",
+    "type": "certification",
+    "color": "#6366f1",
+    "icon": "🤖",
+    "exam_date": "4 September 2026",
+    "est_completion": "25 August 2026",
+    "cert_name": "Claude Certified Associate — Foundational",
+    "courses": [
+      {
+        "key": "c1",
+        "name": "Introduction to Claude",
+        "phase": 0,
+        "total": 3,
+        "done": 0,
+        "next": "Completed",
+        "next_iso": null,
+        "sort_order": 1,
+        "url": null
+      },
+      {
+        "key": "c2",
+        "name": "Claude 101",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "Today · 11 Jun",
+        "next_iso": "2026-06-11",
+        "sort_order": 2,
+        "url": null
+      },
+      {
+        "key": "c3",
+        "name": "Prompt Engineering with Claude",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "22 Jun",
+        "next_iso": "2026-06-22",
+        "sort_order": 3,
+        "url": null
+      },
+      {
+        "key": "c4",
+        "name": "Claude & the API",
+        "phase": 1,
+        "total": 4,
+        "done": 0,
+        "next": "30 Jun",
+        "next_iso": "2026-06-30",
+        "sort_order": 4,
+        "url": null
+      },
+      {
+        "key": "c5",
+        "name": "Tool Use & Function Calling",
+        "phase": 1,
+        "total": 4,
+        "done": 0,
+        "next": "7 Jul",
+        "next_iso": "2026-07-07",
+        "sort_order": 5,
+        "url": null
+      },
+      {
+        "key": "c6",
+        "name": "Model Context Protocol (MCP) 101",
+        "phase": 1,
+        "total": 3,
+        "done": 0,
+        "next": "13 Jul",
+        "next_iso": "2026-07-13",
+        "sort_order": 6,
+        "url": null
+      },
+      {
+        "key": "c7",
+        "name": "Claude Code 101",
+        "phase": 1,
+        "total": 5,
+        "done": 0,
+        "next": "17 Jul",
+        "next_iso": "2026-07-17",
+        "sort_order": 7,
+        "url": null
+      },
+      {
+        "key": "c8",
+        "name": "Building Agents with Claude",
+        "phase": 2,
+        "total": 6,
+        "done": 0,
+        "next": "24 Jul",
+        "next_iso": "2026-07-24",
+        "sort_order": 8,
+        "url": null
+      },
+      {
+        "key": "c9",
+        "name": "Retrieval-Augmented Generation",
+        "phase": 2,
+        "total": 4,
+        "done": 0,
+        "next": "3 Aug",
+        "next_iso": "2026-08-03",
+        "sort_order": 9,
+        "url": null
+      },
+      {
+        "key": "c10",
+        "name": "Claude for Data & Analysis",
+        "phase": 2,
+        "total": 4,
+        "done": 0,
+        "next": "8 Aug",
+        "next_iso": "2026-08-08",
+        "sort_order": 10,
+        "url": null
+      },
+      {
+        "key": "c11",
+        "name": "Evals, Safety & Guardrails",
+        "phase": 2,
+        "total": 4,
+        "done": 0,
+        "next": "13 Aug",
+        "next_iso": "2026-08-13",
+        "sort_order": 11,
+        "url": null
+      },
+      {
+        "key": "c12",
+        "name": "Claude in Production",
+        "phase": 3,
+        "total": 5,
+        "done": 0,
+        "next": "19 Aug",
+        "next_iso": "2026-08-19",
+        "sort_order": 12,
+        "url": null
+      },
+      {
+        "key": "c13",
+        "name": "Capstone Project",
+        "phase": 3,
+        "total": 6,
+        "done": 0,
+        "next": "25 Aug",
+        "next_iso": "2026-08-25",
+        "sort_order": 13,
+        "url": null
+      }
+    ]
+  },
+  "version": 1
+}

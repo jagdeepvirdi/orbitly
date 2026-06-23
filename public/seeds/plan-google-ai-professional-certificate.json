@@ -1,0 +1,104 @@
+{
+  "plan": {
+    "id": 3,
+    "title": "Google AI Professional Certificate",
+    "description": null,
+    "type": "certification",
+    "color": "#6366f1",
+    "icon": "🏆",
+    "exam_date": null,
+    "est_completion": null,
+    "cert_name": null,
+    "courses": [
+      {
+        "key": "c1781432483708",
+        "name": "AI Fundamentals",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 1,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483748",
+        "name": "AI for Brainstorming and Planning",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 2,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483759",
+        "name": "AI for Research and Insights",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 3,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483771",
+        "name": "AI for Writing and Communicating",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 4,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483786",
+        "name": "AI for Content Creation",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 5,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483799",
+        "name": "AI for Data Analysis",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 6,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483818",
+        "name": "AI for App Building",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 7,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      },
+      {
+        "key": "c1781432483837",
+        "name": "Prompt Engineering Tools",
+        "phase": 0,
+        "total": 5,
+        "done": 0,
+        "next": "TBD",
+        "next_iso": null,
+        "sort_order": 8,
+        "url": "https://www.coursera.org/professional-certificates/google-ai"
+      }
+    ]
+  },
+  "version": 1
+}

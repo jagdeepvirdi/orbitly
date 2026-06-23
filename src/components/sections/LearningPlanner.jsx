@@ -1338,8 +1338,96 @@ function LearningEventsSection({ events, plans, onCreated, onUpdated, onDeleted 
 
 // ── Plans Hub ─────────────────────────────────────────────────────────────────
 
+const PLAN_PRESETS = [
+  { id: 'anthropic', label: '🤖 Anthropic Certification Plan', desc: 'AI / Claude specialization', file: '/seeds/plan-anthropic-certification-plan.json' },
+  { id: 'google',    label: '🔷 Google AI Professional Cert',  desc: 'Google Cloud AI track',      file: '/seeds/plan-google-ai-professional-certificate.json' },
+  { id: 'sql',       label: '🗄️ Associate Data Analyst in SQL', desc: 'SQL analytics track',        file: '/seeds/plan-associate-data-analyst-in-sql.json' },
+];
+
+function ImportPlanModal({ onClose, onPlanCreated }) {
+  const [busy,    setBusy]    = useState(null);
+  const [msg,     setMsg]     = useState(null);
+
+  async function doImport(source) {
+    setBusy(source);
+    setMsg(null);
+    try {
+      let data;
+      if (typeof source === 'string') {
+        data = await fetch(source).then(r => r.json());
+      } else {
+        const text = await source.text();
+        data = JSON.parse(text);
+      }
+      const res = await api.importPlan(data);
+      onPlanCreated(res.plan);
+      setMsg(`Plan "${res.plan.title}" imported with ${res.courses} courses.`);
+    } catch (e) {
+      setMsg('Import failed: ' + (e.message || 'Unknown error'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 110, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ width: '100%', maxWidth: 460, borderRadius: 24, background: 'var(--surface-solid)', border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+        <div style={{ padding: '28px 28px 24px' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Import Learning Plan</div>
+          <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 20 }}>Load a preset plan or upload your own JSON. A new plan is always created so you can rename it independently.</div>
+
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Presets</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            {PLAN_PRESETS.map(p => (
+              <button
+                key={p.id}
+                disabled={!!busy}
+                onClick={() => doImport(p.file)}
+                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit', textAlign: 'left', opacity: busy && busy !== p.file ? 0.5 : 1 }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{p.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{p.desc}</div>
+                </div>
+                {busy === p.file ? (
+                  <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</span>
+                ) : (
+                  <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Load →</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Upload JSON</div>
+          <label style={{ display: 'block', padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--border)', textAlign: 'center', cursor: 'pointer', color: 'var(--text-3)', fontSize: 13 }}>
+            {busy === 'file' ? 'Uploading…' : 'Click to choose file'}
+            <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => e.target.files[0] && doImport(e.target.files[0])} />
+          </label>
+
+          {msg && (
+            <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: msg.startsWith('Import failed') ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)', color: msg.startsWith('Import failed') ? '#fca5a5' : '#34d399', fontSize: 13 }}>
+              {msg}
+            </div>
+          )}
+
+          <button
+            onClick={onClose}
+            style={{ marginTop: 18, width: '100%', padding: '11px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-2)', fontWeight: 600 }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlansHub({ plans, courses, books, events, loading, onOpen, onPlanCreated, onPlanUpdated, onPlanDeleted, onEventCreated, onEventUpdated, onEventDeleted }) {
   const [showNew,      setShowNew]      = useState(false);
+  const [showImport,   setShowImport]   = useState(false);
   const [editTarget,   setEditTarget]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -1356,16 +1444,26 @@ function PlansHub({ plans, courses, books, events, loading, onOpen, onPlanCreate
             Certifications, courses, study plans and reading lists
           </p>
         </div>
-        <button onClick={() => setShowNew(true)} style={{
-          display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px',
-          borderRadius: 13, border: 'none', cursor: 'pointer',
-          fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, color: '#fff',
-          background: 'linear-gradient(120deg,#6366f1,#a855f7)',
-          boxShadow: '0 6px 18px rgba(99,102,241,0.3)',
-        }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          New Plan
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => setShowImport(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px',
+            borderRadius: 13, border: '1px solid var(--border)', cursor: 'pointer',
+            fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700,
+            color: 'var(--text-2)', background: 'var(--surface)',
+          }}>
+            ↓ Import Plan
+          </button>
+          <button onClick={() => setShowNew(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px',
+            borderRadius: 13, border: 'none', cursor: 'pointer',
+            fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, color: '#fff',
+            background: 'linear-gradient(120deg,#6366f1,#a855f7)',
+            boxShadow: '0 6px 18px rgba(99,102,241,0.3)',
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            New Plan
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -1400,6 +1498,12 @@ function PlansHub({ plans, courses, books, events, loading, onOpen, onPlanCreate
         onDeleted={onEventDeleted}
       />
 
+      {showImport && (
+        <ImportPlanModal
+          onClose={() => setShowImport(false)}
+          onPlanCreated={plan => onPlanCreated(plan)}
+        />
+      )}
       {showNew && (
         <PlanFormModal
           onClose={() => setShowNew(false)}
