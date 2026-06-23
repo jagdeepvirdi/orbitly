@@ -407,7 +407,7 @@ router.get('/multi', async (req, res) => {
       try {
         const { rows } = await db.query(
           `SELECT name, event_date::text AS date FROM festivals
-           WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3 AND user_id = ''`,
+           WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3`,
           [calId, `${y}-01-01`, `${y}-12-31`]
         );
         results.push(
@@ -444,7 +444,7 @@ router.get('/multi', async (req, res) => {
       try {
         const { rows } = await db.query(
           `SELECT name, event_date::text AS date FROM festivals
-           WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3 AND user_id = ''`,
+           WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3`,
           [dbCalName, `${y}-01-01`, `${y}-12-31`]
         );
         custom = rows.map(h => ({
@@ -503,7 +503,7 @@ router.get('/:year/:country', async (req, res) => {
     try {
       const { rows } = await db.query(
         `SELECT name, event_date::text AS date FROM festivals
-         WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3 AND user_id = ''`,
+         WHERE calendar = $1 AND event_date >= $2 AND event_date <= $3`,
         [dbCalName, `${year}-01-01`, `${year}-12-31`]
       );
       custom = rows.map(h => ({

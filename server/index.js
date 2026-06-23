@@ -524,7 +524,9 @@ async function runMigrations() {
        festival_id INTEGER NOT NULL REFERENCES festivals(id) ON DELETE CASCADE,
        PRIMARY KEY (user_id, festival_id)
      )`,
-    `CREATE INDEX IF NOT EXISTS idx_user_festivals_user ON user_festivals(user_id)`
+    `CREATE INDEX IF NOT EXISTS idx_user_festivals_user ON user_festivals(user_id)`,
+    // Phase 26.3: Drop redundant user_id column from festivals table
+    `ALTER TABLE festivals DROP COLUMN IF EXISTS user_id CASCADE`
   ];
   for (const sql of sqls) {
     try { await db.query(sql); } catch (e) { console.warn('[migrate]', e.message.slice(0, 80)); }
@@ -542,14 +544,14 @@ async function runMigrations() {
       const values = [];
       let pIdx = 1;
       for (const f of festivals) {
-        valuePlaceholders.push(`($${pIdx}, $${pIdx+1}, $${pIdx+2}, $${pIdx+3}, $${pIdx+4}, $${pIdx+5}, $${pIdx+6}, $${pIdx+7}, '')`);
+        valuePlaceholders.push(`($${pIdx}, $${pIdx+1}, $${pIdx+2}, $${pIdx+3}, $${pIdx+4}, $${pIdx+5}, $${pIdx+6}, $${pIdx+7})`);
         values.push(f.name, f.event_date, f.cat, f.emoji, f.action, f.reminder, f.calendar, f.description);
         pIdx += 8;
       }
       
       if (values.length > 0) {
         await db.query(
-          `INSERT INTO festivals (name, event_date, cat, emoji, action, reminder, calendar, description, user_id)
+          `INSERT INTO festivals (name, event_date, cat, emoji, action, reminder, calendar, description)
            VALUES ${valuePlaceholders.join(',')}
            ON CONFLICT (name, event_date) DO NOTHING`,
           values
