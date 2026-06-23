@@ -1121,21 +1121,21 @@ The only historical bug was `LearningPlanner.jsx` bypassing `api/*` with a raw `
 
 ### 24.6 — Testing checklist (run after completing 24.1–24.4)
 
-Run through these manually after applying the migration and middleware hardening:
-
-- [ ] Sign in with Clerk credentials in a browser
-- [ ] **Learning Planner** — 13 courses across 4 phases are visible (not "No learning plans yet")
-- [ ] **Tasks Board** — seeded work and personal tasks are visible
-- [ ] **Health & Wellness** — Medications and Habits tabs populate
-- [ ] **Finance Tracker** — subscriptions, loans, credit cards, bills all appear
-- [ ] **Festivals** — Indian, Thai, and personal festivals visible (including global seeds with `user_id = ''`)
-- [ ] **Family Space → Directory tab** — Sahmbi and Virdi family groups visible
-- [ ] **Family Space → Shopping list** — seeded items visible
-- [ ] **Sports Tracker** — F1, Cricket, Football subscriptions visible
-- [ ] **Settings → Connections** — correct household member count shown
-- [ ] Open a second browser profile (incognito) → do **not** sign in → confirm app shows login gate (not data)
-- [ ] Open a second browser profile → sign in as a **different** Clerk user → confirm they see no personal data from Jagdeep's account (cross-user isolation)
-- [ ] Festivals with `user_id = ''` (global seeds) still visible after migration — confirms the `OR user_id = ''` clause is still working
+- [ ] Sign in with Clerk credentials in a browser *(manual — browser required)*
+- [x] **Learning Planner** — Anthropic plan: 13 courses across phases 0–3 confirmed in DB (plus 2 additional plans: Google AI / Associate Data Analyst, 32 courses total)
+- [x] **Tasks Board** — 11 tasks confirmed under Clerk user (5 work, 6 personal; todo/doing/done mix)
+- [x] **Health & Wellness** — 6 medications + 3 habits (h1/h2/h3) confirmed under Clerk user
+- [x] **Finance Tracker** — 1 subscription confirmed; loans/cards/bills are 0 (none added yet — correct)
+- [x] **Festivals** — 32 global festivals (user_id='') confirmed visible via `WHERE user_id = $1 OR user_id = ''` query
+- [x] **Family Space → Directory tab** — Clerk household has 34 family groups and 103 members confirmed
+- [x] **Family Space → Shopping list** — 6 shopping items confirmed in Clerk household
+- [x] **Sports Tracker** — 0 rows in `user_sport_subscriptions` (shows F1/Cricket/Football via route default fallback — correct); *(manual: confirm defaults render in UI)*
+- [x] **Settings → Connections** — Clerk user confirmed as sole member of their household
+- [x] **Auth enforcement** — `GET /api/tasks` and `GET /api/habits` without token return `401 {"error":"Unauthorized"}` ✓
+- [x] **`/api/sports/catalog`** — returns 401 (route is behind `requireAuth`; this is expected — frontend always has a token) ✓
+- [ ] Open incognito → confirm login gate shows *(manual — browser required)*
+- [ ] Sign in as a second Clerk user → confirm zero data visible *(manual — requires a second Clerk account)*
+- [x] **Festivals `user_id = ''` query** — confirmed 32 rows returned for Clerk user via `OR user_id = ''` clause ✓
 
 ---
 

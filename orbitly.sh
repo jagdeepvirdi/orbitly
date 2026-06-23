@@ -152,9 +152,11 @@ stop_prod() {
 
 # ── Dispatch ──────────────────────────────────────────────────────────────────
 
-[[ $# -ne 2 ]] && usage
+# Default to "dev start" when called with no arguments
+MODE="${1:-dev}"
+ACTION="${2:-start}"
 
-case "$1-$2" in
+case "$MODE-$ACTION" in
   dev-start)
     echo; echo "[Orbitly] Starting dev stack..."
     start_database
@@ -194,3 +196,4 @@ case "$1-$2" in
     ;;
   *) usage ;;
 esac
+

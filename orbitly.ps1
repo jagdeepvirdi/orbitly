@@ -1,7 +1,7 @@
 # Usage: .\orbitly.ps1 {dev|prod} {start|stop|restart}
 param(
-    [Parameter(Mandatory)][ValidateSet('dev','prod')] [string]$Mode,
-    [Parameter(Mandatory)][ValidateSet('start','stop','restart','status')] [string]$Action
+    [ValidateSet('dev','prod')]                        [string]$Mode   = 'dev',
+    [ValidateSet('start','stop','restart','status')]   [string]$Action = 'start'
 )
 
 Set-Location $PSScriptRoot

@@ -21,7 +21,10 @@ export default async function requireAuth(req, res, next) {
   const token = authHeader.slice(7);
   try {
     const payload = await clerkClient.verifyToken(token, {
-      authorizedParties: [process.env.VITE_CLERK_PUBLISHABLE_KEY],
+      // APP_URL is the frontend origin (e.g. http://localhost:5177 or https://orbitly.vercel.app).
+      // Clerk's JWT azp claim carries the origin, not the publishable key.
+      // Omitting authorizedParties in dev is safe — Clerk dev JWTs may not include azp at all.
+      ...(process.env.APP_URL && { authorizedParties: [process.env.APP_URL] }),
       clockSkewInMs: 60_000,
     });
     req.userId = payload.sub;
