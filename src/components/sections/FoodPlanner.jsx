@@ -632,7 +632,40 @@ function ImportView({ dispatch }) {
 
 /* ── Discover & Cuisine Library ─────────────────────────── */
 
+function ScrollArrowButton({ dir, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={dir < 0 ? 'Scroll left' : 'Scroll right'}
+      style={{
+        flexShrink: 0, width: 26, height: 26, borderRadius: '50%',
+        border: '1px solid var(--border)', background: 'var(--surface)',
+        color: 'var(--text-2)', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        {dir < 0 ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+      </svg>
+    </button>
+  );
+}
+
 function DiscoverView({ recipes, dispatch }) {
+  const areaScrollRef = useRef(null);
+  const categoryScrollRef = useRef(null);
+
+  // Let mouse-wheel scroll these horizontal pill rows (they have no visible
+  // scrollbar, so without this, mouse users can't reach items past the fold)
+  const handleWheelScroll = e => {
+    if (e.deltaY === 0) return;
+    e.currentTarget.scrollLeft += e.deltaY;
+    e.preventDefault();
+  };
+  const scrollRow = (ref, dir) => {
+    ref.current?.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  };
+
   const [categories, setCategories] = useState([]);
   const [areas, setAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState('All');
@@ -918,34 +951,43 @@ function DiscoverView({ recipes, dispatch }) {
         <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)', marginBottom: 8 }}>
           Cuisine
         </div>
-        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-          <button
-            onClick={() => handleSelectArea('All')}
-            style={{
-              padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
-              background: selectedArea === 'All' ? 'var(--accent)' : 'var(--surface)',
-              color: selectedArea === 'All' ? '#fff' : 'var(--text-2)',
-              fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              whiteSpace: 'nowrap', transition: 'all .15s',
-            }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ScrollArrowButton dir={-1} onClick={() => scrollRow(areaScrollRef, -1)} />
+          <div
+            ref={areaScrollRef}
+            onWheel={handleWheelScroll}
+            className="hide-scrollbar"
+            style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}
           >
-            All Cuisines
-          </button>
-          {areas.map(area => (
             <button
-              key={area}
-              onClick={() => handleSelectArea(area)}
+              onClick={() => handleSelectArea('All')}
               style={{
                 padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
-                background: selectedArea === area ? 'var(--accent)' : 'var(--surface)',
-                color: selectedArea === area ? '#fff' : 'var(--text-2)',
+                background: selectedArea === 'All' ? 'var(--accent)' : 'var(--surface)',
+                color: selectedArea === 'All' ? '#fff' : 'var(--text-2)',
                 fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 whiteSpace: 'nowrap', transition: 'all .15s',
               }}
             >
-              {area}
+              All Cuisines
             </button>
-          ))}
+            {areas.map(area => (
+              <button
+                key={area}
+                onClick={() => handleSelectArea(area)}
+                style={{
+                  padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
+                  background: selectedArea === area ? 'var(--accent)' : 'var(--surface)',
+                  color: selectedArea === area ? '#fff' : 'var(--text-2)',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  whiteSpace: 'nowrap', transition: 'all .15s',
+                }}
+              >
+                {area}
+              </button>
+            ))}
+          </div>
+          <ScrollArrowButton dir={1} onClick={() => scrollRow(areaScrollRef, 1)} />
         </div>
       </div>
 
@@ -954,34 +996,43 @@ function DiscoverView({ recipes, dispatch }) {
         <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)', marginBottom: 8 }}>
           Category
         </div>
-        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-          <button
-            onClick={() => handleSelectCategory('All')}
-            style={{
-              padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
-              background: selectedCategory === 'All' ? 'var(--accent)' : 'var(--surface)',
-              color: selectedCategory === 'All' ? '#fff' : 'var(--text-2)',
-              fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              whiteSpace: 'nowrap', transition: 'all .15s',
-            }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ScrollArrowButton dir={-1} onClick={() => scrollRow(categoryScrollRef, -1)} />
+          <div
+            ref={categoryScrollRef}
+            onWheel={handleWheelScroll}
+            className="hide-scrollbar"
+            style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}
           >
-            All Categories
-          </button>
-          {categories.map(cat => (
             <button
-              key={cat}
-              onClick={() => handleSelectCategory(cat)}
+              onClick={() => handleSelectCategory('All')}
               style={{
                 padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
-                background: selectedCategory === cat ? 'var(--accent)' : 'var(--surface)',
-                color: selectedCategory === cat ? '#fff' : 'var(--text-2)',
+                background: selectedCategory === 'All' ? 'var(--accent)' : 'var(--surface)',
+                color: selectedCategory === 'All' ? '#fff' : 'var(--text-2)',
                 fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 whiteSpace: 'nowrap', transition: 'all .15s',
               }}
             >
-              {cat}
+              All Categories
             </button>
-          ))}
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => handleSelectCategory(cat)}
+                style={{
+                  padding: '6px 14px', borderRadius: 99, border: '1px solid var(--border)',
+                  background: selectedCategory === cat ? 'var(--accent)' : 'var(--surface)',
+                  color: selectedCategory === cat ? '#fff' : 'var(--text-2)',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  whiteSpace: 'nowrap', transition: 'all .15s',
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <ScrollArrowButton dir={1} onClick={() => scrollRow(categoryScrollRef, 1)} />
         </div>
       </div>
 
