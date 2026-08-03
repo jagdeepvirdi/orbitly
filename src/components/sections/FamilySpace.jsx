@@ -3,10 +3,12 @@ import { useAppStore } from '../../store/appStore';
 import { fmtBday, nextBdayDays } from '../../utils/dateUtils';
 import { api } from '../../api/client';
 import CheckRow from '../ui/CheckRow';
+import EmojiPicker from '../ui/EmojiPicker';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MOMENT_EMOJIS = ['📸','🎉','🎂','🏖️','🎬','🍳','🌳','🎨','☕','🏊','🎵','🥳','❤️','🌸','⭐','🏡','✈️','🐾','🌅','🎁'];
+const FAMILY_GROUP_EMOJIS = ['👥','👨‍👩‍👧‍👦','❤️','🏡','👪','🤝','👴','👵','🐶','🐱','🌟','🏆','📖','🎯','🧡','💙','💚','🫂','🎗️','🧑‍🤝‍🧑'];
 const TERM_COLORS   = ['#6366f1','#f59e0b','#10b981','#ef4444','#a855f7','#0ea5e9','#f43f5e','#f97316','#64748b','#d4af37'];
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
@@ -133,12 +135,12 @@ function GroupModal({ group, onSave, onClose }) {
       <ModalHeader title={isEdit ? 'Edit Group' : 'Add New Group'} sub={isEdit ? undefined : 'Create a custom group to organise your contacts'} onClose={onClose} />
       <div style={{ padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
-          <label style={{ fontSize: 11.5, color: 'var(--text-3)', display: 'block', marginBottom: 5 }}>Emoji</label>
-          <input style={{ ...INPUT, width: 64, textAlign: 'center', fontSize: 22, padding: '7px 8px' }} value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} maxLength={2} />
-        </div>
-        <div>
           <label style={{ fontSize: 11.5, color: 'var(--text-3)', display: 'block', marginBottom: 5 }}>Group Name *</label>
           <input style={INPUT} value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} placeholder="e.g. Work Friends, College Buddies…" autoFocus />
+        </div>
+        <div>
+          <label style={{ fontSize: 11.5, color: 'var(--text-3)', display: 'block', marginBottom: 5 }}>Emoji</label>
+          <EmojiPicker options={FAMILY_GROUP_EMOJIS} value={form.emoji} onChange={v => setForm(p => ({ ...p, emoji: v }))} />
         </div>
       </div>
       <ModalFooter onSave={() => form.label.trim() && onSave(form)} onClose={onClose} saveLabel={isEdit ? 'Save Changes' : 'Create Group'} disabled={!form.label.trim()} />
@@ -911,14 +913,7 @@ function MomentFormModal({ moment, onClose, onSave }) {
         </div>
         <div>
           <label style={{ fontSize: 11.5, color: 'var(--text-3)', display: 'block', marginBottom: 8 }}>Emoji</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {MOMENT_EMOJIS.map(e => (
-              <button key={e} onClick={() => setForm(p => ({ ...p, emoji: e }))}
-                style={{ width: 36, height: 36, borderRadius: 8, border: `2px solid ${form.emoji === e ? 'var(--accent)' : 'var(--border)'}`, background: form.emoji === e ? 'rgba(99,102,241,0.15)' : 'transparent', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {e}
-              </button>
-            ))}
-          </div>
+          <EmojiPicker options={MOMENT_EMOJIS} value={form.emoji} onChange={v => setForm(p => ({ ...p, emoji: v }))} />
         </div>
         <div>
           <label style={{ fontSize: 11.5, color: 'var(--text-3)', display: 'block', marginBottom: 5 }}>Date</label>

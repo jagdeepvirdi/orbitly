@@ -45,6 +45,21 @@ const SECTIONS = {
   settings: SettingsProfiles,
 };
 
+// Retries a failed bootstrap request a couple of times with backoff before
+// giving up. Without this, a transient blip — a dev-server restart, a brief
+// wifi drop, a Neon cold start — leaves that piece of data silently missing
+// from the bootstrap, and the section just shows whatever stale/default state
+// was already there (looking "wrong") until the user manually reloads the page.
+function withRetry(fn, retries = 2, delayMs = 1500) {
+  return fn().catch(async (err) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      await new Promise(r => setTimeout(r, delayMs * attempt));
+      try { return await fn(); } catch (e) { err = e; }
+    }
+    throw err;
+  });
+}
+
 // Loads all DB data after auth is confirmed.
 // Rendered inside ClerkAuthGuard (Clerk mode) or directly (dev mode),
 // so ClerkBridge always sets the token getter before this mounts.
@@ -54,22 +69,23 @@ function AppDataLoader({ dispatch, state }) {
     const month = today.slice(0, 7);
 
     Promise.allSettled([
-      api.getTasks(),
-      api.getMeds(today),
-      api.getHabits(today),
-      api.getAppts(),
-      api.getShopping(),
-      api.getCourses(),
-      api.getPaid(month),
-      api.getFamilyMembers(),
-      api.getFamilyGroups(),
-      api.getFamilyEvents(),
-      api.getCalendarSubscriptions(),
-      api.getSportSubscriptions(),
-      api.getHousehold(),
-      api.getProfile(),
-      api.getPinnedFestivals(),
-    ]).then(([tasks, meds, habits, appts, shopping, courses, paid, rawMembers, rawGroups, rawEvents, calSubs, sportSubs, household, profile, pinnedFestivals]) => {
+      withRetry(() => api.getTasks()),
+      withRetry(() => api.getMeds(today)),
+      withRetry(() => api.getHabits(today)),
+      withRetry(() => api.getAppts()),
+      withRetry(() => api.getShopping()),
+      withRetry(() => api.getCourses()),
+      withRetry(() => api.getPaid(month)),
+      withRetry(() => api.getFamilyMembers()),
+      withRetry(() => api.getFamilyGroups()),
+      withRetry(() => api.getFamilyEvents()),
+      withRetry(() => api.getCalendarSubscriptions()),
+      withRetry(() => api.getSportSubscriptions()),
+      withRetry(() => api.getHousehold()),
+      withRetry(() => api.getProfile()),
+      withRetry(() => api.getPinnedFestivals()),
+      withRetry(() => api.getPinnedCourses()),
+    ]).then(([tasks, meds, habits, appts, shopping, courses, paid, rawMembers, rawGroups, rawEvents, calSubs, sportSubs, household, profile, pinnedFestivals, pinnedCourses]) => {
       const data = {};
       if (tasks.status === 'fulfilled') {
         data.workTasks     = tasks.value.work     || [];
@@ -81,6 +97,8 @@ function AppDataLoader({ dispatch, state }) {
           prescriptionId: m.prescription_id,
           startDate: m.start_date,
           endDate: m.end_date,
+          daysOfWeek: m.days_of_week,
+          foodTiming: m.food_timing,
         }));
       }
       if (habits.status  === 'fulfilled') data.habits       = habits.value;
@@ -93,6 +111,8 @@ function AppDataLoader({ dispatch, state }) {
       if (profile.status === 'fulfilled') {
         data.userGender          = profile.value.gender ?? 'prefer-not-to-say';
         data.householdCycleShared = profile.value.share_cycle_tracker ?? false;
+        data.userCurrencies = Array.isArray(profile.value.currencies) && profile.value.currencies.length
+          ? profile.value.currencies : ['INR', 'THB', 'USD'];
       }
       if (shopping.status === 'fulfilled') data.shopList    = shopping.value;
       if (courses.status === 'fulfilled' && courses.value.length) {
@@ -135,6 +155,9 @@ function AppDataLoader({ dispatch, state }) {
       }
       if (pinnedFestivals.status === 'fulfilled' && Array.isArray(pinnedFestivals.value)) {
         data.pinnedFestivals = pinnedFestivals.value;
+      }
+      if (pinnedCourses.status === 'fulfilled' && Array.isArray(pinnedCourses.value)) {
+        data.pinnedCourses = pinnedCourses.value;
       }
  
       if (Object.keys(data).length) {

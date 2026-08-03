@@ -59,6 +59,7 @@ function createInitialState() {
   cycleDay: 14,
   userGender: 'prefer-not-to-say',
   householdCycleShared: false,
+  userCurrencies: ['INR', 'THB', 'USD'],
   prescriptions: [],
   testResults: [],
   sportSubscriptions: [
@@ -91,6 +92,7 @@ function createInitialState() {
   icsFeeds: [],
   householdId: null,     // loaded from DB on mount — not persisted locally
   pinnedFestivals: [],   // loaded from DB on mount — not persisted locally
+  pinnedCourses: [],     // loaded from DB on mount — not persisted locally
   };
 }
 
@@ -98,7 +100,7 @@ function createInitialState() {
 // Prescription file blobs live in a separate localStorage key ('orbitly-rx-files').
 const PERSIST_KEYS = [
   'theme', 'userId', 'examDone', 'cycleDay',
-  'userGender', 'householdCycleShared',
+  'userGender', 'householdCycleShared', 'userCurrencies',
   'sportSubscriptions', 'overlays', 'notifications',
   'taskView', 'calView', 'rescheduleDismissed',
   'timer', 'lastResetDate',
@@ -157,6 +159,12 @@ function reducer(state, action) {
       return { ...state, pinnedFestivals: [...state.pinnedFestivals, action.id] };
     case 'UNPIN_FESTIVAL':
       return { ...state, pinnedFestivals: state.pinnedFestivals.filter(id => id !== action.id) };
+    case 'SET_PINNED_COURSES':
+      return { ...state, pinnedCourses: action.ids };
+    case 'PIN_COURSE':
+      return { ...state, pinnedCourses: [...state.pinnedCourses, action.id] };
+    case 'UNPIN_COURSE':
+      return { ...state, pinnedCourses: state.pinnedCourses.filter(id => id !== action.id) };
     case 'SET_SECTION':
       return { ...state, section: action.section };
     case 'TOGGLE_THEME':
@@ -229,14 +237,14 @@ function reducer(state, action) {
       return { ...state, userGender: action.gender };
     case 'SET_CYCLE_SHARED':
       return { ...state, householdCycleShared: action.shared };
+    case 'SET_CURRENCIES':
+      return { ...state, userCurrencies: action.currencies };
     case 'TOGGLE_SHOP':
       return { ...state, shopList: state.shopList.map(i => i.id === action.id ? { ...i, done: !i.done } : i) };
     case 'ADD_SHOP':
       return { ...state, shopList: [...state.shopList, action.shopItem] };
-    case 'ADD_TASK': {
-      const task = { id: 't' + Date.now(), title: action.title, priority: action.priority || 'Normal', due: action.due || '', status: 'todo', overdue: false, recurring: false };
-      return { ...state, [action.list]: [...state[action.list], task] };
-    }
+    case 'ADD_TASK':
+      return { ...state, [action.list]: [...state[action.list], action.task] };
     case 'DELETE_TASK': {
       const list = action.list;
       return { ...state, [list]: state[list].filter(t => t.id !== action.id) };
@@ -481,7 +489,7 @@ export function AppStoreProvider({ children }) {
     saveToStorage(state);
   }, [
     state.theme, state.userId, state.examDone, state.cycleDay,
-    state.userGender, state.householdCycleShared,
+    state.userGender, state.householdCycleShared, state.userCurrencies,
     state.sportSubscriptions, state.overlays, state.notifications,
     state.taskView, state.calView, state.rescheduleDismissed,
     state.timer, state.lastResetDate,

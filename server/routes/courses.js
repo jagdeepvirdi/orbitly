@@ -450,6 +450,51 @@ router.post('/ai-import', aiLimiter, async (req, res) => {
   res.status(503).json({ error: errorMsg, geminiQuotaExceeded: isQuota, ollamaTimedOut });
 });
 
+// GET /pinned — returns all pinned course IDs for the user
+router.get('/pinned', async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT course_id FROM user_pinned_courses WHERE user_id = $1',
+      [req.userId]
+    );
+    res.json(rows.map(r => r.course_id));
+  } catch (e) {
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+// POST /pinned — pin a course
+router.post('/pinned', async (req, res) => {
+  const { courseId } = req.body;
+  if (!courseId) {
+    return res.status(400).json({ error: 'courseId required' });
+  }
+  try {
+    await db.query(
+      `INSERT INTO user_pinned_courses (user_id, course_id)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id, course_id) DO NOTHING`,
+      [req.userId, courseId]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+// DELETE /pinned/:courseId — unpin a course
+router.delete('/pinned/:courseId', async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM user_pinned_courses WHERE user_id = $1 AND course_id = $2',
+      [req.userId, req.params.courseId]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
 // DELETE /:id — remove a course from DB
 router.delete('/:id', async (req, res) => {
   try {

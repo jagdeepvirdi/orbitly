@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { api } from '../../api/client';
 import CheckRow from '../ui/CheckRow';
+import EmojiPicker from '../ui/EmojiPicker';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+
+const HOME_EMOJIS = ['🏠','🔧','🧹','🪴','🚿','🧯','🔥','🪟','🧺','🐛','🚪','🛠️','🌡️','❄️','🚽','🧴','🪣','🧽','🔌','🎨'];
 
 const APP_TODAY_ISO = '2026-06-17';
 const TODAY = new Date(APP_TODAY_ISO);
@@ -190,15 +193,13 @@ function ChoreModal({ initial, onSave, onClose }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr', gap: 10 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 5 }}>EMOJI</div>
-              <input style={{ ...INP, textAlign: 'center', fontSize: 22, padding: '8px 4px' }} value={form.emoji} onChange={e => set('emoji', e.target.value)} maxLength={2} />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 5 }}>TASK NAME *</div>
-              <input autoFocus style={INP} placeholder="e.g. AC Cleaning" value={form.name} onChange={e => set('name', e.target.value)} />
-            </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 5 }}>TASK NAME *</div>
+            <input autoFocus style={INP} placeholder="e.g. AC Cleaning" value={form.name} onChange={e => set('name', e.target.value)} />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 5 }}>EMOJI</div>
+            <EmojiPicker options={HOME_EMOJIS} value={form.emoji} onChange={v => set('emoji', v)} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -245,6 +246,7 @@ function ChoreModal({ initial, onSave, onClose }) {
 
 export default function HomeManagement() {
   const { state, dispatch } = useAppStore();
+  const mob = state.isMobile;
   const [choreModal, setChoreModal] = useState(null); // null | 'new' | chore-object
   const [shopInput, setShopInput] = useState('');
   const [shopCat, setShopCat] = useState('');
@@ -378,11 +380,11 @@ export default function HomeManagement() {
       </div>
 
       {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 18, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : 'repeat(12, 1fr)', gap: mob ? 14 : 18, alignItems: 'start' }}>
 
         {/* ── MAINTENANCE TASKS ── */}
         <section style={{
-          gridColumn: 'span 7',
+          gridColumn: mob ? 'span 1' : 'span 7',
           background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 22, padding: 24,
         }}>
@@ -416,7 +418,7 @@ export default function HomeManagement() {
 
         {/* ── SHOPPING LIST ── */}
         <section style={{
-          gridColumn: 'span 5',
+          gridColumn: mob ? 'span 1' : 'span 5',
           background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 22, padding: 24,
         }}>

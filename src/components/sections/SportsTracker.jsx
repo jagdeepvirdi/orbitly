@@ -115,6 +115,8 @@ function StandingsTable({ title, rows, showWins }) {
 }
 
 function F1Section({ dispatch }) {
+  const { state } = useAppStore();
+  const mob = state.isMobile;
   const { schedule, standings, constructors, raceResults, loading, error, refresh, fetchedAt, season } = useLiveF1();
 
   const rawCalendar     = schedule      || F1_CALENDAR;
@@ -191,7 +193,7 @@ function F1Section({ dispatch }) {
       </div>
 
       {/* Row 1: Upcoming Races + Recent Results */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16, alignItems: 'start' }}>
 
         {/* Upcoming races */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
@@ -259,7 +261,7 @@ function F1Section({ dispatch }) {
       </div>
 
       {/* Row 2: Driver Standings + Constructor Standings */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : '1fr 1fr', gap: 16, alignItems: 'start' }}>
         <StandingsTable
           title="Driver Standings"
           rows={rawDrivers}

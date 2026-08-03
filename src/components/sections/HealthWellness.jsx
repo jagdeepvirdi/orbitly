@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect, Fragment } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { api } from '../../api/client';
-import { todayISO, fmtApptDate, fmtShortDate } from '../../utils/dateUtils';
+import EmojiPicker from '../ui/EmojiPicker';
+import { todayISO, fmtApptDate, fmtShortDate, isDueToday, fmtDaysOfWeek, DAY_LABELS, ALL_DAYS, getMedStatus } from '../../utils/dateUtils';
 
 const INP = {
   width: '100%', padding: '10px 13px', borderRadius: 10,
@@ -49,7 +50,14 @@ function openFile(dataUrl) {
   if (w) w.document.write(`<html><body style="margin:0"><iframe src="${dataUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
 }
 
-const EMPTY_MED  = { name: '', dose: '', time: 'Morning', who: 'Jagdeep', doctor: '', startDate: '', endDate: '', notes: '', prescriptionId: '' };
+const TIME_SLOTS = ['Morning', 'Afternoon', 'Evening', 'Night'];
+const FOOD_TIMINGS = [
+  { value: '',            label: 'Any time' },
+  { value: 'before_food', label: 'Before food' },
+  { value: 'after_food',  label: 'After food' },
+  { value: 'with_food',   label: 'With food' },
+];
+const EMPTY_MED  = { name: '', dose: '', times: ['Morning'], daysOfWeek: ALL_DAYS, foodTiming: '', who: 'Jagdeep', doctor: '', startDate: '', endDate: '', notes: '', prescriptionId: '' };
 const EMPTY_APPT = { type: '', who: 'Jagdeep', date: '', doctor: '', location: '', time: '', notes: '' };
 const EMPTY_HABIT = { label: '', icon: '💧' };
 const HABIT_EMOJIS = ['💧','🏃','😴','🧘','📚','🥗','💊','🚶','🎯','🏋️','☀️','🍎','🌿','💪','🧠','🎵','✍️','🛁','🌙','🧹'];
@@ -399,14 +407,58 @@ function TogglePills({ options, value, onChange }) {
     </div>
   );
 }
+// Multi-select variant — several chips can be active at once (e.g. Morning + Night)
+function MultiTogglePills({ options, values, onChange }) {
+  const toggle = opt => onChange(values.includes(opt) ? values.filter(v => v !== opt) : [...values, opt]);
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {options.map(opt => {
+        const active = values.includes(opt);
+        return (
+          <button key={opt} type="button" onClick={() => toggle(opt)}
+            style={{ flex: '1 0 auto', minWidth: 70, padding: '8px 10px', borderRadius: 9, fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .13s', border: `1px solid ${active ? '#10b981' : 'var(--border-strong)'}`, background: active ? 'rgba(16,185,129,0.15)' : 'transparent', color: active ? '#6ee7b7' : 'var(--text-3)' }}>
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+// Value-pair variant for options whose display label differs from its stored value (e.g. food timing)
+function ValueTogglePills({ options, value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {options.map(opt => (
+        <button key={opt.value} type="button" onClick={() => onChange(opt.value)}
+          style={{ flex: '1 0 auto', padding: '8px 10px', borderRadius: 9, fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .13s', border: `1px solid ${value === opt.value ? '#10b981' : 'var(--border-strong)'}`, background: value === opt.value ? 'rgba(16,185,129,0.15)' : 'transparent', color: value === opt.value ? '#6ee7b7' : 'var(--text-3)' }}>
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+// 7 day-of-week chips (0=Sun..6=Sat). Won't let the last selected day be removed.
+function DayOfWeekPicker({ values, onChange }) {
+  const toggle = d => {
+    if (values.includes(d)) { if (values.length > 1) onChange(values.filter(v => v !== d)); }
+    else onChange([...values, d].sort((a, b) => a - b));
+  };
+  return (
+    <div style={{ display: 'flex', gap: 5 }}>
+      {DAY_LABELS.map((label, d) => {
+        const active = values.includes(d);
+        return (
+          <button key={d} type="button" onClick={() => toggle(d)} title={label}
+            style={{ flex: 1, padding: '8px 0', borderRadius: 9, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .13s', border: `1px solid ${active ? '#10b981' : 'var(--border-strong)'}`, background: active ? 'rgba(16,185,129,0.15)' : 'transparent', color: active ? '#6ee7b7' : 'var(--text-3)' }}>
+            {label[0]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // ── Med status helpers ────────────────────────────────────────────────────────
-function getMedStatus(med) {
-  const today = todayISO();
-  if (med.startDate && med.startDate > today) return 'upcoming';
-  if (med.endDate && med.endDate < today) return 'past';
-  return 'active';
-}
 const MED_STATUS_ORDER = { active: 0, upcoming: 1, past: 2 };
 
 function fmtMedRange(med) {
@@ -432,42 +484,62 @@ function CatIcon({ category, stroke }) {
   }
 }
 
+const FOOD_TIMING_LABELS = { before_food: 'Before food', after_food: 'After food', with_food: 'With food' };
+
 // ── Med row ───────────────────────────────────────────────────────────────────
-function MedRow({ med, onToggle, onDelete, rx }) {
+function MedRow({ med, onToggle, onDelete, onEdit, rx }) {
   const [hov, setHov] = useState(false);
   const ws = WHO_STYLE[med.who || 'Jagdeep'] || WHO_STYLE.Jagdeep;
-  const timeBg    = med.time === 'Morning' ? 'rgba(245,158,11,0.16)' : med.time === 'Both' ? 'rgba(16,185,129,0.16)' : 'rgba(99,102,241,0.16)';
-  const timeColor = med.time === 'Morning' ? '#fcd34d' : med.time === 'Both' ? '#6ee7b7' : '#a5b4fc';
+  const t = med.time || '';
+  const hasMorning = /morning/i.test(t), hasEveningOrNight = /evening|night/i.test(t);
+  const timeBg    = hasMorning && hasEveningOrNight ? 'rgba(16,185,129,0.16)' : hasMorning ? 'rgba(245,158,11,0.16)' : 'rgba(99,102,241,0.16)';
+  const timeColor = hasMorning && hasEveningOrNight ? '#6ee7b7' : hasMorning ? '#fcd34d' : '#a5b4fc';
   const status = getMedStatus(med);
   const isUpcoming = status === 'upcoming';
   const isPast = status === 'past';
   const dateRange = fmtMedRange(med);
+  const dueToday = isDueToday(med.daysOfWeek);
+  const daysLabel = fmtDaysOfWeek(med.daysOfWeek);
+  const foodLabel = FOOD_TIMING_LABELS[med.foodTiming];
+  const checkboxDisabled = isUpcoming || !dueToday;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', margin: '0 -10px', borderRadius: 12, transition: 'background .13s', background: hov ? 'var(--surface-2)' : 'transparent', opacity: isPast ? 0.55 : 1 }}
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 10px', margin: '0 -10px', borderRadius: 12, transition: 'background .13s', background: hov ? 'var(--surface-2)' : 'transparent', opacity: isPast ? 0.55 : 1 }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <button onClick={isUpcoming ? undefined : onToggle} disabled={isUpcoming}
-        style={{ flex: '0 0 22px', width: 22, height: 22, borderRadius: 7, border: `2px solid ${med.done ? '#10b981' : isUpcoming ? 'var(--border)' : 'var(--border-strong)'}`, background: med.done ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isUpcoming ? 'default' : 'pointer', opacity: isUpcoming ? 0.4 : 1 }}>
+      <button onClick={checkboxDisabled ? undefined : onToggle} disabled={checkboxDisabled}
+        style={{ flex: '0 0 22px', width: 22, height: 22, marginTop: 1, borderRadius: 7, border: `2px solid ${med.done ? '#10b981' : checkboxDisabled ? 'var(--border)' : 'var(--border-strong)'}`, background: med.done ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: checkboxDisabled ? 'default' : 'pointer', opacity: checkboxDisabled ? 0.4 : 1 }}>
         {med.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
       </button>
-      <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+      <div style={{ flex: 1, textAlign: 'left', minWidth: 0, cursor: onEdit ? 'pointer' : 'default' }} onClick={onEdit}>
         <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...(med.done ? { textDecoration: 'line-through', color: 'var(--text-3)' } : {}) }}>{med.name}</div>
         <div style={{ fontSize: 11.5, color: 'var(--text-3)' }}>
           {med.dose}{med.doctor ? ` · ${med.doctor}` : ''}
           {dateRange && <span style={{ marginLeft: 5, color: isUpcoming ? '#fcd34d' : isPast ? '#6ee7b7' : 'var(--text-3)' }}>{dateRange}</span>}
         </div>
+        {!isUpcoming && !isPast && (daysLabel || foodLabel) && (
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 4 }}>
+            {daysLabel && <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 99, fontWeight: 600, background: dueToday ? 'rgba(168,85,247,0.14)' : 'rgba(107,114,128,0.14)', color: dueToday ? '#d8b4fe' : 'var(--text-3)' }}>{daysLabel}</span>}
+            {foodLabel && <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 99, fontWeight: 600, background: 'rgba(59,130,246,0.14)', color: '#93c5fd' }}>{foodLabel}</span>}
+          </div>
+        )}
       </div>
       {isUpcoming && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: 'rgba(245,158,11,0.16)', color: '#fcd34d', whiteSpace: 'nowrap' }}>Upcoming</span>}
       {isPast    && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: 'rgba(16,185,129,0.16)', color: '#6ee7b7', whiteSpace: 'nowrap' }}>Completed</span>}
       {!isUpcoming && !isPast && (
         <>
+          {!dueToday && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: 'var(--surface-2)', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>Not today</span>}
           <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, fontWeight: 700, background: ws.bg, color: ws.color, whiteSpace: 'nowrap' }}>{(med.who || 'Jagdeep').slice(0, 3).toUpperCase()}</span>
-          <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: timeBg, color: timeColor, whiteSpace: 'nowrap' }}>{med.time}</span>
+          {med.time && <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: timeBg, color: timeColor, whiteSpace: 'nowrap' }}>{med.time}</span>}
         </>
       )}
       {rx && (
         <span title={rx.name} style={{ color: '#10b981', display: 'flex', alignItems: 'center' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </span>
+      )}
+      {hov && onEdit && (
+        <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ width: 22, height: 22, borderRadius: 6, border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text-2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
       )}
       {hov && (
         <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ width: 22, height: 22, borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -719,6 +791,7 @@ export default function HealthWellness() {
 
   const [medModal, setMedModal] = useState(false);
   const [medForm, setMedForm]   = useState(EMPTY_MED);
+  const [medEditId, setMedEditId] = useState(null);
   const [pastMedsOpen, setPastMedsOpen] = useState(false);
 
   const [habitModal, setHabitModal]   = useState(false);
@@ -806,19 +879,46 @@ export default function HealthWellness() {
   async function handleMedSubmit(e) {
     e.preventDefault();
     if (!medForm.name.trim()) return;
-    try {
-      const row = await api.createMed({
-        name: medForm.name, dose: medForm.dose, time: medForm.time, who: medForm.who,
-        doctor: medForm.doctor, notes: medForm.notes,
-        start_date: medForm.startDate || null, end_date: medForm.endDate || null,
-        prescription_id: medForm.prescriptionId || null,
-      });
-      dispatch({ type: 'ADD_MED', med: { ...row, prescriptionId: row.prescription_id, startDate: row.start_date, endDate: row.end_date } });
-    } catch {
-      dispatch({ type: 'ADD_MED', med: { id: 'm' + Date.now(), ...medForm, done: false } });
+    const daysOfWeek = medForm.daysOfWeek.length ? medForm.daysOfWeek : ALL_DAYS;
+    const payload = {
+      name: medForm.name, dose: medForm.dose, time: medForm.times.join(', '), who: medForm.who,
+      doctor: medForm.doctor, notes: medForm.notes,
+      start_date: medForm.startDate || null, end_date: medForm.endDate || null,
+      prescription_id: medForm.prescriptionId || null,
+      days_of_week: daysOfWeek, food_timing: medForm.foodTiming || null,
+    };
+    if (medEditId) {
+      try {
+        const row = await api.updateMed(medEditId, payload);
+        dispatch({ type: 'UPDATE_MED', id: medEditId, med: { ...row, prescriptionId: row.prescription_id, startDate: row.start_date, endDate: row.end_date, daysOfWeek: row.days_of_week, foodTiming: row.food_timing } });
+      } catch {
+        dispatch({ type: 'UPDATE_MED', id: medEditId, med: { ...payload, startDate: payload.start_date, endDate: payload.end_date, daysOfWeek: payload.days_of_week, foodTiming: payload.food_timing } });
+      }
+    } else {
+      try {
+        const row = await api.createMed(payload);
+        dispatch({ type: 'ADD_MED', med: { ...row, prescriptionId: row.prescription_id, startDate: row.start_date, endDate: row.end_date, daysOfWeek: row.days_of_week, foodTiming: row.food_timing } });
+      } catch {
+        dispatch({ type: 'ADD_MED', med: { id: 'm' + Date.now(), ...payload, startDate: payload.start_date, endDate: payload.end_date, daysOfWeek: payload.days_of_week, foodTiming: payload.food_timing, done: false } });
+      }
     }
     setMedModal(false);
+    setMedEditId(null);
     setMedForm(EMPTY_MED);
+  }
+
+  function handleMedEdit(m) {
+    setMedForm({
+      name: m.name || '', dose: m.dose || '',
+      times: m.time ? m.time.split(',').map(s => s.trim()).filter(Boolean) : [],
+      daysOfWeek: (m.daysOfWeek && m.daysOfWeek.length ? m.daysOfWeek : ALL_DAYS),
+      foodTiming: m.foodTiming || '',
+      who: m.who || 'Jagdeep', doctor: m.doctor || '',
+      startDate: m.startDate || '', endDate: m.endDate || '',
+      notes: m.notes || '', prescriptionId: m.prescriptionId || '',
+    });
+    setMedEditId(m.id);
+    setMedModal(true);
   }
 
   async function handleHabitSubmit(e) {
@@ -897,7 +997,6 @@ export default function HealthWellness() {
   }
 
   const mob  = state.isMobile;
-  const medsDone    = state.meds.filter(m => m.done).length;
   const prescriptions = state.prescriptions || [];
   const testResults   = state.testResults   || [];
 
@@ -905,6 +1004,9 @@ export default function HealthWellness() {
   const sortedMeds = [...state.meds].sort((a, b) => MED_STATUS_ORDER[getMedStatus(a)] - MED_STATUS_ORDER[getMedStatus(b)]);
   const activeMeds = sortedMeds.filter(m => getMedStatus(m) !== 'past');
   const pastMeds   = sortedMeds.filter(m => getMedStatus(m) === 'past');
+  // header count only reflects meds actually due today (excludes upcoming/past/off-schedule)
+  const dueTodayMeds = activeMeds.filter(m => getMedStatus(m) === 'active' && isDueToday(m.daysOfWeek));
+  const medsDone = dueTodayMeds.filter(m => m.done).length;
 
   // 22.3: split appointments into upcoming vs past
   const today = todayISO();
@@ -912,8 +1014,8 @@ export default function HealthWellness() {
   const pastAppts = [...state.appointments.filter(a => a.appt_date && a.appt_date < today)]
     .sort((a, b) => b.appt_date.localeCompare(a.appt_date));
 
-  // 22.4: cycle tracker visibility
-  const showCycle = state.userGender !== 'male' || state.householdCycleShared;
+  // 22.4: cycle tracker only shown when wife has explicitly shared it
+  const showCycle = state.householdCycleShared;
   const habitsSpan = showCycle ? 7 : 12;
 
   const cycleLen = 28;
@@ -940,12 +1042,13 @@ export default function HealthWellness() {
               <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#10b981' }} />
               <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6ee7b7' }}>Medications</span>
             </div>
-            <span style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{medsDone}/{state.meds.length} today</span>
+            <span style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{medsDone}/{dueTodayMeds.length} today</span>
           </div>
           {activeMeds.map(m => (
             <MedRow key={m.id} med={m}
               onToggle={() => { dispatch({ type: 'TOGGLE_MED', id: m.id }); api.toggleMed(m.id, todayISO()).catch(() => {}); }}
               onDelete={() => { dispatch({ type: 'DELETE_MED', id: m.id }); api.deleteMed(m.id).catch(() => {}); }}
+              onEdit={() => handleMedEdit(m)}
               rx={m.prescriptionId ? prescriptions.find(r => r.id === m.prescriptionId) : null}
             />
           ))}
@@ -960,12 +1063,13 @@ export default function HealthWellness() {
                 <MedRow key={m.id} med={m}
                   onToggle={() => {}}
                   onDelete={() => { dispatch({ type: 'DELETE_MED', id: m.id }); api.deleteMed(m.id).catch(() => {}); }}
+                  onEdit={() => handleMedEdit(m)}
                   rx={m.prescriptionId ? prescriptions.find(r => r.id === m.prescriptionId) : null}
                 />
               ))}
             </div>
           )}
-          <button onClick={() => setMedModal(true)}
+          <button onClick={() => { setMedEditId(null); setMedForm(EMPTY_MED); setMedModal(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', marginTop: 14, padding: '11px 14px', borderRadius: 13, border: '1px dashed var(--border-strong)', background: 'transparent', color: 'var(--text-3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5 }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -1210,21 +1314,23 @@ export default function HealthWellness() {
         </Overlay>
       )}
 
-      {/* ════════ ADD MEDICATION MODAL ════════ */}
+      {/* ════════ ADD/EDIT MEDICATION MODAL ════════ */}
       {medModal && (
-        <Overlay onClose={() => setMedModal(false)}>
+        <Overlay onClose={() => { setMedModal(false); setMedEditId(null); }}>
           <form onSubmit={handleMedSubmit} style={MODAL_STYLE}>
-            <ModalTitle>Add Medication</ModalTitle>
+            <ModalTitle>{medEditId ? 'Edit Medication' : 'Add Medication'}</ModalTitle>
             <Field label="Medication name *"><input autoFocus style={INP} placeholder="e.g. Vitamin D3, Metformin…" value={medForm.name} onChange={e=>setMedForm(f=>({...f,name:e.target.value}))} /></Field>
             <Field label="Dose / Strength"><input style={INP} placeholder="e.g. 500mg, 1 tablet · 2000 IU" value={medForm.dose} onChange={e=>setMedForm(f=>({...f,dose:e.target.value}))} /></Field>
-            <Field label="Time"><TogglePills options={['Morning','Evening','Both']} value={medForm.time} onChange={v=>setMedForm(f=>({...f,time:v}))} /></Field>
+            <Field label="Time of day — select all that apply"><MultiTogglePills options={TIME_SLOTS} values={medForm.times} onChange={v=>setMedForm(f=>({...f,times:v}))} /></Field>
+            <Field label="Food timing"><ValueTogglePills options={FOOD_TIMINGS} value={medForm.foodTiming} onChange={v=>setMedForm(f=>({...f,foodTiming:v}))} /></Field>
+            <Field label="Days — tap to toggle off"><DayOfWeekPicker values={medForm.daysOfWeek} onChange={v=>setMedForm(f=>({...f,daysOfWeek:v}))} /></Field>
             <Field label="For"><TogglePills options={WHO_NAMES} value={medForm.who} onChange={v=>setMedForm(f=>({...f,who:v}))} /></Field>
             <Field label="Prescribing doctor"><input style={INP} placeholder="Dr. name" value={medForm.doctor} onChange={e=>setMedForm(f=>({...f,doctor:e.target.value}))} /></Field>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <Field label="Start date"><input type="date" style={INP} value={medForm.startDate} onChange={e=>setMedForm(f=>({...f,startDate:e.target.value}))} /></Field>
               <Field label="End date"><input type="date" style={INP} min={medForm.startDate || undefined} value={medForm.endDate} onChange={e=>setMedForm(f=>({...f,endDate:e.target.value}))} /></Field>
             </div>
-            <Field label="Notes"><textarea style={{...INP,resize:'vertical',minHeight:60}} placeholder="e.g. Take with food, avoid alcohol…" value={medForm.notes} onChange={e=>setMedForm(f=>({...f,notes:e.target.value}))} /></Field>
+            <Field label="Notes"><textarea style={{...INP,resize:'vertical',minHeight:60}} placeholder="e.g. avoid alcohol…" value={medForm.notes} onChange={e=>setMedForm(f=>({...f,notes:e.target.value}))} /></Field>
             {prescriptions.length > 0 && (
               <Field label="Link to prescription (optional)">
                 <select style={{...INP,appearance:'none'}} value={medForm.prescriptionId} onChange={e=>setMedForm(f=>({...f,prescriptionId:e.target.value}))}>
@@ -1233,7 +1339,7 @@ export default function HealthWellness() {
                 </select>
               </Field>
             )}
-            <ModalActions onCancel={() => setMedModal(false)} submitLabel="Save medication" />
+            <ModalActions onCancel={() => { setMedModal(false); setMedEditId(null); }} submitLabel={medEditId ? 'Save changes' : 'Save medication'} />
           </form>
         </Overlay>
       )}
@@ -1339,16 +1445,7 @@ export default function HealthWellness() {
             <Field label="Habit name *">
               <input autoFocus style={INP} placeholder="e.g. Meditate 10 minutes" value={habitForm.label} onChange={e=>setHabitForm(f=>({...f,label:e.target.value}))} />
             </Field>
-            <Field label="Icon">
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 6 }}>
-                {HABIT_EMOJIS.map(em => (
-                  <button key={em} type="button" onClick={() => setHabitForm(f=>({...f,icon:em}))}
-                    style={{ width: 36, height: 36, borderRadius: 9, border: `2px solid ${habitForm.icon===em?'#6366f1':'var(--border)'}`, background: habitForm.icon===em?'rgba(99,102,241,0.15)':'var(--surface-2)', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {em}
-                  </button>
-                ))}
-              </div>
-            </Field>
+            <Field label="Icon"><EmojiPicker options={HABIT_EMOJIS} value={habitForm.icon} onChange={v=>setHabitForm(f=>({...f,icon:v}))} /></Field>
             <ModalActions onCancel={() => { setHabitModal(false); setHabitEditId(null); setHabitForm(EMPTY_HABIT); }} submitLabel={habitEditId ? 'Save changes' : 'Add habit'} />
           </form>
         </Overlay>

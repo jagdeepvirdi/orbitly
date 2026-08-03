@@ -144,6 +144,11 @@ export const api = {
   createCourse:  (body)       => post('/courses', body),
   deleteCourse:  (id)         => del(`/courses/${id}`),
   aiImportCourse:(body)       => post('/courses/ai-import', body),
+  getPinnedCourses: ()        => get('/courses/pinned'),
+  pinCourse:     (courseId)   => post('/courses/pinned', { courseId }),
+  unpinCourse:   (courseId)   => del(`/courses/pinned/${courseId}`),
+  getCourseTimeLogs: ()                => get('/course-time-logs'),
+  logCourseTime:     (courseId, secs)  => post('/course-time-logs/increment', { course_id: courseId, seconds: secs }),
 
   // ── Sports refresh ────────────────────────────────────────────
   cricketRefresh: async () => {
@@ -191,19 +196,28 @@ export const api = {
   // ── Finance ───────────────────────────────────────────────────
   getSubscriptions: ()        => get('/finance/subscriptions'),
   createSubscription:(body)   => post('/finance/subscriptions', body),
+  updateSubscription:(id,body)=> req('PUT', `/finance/subscriptions/${id}`, body),
   deleteSubscription:(id)     => del(`/finance/subscriptions/${id}`),
 
   getLoans:      ()           => get('/finance/loans'),
   createLoan:    (body)       => post('/finance/loans', body),
+  updateLoan:    (id,body)    => req('PUT', `/finance/loans/${id}`, body),
   deleteLoan:    (id)         => del(`/finance/loans/${id}`),
 
   getCreditCards:()           => get('/finance/credit-cards'),
   createCreditCard:(body)     => post('/finance/credit-cards', body),
+  updateCreditCard:(id,body)  => req('PUT', `/finance/credit-cards/${id}`, body),
   deleteCreditCard:(id)       => del(`/finance/credit-cards/${id}`),
 
   getBills:      ()           => get('/finance/bills'),
   createBill:    (body)       => post('/finance/bills', body),
+  updateBill:    (id,body)    => req('PUT', `/finance/bills/${id}`, body),
   deleteBill:    (id)         => del(`/finance/bills/${id}`),
+
+  getInsurance:     ()        => get('/finance/insurance'),
+  createInsurance:  (body)    => post('/finance/insurance', body),
+  updateInsurance:  (id,body) => req('PUT', `/finance/insurance/${id}`, body),
+  deleteInsurance:  (id)      => del(`/finance/insurance/${id}`),
 
   getPaid:       (month)      => get(`/finance/paid?month=${month}`),
   togglePaid:    (type, id, month) => post(`/finance/paid/${type}/${id}?month=${month}`),

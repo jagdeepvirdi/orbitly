@@ -18,12 +18,12 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { title, list, priority = 'Normal', due = null, status = 'todo', overdue = false, recurring = false } = req.body;
+  const { title, list, priority = 'Normal', due = null, status = 'todo', overdue = false, recurring = false, project = null } = req.body;
   try {
     const { rows } = await db.query(
-      `INSERT INTO tasks (title, list, priority, due, status, overdue, recurring, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [title, list, priority, due || null, status, overdue, recurring, req.userId]
+      `INSERT INTO tasks (title, list, priority, due, status, overdue, recurring, project, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [title, list, priority, due || null, status, overdue, recurring, project || null, req.userId]
     );
     res.status(201).json(rows[0]);
   } catch (e) {
@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   const { id } = req.params;
-  const fields = ['title','list','priority','due','status','overdue','recurring'];
+  const fields = ['title','list','priority','due','status','overdue','recurring','project'];
   const updates = fields.filter(f => req.body[f] !== undefined);
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
 

@@ -11,15 +11,30 @@ async function fetchWithTimeout(url) {
   return res.json();
 }
 
-// 1. GET /areas -> list of cuisine areas, sorted
+// 1. GET /areas -> list of cuisine areas that actually have recipes, sorted
+//
+// TheMealDB's list.php?a=list returns a static list of ~190 nationalities,
+// most of which have zero recipes (and some real areas use different
+// spellings than that list, e.g. "India" not "Indian"). Instead, derive the
+// area list from actual recipe data by scanning all meals a-z and collecting
+// the distinct strArea values, so only cuisines with real recipes show up.
 router.get('/areas', async (req, res) => {
   const cacheKey = 'recipes-areas';
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
 
   try {
-    const data = await fetchWithTimeout('https://www.themealdb.com/api/json/v1/1/list.php?a=list');
-    const areas = (data.meals || []).map(m => m.strArea).sort();
+    const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    const results = await Promise.all(
+      letters.map(l => fetchWithTimeout(`https://www.themealdb.com/api/json/v1/1/search.php?f=${l}`).catch(() => ({ meals: [] })))
+    );
+    const areaSet = new Set();
+    for (const data of results) {
+      for (const m of data.meals || []) {
+        if (m.strArea) areaSet.add(m.strArea);
+      }
+    }
+    const areas = [...areaSet].sort();
     setCache(cacheKey, areas, 24 * H);
     res.json(areas);
   } catch (e) {

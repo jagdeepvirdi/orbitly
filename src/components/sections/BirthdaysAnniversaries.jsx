@@ -1,18 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useAppStore } from '../../store/appStore';
-import { APP_TODAY, fmtBday, nextBdayDays } from '../../utils/dateUtils';
+import { fmtBday, nextBdayDays, nextEventDays } from '../../utils/dateUtils';
 
 function urgentColor(days) {
   return days === 0 ? '#34d399' : days <= 7 ? '#ef4444' : days <= 21 ? '#f59e0b' : '#6c6c80';
-}
-
-function nextEventDays(m, d) {
-  const now = APP_TODAY;
-  const y   = now.getFullYear();
-  let next  = new Date(y, m - 1, d);
-  const today = new Date(y, now.getMonth(), now.getDate());
-  if (next < today) next = new Date(y + 1, m - 1, d);
-  return Math.round((next - today) / 86400000);
 }
 
 function Pill({ label, active, onClick }) {

@@ -94,6 +94,32 @@
 
 ---
 
+## PHASE 27 — Today Dashboard: Remove Hardcoded / Stale Data
+
+> Goal: The Today dashboard (`src/components/sections/TodayDashboard.jsx`) was flagged as "looks hardcoded." Investigation confirmed four real, stale/static pieces that don't reflect live state — none of these are just a visual impression. Fix each so the dashboard reflects actual subscribed/live data, matching what the rest of the app (Phase 20 sports subscriptions, Phase 25/26 festivals DB) already does correctly.
+
+### 27.1 — Sports Ticker: wire to live/subscribed sports data
+- [x] `TodayDashboard.jsx` no longer imports `F1_CALENDAR`, `CRICKET_MATCHES`, `FOOTBALL_FIXTURES` as the primary data source — now uses `useLiveF1`/`useLiveCricket`/`useLiveFootball` (same hooks as `SportsTracker.jsx`), falling back to seed arrays only when live data is unavailable
+- [x] Ticker only renders cards for sports in `state.sportSubscriptions` (matches `SportsTracker.jsx`'s subscription-driven rendering); shows an empty state with a link to Sports Tracker when nothing is subscribed
+- [x] Replaced the Sports Ticker's data source with the same subscribed/live data `SportsTracker.jsx` fetches
+- [x] Added a "◌ Seed data" badge on any ticker card not backed by live data, matching `SportsTracker.jsx`'s `DataSourceBadge` — no more silently frozen fake scores (e.g. the hardcoded cricket "LIVE" status)
+
+### 27.2 — "Upcoming 48h" card runs on fake recurring data
+- [x] `TodayDashboard.jsx` no longer imports `CAL_EVENTS` — dropped in favor of only DB-backed events, per the option outlined below
+- [x] `upcoming` is now built from three live sources within the real next 48 hours: festivals (`GET /api/festivals`, respecting subscribed calendars), enabled ICS feed events, and work/personal tasks with a real ISO due date
+- [x] Decision: dropped `CAL_EVENTS` entirely for the Today dashboard rather than converting it to dated entries or scoping it as an expiring demo — it was pre-Phase-20/25 leftover once real DB-backed sources existed
+- [x] `CalendarView.jsx` no longer imports the static file (was aliased `JUNE_EVENTS`) — month view now merges only birthdays/anniversaries, live holidays, live cricket, and imported ICS events; week view's birthday/holiday/cricket lookups now use the real current year/month (derived from `APP_TODAY`) instead of a hardcoded June 2026, matching `buildWeekCells`'s already-dynamic "current week" logic. `src/data/calEvents.js` had no remaining consumers and was deleted.
+
+### 27.3 — Glance stat pills are literal hardcoded strings
+- [x] "learning session" pill now computed from `activeCourse` + weekday check (`hasLearningSessionToday`), not a fixed `'1'`
+- [x] "events soon" pill now uses `upcoming.length` (from the fixed 27.2 data), not a fixed `'2'`
+
+### 27.4 — Rakhi countdown card: remove hardcoded duplicate
+- [x] Removed the unconditional hardcoded Rakhi card (fixed "Raksha Bandhan" / "Friday, 28 August 2026") and the now-unused `RAKHI_DAYS` constant
+- [x] Dashboard now relies solely on the dynamic "Pinned Festival Alerts" card, which already reads the real festival date from the DB + `state.pinnedFestivals`
+
+---
+
 ## Notes for Claude Code
 - Read `CLAUDE.md` fully before starting any phase
 - Read `Orbitly-handoff.zip/orbitly/project/Orbitly.dc.html` fully before starting Phase 2

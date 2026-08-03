@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppStore, CAT } from '../../store/appStore';
 import { buildMonthGrid, buildWeekCells, buildBirthdayEvents, mergeCalEvents, DAY_AGENDA, MONTHS, WD } from '../../utils/calendarUtils';
-import { CAL_EVENTS as JUNE_EVENTS } from '../../data/calEvents';
+import { APP_TODAY } from '../../utils/dateUtils';
 import { useLiveHolidays } from '../../hooks/useLiveHolidays';
 import { useLiveCricket } from '../../hooks/useLiveCricket';
 import IcsImportModal from '../ui/IcsImportModal';
@@ -92,24 +92,25 @@ export default function CalendarView() {
   const { holidays } = useLiveHolidays(state.subscribedCalendars || ['IN', 'TH'], state.calYear);
   const { matches: cricketMatches } = useLiveCricket();
 
-  // Use static June events only when viewing June 2026; other months show only birthday/anniversary events
-  const baseEvents = (state.calYear === 2026 && state.calMonth === 5) ? JUNE_EVENTS : {};
+  // Month view events — all DB/live-backed (birthdays, holidays, cricket, imported ICS); no static demo data
   const bdayEvents = buildBirthdayEvents(state.calYear, state.calMonth, state.familyMembers, state.familyEvents);
   const holidayEvents = buildHolidayEvents(holidays, state.calYear, state.calMonth);
   const cricketEvents = buildCricketEvents(cricketMatches, state.calYear, state.calMonth);
   const importedEvts  = buildImportedEvtMap(state.importedCalEvents, state.calYear, state.calMonth);
   const calEvents = mergeCalEvents(
-    mergeCalEvents(mergeCalEvents(mergeCalEvents(baseEvents, bdayEvents), holidayEvents), cricketEvents),
+    mergeCalEvents(mergeCalEvents(bdayEvents, holidayEvents), cricketEvents),
     importedEvts
   );
 
-  // Week view is always the current week (June 2026), so always merge with June base + June birthdays
-  const weekBase = (state.calYear === 2026 && state.calMonth === 5) ? JUNE_EVENTS : {};
-  const weekBday = buildBirthdayEvents(2026, 5, state.familyMembers, state.familyEvents);
-  const weekHolidays = buildHolidayEvents(holidays, 2026, 5);
-  const weekCricket = buildCricketEvents(cricketMatches, 2026, 5);
+  // Week view always shows the real current week, so its birthday/holiday/cricket
+  // lookups must use today's actual year/month — not a fixed month — to match.
+  const weekYear = APP_TODAY.getFullYear();
+  const weekMonth = APP_TODAY.getMonth();
+  const weekBday = buildBirthdayEvents(weekYear, weekMonth, state.familyMembers, state.familyEvents);
+  const weekHolidays = buildHolidayEvents(holidays, weekYear, weekMonth);
+  const weekCricket = buildCricketEvents(cricketMatches, weekYear, weekMonth);
   const weekEvents = mergeCalEvents(
-    mergeCalEvents(mergeCalEvents(weekBase, weekBday), weekHolidays),
+    mergeCalEvents(weekBday, weekHolidays),
     weekCricket
   );
 

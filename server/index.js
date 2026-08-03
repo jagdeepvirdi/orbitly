@@ -24,6 +24,7 @@ import coursesRouter     from './routes/courses.js';
 import learningPlansRouter  from './routes/learningPlans.js';
 import booksRouter          from './routes/books.js';
 import learningEventsRouter from './routes/learningEvents.js';
+import courseTimeLogsRouter from './routes/courseTimeLogs.js';
 import familyRouter      from './routes/family.js';
 import financeRouter     from './routes/finance.js';
 import festivalsRouter   from './routes/festivals.js';
@@ -526,7 +527,76 @@ async function runMigrations() {
      )`,
     `CREATE INDEX IF NOT EXISTS idx_user_festivals_user ON user_festivals(user_id)`,
     // Phase 26.3: Drop redundant user_id column from festivals table
-    `ALTER TABLE festivals DROP COLUMN IF EXISTS user_id CASCADE`
+    `ALTER TABLE festivals DROP COLUMN IF EXISTS user_id CASCADE`,
+    // Phase 27: subscription start_date
+    `ALTER TABLE finance_subscriptions ADD COLUMN IF NOT EXISTS start_date DATE`,
+    // Phase 27.1: insurance table
+    `CREATE TABLE IF NOT EXISTS finance_insurance (
+       id            VARCHAR(50)  PRIMARY KEY DEFAULT gen_random_uuid()::text,
+       name          VARCHAR(200) NOT NULL,
+       provider      VARCHAR(200),
+       type          VARCHAR(50)  NOT NULL DEFAULT 'other',
+       emoji         VARCHAR(10),
+       amount        NUMERIC(10,2),
+       currency      VARCHAR(5)   NOT NULL DEFAULT 'INR',
+       billing_day   SMALLINT     CHECK (billing_day BETWEEN 1 AND 31),
+       country       VARCHAR(10)  NOT NULL DEFAULT 'IN',
+       policy_number VARCHAR(100),
+       user_id       TEXT         NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_insurance_user_id ON finance_insurance(user_id)`,
+    `ALTER TABLE finance_insurance ADD COLUMN IF NOT EXISTS cycle VARCHAR(20) NOT NULL DEFAULT 'monthly'`,
+    // Phase 28: plan start_date and completed_date
+    `ALTER TABLE learning_plans ADD COLUMN IF NOT EXISTS start_date DATE`,
+    `ALTER TABLE learning_plans ADD COLUMN IF NOT EXISTS completed_date DATE`,
+    // Phase 29: medication scheduling — days of week + food timing; `time` becomes free-form multi-slot text
+    `ALTER TABLE medications DROP CONSTRAINT IF EXISTS medications_time_check`,
+    `ALTER TABLE medications ALTER COLUMN time TYPE VARCHAR(60)`,
+    `ALTER TABLE medications ADD COLUMN IF NOT EXISTS days_of_week SMALLINT[] NOT NULL DEFAULT '{0,1,2,3,4,5,6}'`,
+    `ALTER TABLE medications ADD COLUMN IF NOT EXISTS food_timing VARCHAR(20)`,
+    `DO $$ BEGIN
+       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'medications_food_timing_check') THEN
+         ALTER TABLE medications ADD CONSTRAINT medications_food_timing_check
+           CHECK (food_timing IS NULL OR food_timing IN ('before_food','after_food','with_food'));
+       END IF;
+     END $$`,
+    // Phase 30: emoji picker — loans & credit cards previously had no editable icon
+    `ALTER TABLE finance_loans ADD COLUMN IF NOT EXISTS emoji VARCHAR(10)`,
+    `ALTER TABLE finance_credit_cards ADD COLUMN IF NOT EXISTS emoji VARCHAR(10)`,
+    // Phase 31: courses.id was widened 10->30 previously but never far enough for the
+    // `c-${randomUUID()}` id pattern (38 chars) used by routes/courses.js and the plan
+    // import route — every course insert has been failing with "value too long" since
+    // that id scheme was introduced.
+    `ALTER TABLE courses ALTER COLUMN id TYPE VARCHAR(50)`,
+    // Phase 32: bills need yearly/quarterly cycles too (e.g. a prepaid mobile validity
+    // that renews once a year on a specific date), not just a recurring day-of-month.
+    `ALTER TABLE finance_bills ADD COLUMN IF NOT EXISTS cycle VARCHAR(20) NOT NULL DEFAULT 'monthly'`,
+    `ALTER TABLE finance_bills ADD COLUMN IF NOT EXISTS start_date DATE`,
+    // Phase 33: per-course timer/stopwatch — daily study-time log so hours spent
+    // per course (and per day) can be tracked, separate from the session counter.
+    `CREATE TABLE IF NOT EXISTS course_time_logs (
+       id         VARCHAR(50) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+       course_id  VARCHAR(50) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+       log_date   DATE        NOT NULL,
+       seconds    INTEGER     NOT NULL DEFAULT 0,
+       user_id    TEXT        NOT NULL DEFAULT '',
+       UNIQUE (course_id, user_id, log_date)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_course_time_logs_user_id ON course_time_logs(user_id)`,
+    // Phase 34: insurance gets the same start_date anchor Bills got, so yearly/quarterly
+    // premiums get a real next-due-date instead of just a recurring day-of-month.
+    `ALTER TABLE finance_insurance ADD COLUMN IF NOT EXISTS start_date DATE`,
+    // Phase 35: tasks can be grouped by project (free-text label) within Work/Personal
+    `ALTER TABLE tasks ADD COLUMN IF NOT EXISTS project VARCHAR(100)`,
+    // Phase 36: user pinned courses mapping table — mirrors user_pinned_festivals so
+    // the Today dashboard can show user-chosen courses instead of guessing one.
+    `CREATE TABLE IF NOT EXISTS user_pinned_courses (
+       user_id    TEXT NOT NULL,
+       course_id  VARCHAR(50) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+       PRIMARY KEY (user_id, course_id)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_user_pinned_courses_user ON user_pinned_courses(user_id)`
   ];
   for (const sql of sqls) {
     try { await db.query(sql); } catch (e) { console.warn('[migrate]', e.message.slice(0, 80)); }
@@ -622,6 +692,7 @@ app.use('/api/courses',      coursesRouter);
 app.use('/api/plans',           learningPlansRouter);
 app.use('/api/books',           booksRouter);
 app.use('/api/learning-events', learningEventsRouter);
+app.use('/api/course-time-logs', courseTimeLogsRouter);
 app.use('/api/family',       familyRouter);
 app.use('/api/finance',      financeRouter);
 app.use('/api/festivals',    festivalsRouter);

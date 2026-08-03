@@ -23,7 +23,22 @@ function ViewBtn({ label, active, onClick }) {
   );
 }
 
-const BLANK_FORM = { title: '', priority: 'Normal', due: '' };
+const BLANK_FORM = { title: '', priority: 'Normal', due: '', project: '' };
+
+// Groups a flat task list by its `project` label. Named projects come first
+// (alphabetically); tasks with no project land in a trailing "General" bucket.
+function groupTasksByProject(tasks) {
+  const map = new Map();
+  tasks.forEach(t => {
+    const key = t.project || null;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(t);
+  });
+  const named = [...map.keys()].filter(k => k !== null).sort((a, b) => a.localeCompare(b));
+  const groups = named.map(project => ({ project, tasks: map.get(project) }));
+  if (map.has(null)) groups.push({ project: null, tasks: map.get(null) });
+  return groups;
+}
 
 const inputStyle = {
   width: '100%', padding: '10px 13px', borderRadius: 10,
@@ -34,6 +49,7 @@ const inputStyle = {
 
 export default function TasksBoard() {
   const { state, dispatch } = useAppStore();
+  const mob = state.isMobile;
   const allTasks = state.workTasks.concat(state.personalTasks);
   const doneToday = allTasks.filter(t => t.status === 'done').length;
   const overdueCount = allTasks.filter(t => t.overdue).length;
@@ -49,12 +65,21 @@ export default function TasksBoard() {
     e.preventDefault();
     if (!form.title.trim()) return;
     const due = form.due || null;
-    const laneList = LANES.find(l => l.key === addModal)?.list || 'work';
-    dispatch({ type: 'ADD_TASK', list: addModal, title: form.title.trim(), priority: form.priority, due });
+    const project = form.project.trim() || null;
+    const list = addModal;
+    const laneList = LANES.find(l => l.key === list)?.list || 'work';
+    const title = form.title.trim();
     closeModal();
+    // Create on the server first so the client always has the real DB id —
+    // dispatching a client-generated id here would make every later
+    // advance/toggle/delete on this task silently fail to persist (they'd
+    // target an id the server has never heard of).
     try {
-      await api.createTask({ title: form.title.trim(), list: laneList, priority: form.priority, due, status: 'todo' });
-    } catch {}
+      const row = await api.createTask({ title, list: laneList, priority: form.priority, due, status: 'todo', project });
+      dispatch({ type: 'ADD_TASK', list, task: row });
+    } catch {
+      dispatch({ type: 'ADD_TASK', list, task: { id: 't' + Date.now(), title, priority: form.priority, due: due || '', status: 'todo', overdue: false, recurring: false, project } });
+    }
   }
 
   async function handleAdvance(lane, taskId, currentStatus) {
@@ -83,15 +108,16 @@ export default function TasksBoard() {
 
   const lanes = LANES.map(({ key, label, dot, list }) => {
     const tasks = state[key];
+    const projects = [...new Set(tasks.map(t => t.project).filter(Boolean))].sort((a, b) => a.localeCompare(b));
     return {
-      key, label, dot, list,
+      key, label, dot, list, projects,
       total: tasks.length,
       doneCount: tasks.filter(t => t.status === 'done').length,
-      columns: COLS.map(([cKey, cLabel]) => ({
-        key: cKey, label: cLabel,
-        cards: tasks.filter(t => t.status === cKey),
-      })),
-      checklist: tasks,
+      columns: COLS.map(([cKey, cLabel]) => {
+        const colTasks = tasks.filter(t => t.status === cKey);
+        return { key: cKey, label: cLabel, total: colTasks.length, groups: groupTasksByProject(colTasks) };
+      }),
+      checklistGroups: groupTasksByProject(tasks),
     };
   });
 
@@ -157,7 +183,7 @@ export default function TasksBoard() {
                     Add task
                   </button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
                   {lane.columns.map(col => (
                     <div key={col.key} style={{
                       background: 'var(--surface)', border: '1px solid var(--border)',
@@ -172,22 +198,31 @@ export default function TasksBoard() {
                           borderRadius: 99, background: 'var(--surface-2)', color: 'var(--text-2)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          {col.cards.length}
+                          {col.total}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                        {col.cards.length === 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        {col.total === 0 && (
                           <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', padding: '16px 0', borderRadius: 10, border: '1px dashed var(--border)' }}>
                             No tasks
                           </div>
                         )}
-                        {col.cards.map(t => (
-                          <KanbanCard
-                            key={t.id}
-                            task={t}
-                            onAdvance={() => handleAdvance(lane, t.id, t.status)}
-                            onDelete={() => handleDelete(lane, t.id)}
-                          />
+                        {col.groups.map(g => (
+                          <div key={g.project || '_none'} style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                            {col.groups.length > 1 && (
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                {g.project || 'General'}
+                              </div>
+                            )}
+                            {g.tasks.map(t => (
+                              <KanbanCard
+                                key={t.id}
+                                task={t}
+                                onAdvance={() => handleAdvance(lane, t.id, t.status)}
+                                onDelete={() => handleDelete(lane, t.id)}
+                              />
+                            ))}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -249,6 +284,19 @@ export default function TasksBoard() {
                   onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
                 />
               </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Project (optional)</div>
+                <input
+                  list="task-project-suggestions"
+                  style={inputStyle}
+                  placeholder="e.g. Website Redesign — leave blank for none"
+                  value={form.project}
+                  onChange={e => setForm(f => ({ ...f, project: e.target.value }))}
+                />
+                <datalist id="task-project-suggestions">
+                  {(lanes.find(l => l.key === addModal)?.projects || []).map(p => <option key={p} value={p} />)}
+                </datalist>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
@@ -293,20 +341,29 @@ export default function TasksBoard() {
                   Add task
                 </button>
               </div>
-              {lane.checklist.map(t => {
-                const done = t.status === 'done';
-                const checkColor = lane.key === 'workTasks' ? '#64748b' : '#f59e0b';
-                return (
-                  <CheckRow
-                    key={t.id}
-                    task={t}
-                    done={done}
-                    checkColor={checkColor}
-                    onToggle={() => handleToggle(lane, t.id, t.status)}
-                    onDelete={() => handleDelete(lane, t.id)}
-                  />
-                );
-              })}
+              {lane.checklistGroups.map(g => (
+                <div key={g.project || '_none'} style={{ marginBottom: 10 }}>
+                  {lane.checklistGroups.length > 1 && (
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '10px 0 4px' }}>
+                      {g.project || 'General'}
+                    </div>
+                  )}
+                  {g.tasks.map(t => {
+                    const done = t.status === 'done';
+                    const checkColor = lane.key === 'workTasks' ? '#64748b' : '#f59e0b';
+                    return (
+                      <CheckRow
+                        key={t.id}
+                        task={t}
+                        done={done}
+                        checkColor={checkColor}
+                        onToggle={() => handleToggle(lane, t.id, t.status)}
+                        onDelete={() => handleDelete(lane, t.id)}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
             </section>
           ))}
         </div>

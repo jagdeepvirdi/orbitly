@@ -4,6 +4,7 @@ import { USERS } from '../../data/users';
 import { api } from '../../api/client';
 import { parseICS } from '../../utils/icsParser';
 import IcsImportModal from '../ui/IcsImportModal';
+import { CURRENCIES } from '../../data/currencies';
 
 const NOTIF_ROWS = [
   { key: 'meds', label: 'Medication reminders', desc: 'Daily at 08:00 and 20:00 Bangkok time' },
@@ -14,6 +15,53 @@ const NOTIF_ROWS = [
   { key: 'evening_wrap', label: 'Evening Day Wrap', desc: 'Daily at 21:00 — tasks completed, sessions done' },
   { key: 'weekly_digest', label: 'Weekly Digest', desc: 'Every Sunday at 19:00 — preview of the week ahead' },
 ];
+
+// ── Currency picker (Settings → Profiles) ──────────────────────────────────────
+function CurrencyPicker({ selected, onChange, accent }) {
+  const [custom, setCustom] = useState('');
+  const toggle = code => {
+    if (selected.includes(code)) {
+      if (selected.length > 1) onChange(selected.filter(c => c !== code));
+    } else {
+      onChange([...selected, code]);
+    }
+  };
+  function addCustom() {
+    const code = custom.trim().toUpperCase();
+    if (/^[A-Z]{3}$/.test(code) && !selected.includes(code)) {
+      onChange([...selected, code]);
+      setCustom('');
+    }
+  }
+  const extras = selected.filter(code => !CURRENCIES.some(c => c.code === code));
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        {CURRENCIES.map(c => {
+          const active = selected.includes(c.code);
+          return (
+            <button key={c.code} type="button" onClick={() => toggle(c.code)}
+              style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${active ? accent : 'var(--border)'}`, background: active ? `${accent}22` : 'var(--surface-2)', color: active ? accent : 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: active ? 700 : 500 }}>
+              {c.flag} {c.code}
+            </button>
+          );
+        })}
+        {extras.map(code => (
+          <button key={code} type="button" onClick={() => toggle(code)}
+            style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${accent}`, background: `${accent}22`, color: accent, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}>
+            🌐 {code}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input value={custom} onChange={e => setCustom(e.target.value.toUpperCase())} placeholder="Add another (e.g. EUR)" maxLength={3}
+          style={{ padding: '7px 10px', borderRadius: 9, background: 'var(--surface-2)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontFamily: 'inherit', fontSize: 12.5, width: 160, textTransform: 'uppercase' }}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } }} />
+        <button type="button" onClick={addCustom} style={{ padding: '7px 12px', borderRadius: 9, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600 }}>+ Add</button>
+      </div>
+    </div>
+  );
+}
 
 // ── AI status helpers ─────────────────────────────────────────────────────────
 async function fetchAiStatus() {
@@ -511,6 +559,18 @@ export default function SettingsProfiles() {
                 );
               })}
             </div>
+          </div>
+          <div style={{ padding: '18px 22px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 4 }}>Currencies</div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 12 }}>Only these show up as options in the Finance tab — pick as many as you actually use</div>
+            <CurrencyPicker
+              selected={state.userCurrencies?.length ? state.userCurrencies : ['INR', 'THB', 'USD']}
+              accent={me.accent}
+              onChange={async next => {
+                dispatch({ type: 'SET_CURRENCIES', currencies: next });
+                try { await api.updateProfile({ gender: state.userGender, share_cycle_tracker: state.householdCycleShared, currencies: next }); } catch {}
+              }}
+            />
           </div>
         </>
       )}

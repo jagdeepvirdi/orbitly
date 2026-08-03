@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { PHASE_NAMES, EXAM_DATE, EST_COMPLETION_DATE } from '../../data/certPlan';
 import { fireConfetti } from '../../hooks/useConfetti';
@@ -136,13 +136,15 @@ const inp = {
 function PlanFormModal({ plan = null, onClose, onSave }) {
   const isEdit = !!plan;
   const [form, setForm] = useState({
-    title:         plan?.title          || '',
-    type:          plan?.type           || 'certification',
-    icon:          plan?.icon           || '📚',
-    color:         plan?.color          || '#6366f1',
-    examDate:      plan?.exam_date      || '',
-    estCompletion: plan?.est_completion || '',
-    description:   plan?.description   || '',
+    title:         plan?.title           || '',
+    type:          plan?.type            || 'certification',
+    icon:          plan?.icon            || '📚',
+    color:         plan?.color           || '#6366f1',
+    startDate:     plan?.start_date      || '',
+    examDate:      plan?.exam_date       || '',
+    estCompletion: plan?.est_completion  || '',
+    completedDate: plan?.completed_date  || '',
+    description:   plan?.description    || '',
   });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -157,8 +159,10 @@ function PlanFormModal({ plan = null, onClose, onSave }) {
         type:           form.type,
         color:          form.color,
         icon:           form.icon,
-        exam_date:      form.examDate.trim() || null,
-        est_completion: form.estCompletion.trim() || null,
+        start_date:     form.startDate     || null,
+        exam_date:      form.examDate      || null,
+        est_completion: form.estCompletion || null,
+        completed_date: form.completedDate || null,
       };
       const result = isEdit
         ? await api.updatePlan(plan.id, body)
@@ -224,13 +228,23 @@ function PlanFormModal({ plan = null, onClose, onSave }) {
       </Field>
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <Field label="Exam / Target Date (optional)" half>
-          <input value={form.examDate} onChange={e => set('examDate', e.target.value)}
-            placeholder="e.g. 15 October 2026" style={inp} />
+        <Field label="Start Date (optional)" half>
+          <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)}
+            style={inp} />
         </Field>
         <Field label="Est. Completion (optional)" half>
-          <input value={form.estCompletion} onChange={e => set('estCompletion', e.target.value)}
-            placeholder="e.g. 30 September 2026" style={inp} />
+          <input type="date" value={form.estCompletion} onChange={e => set('estCompletion', e.target.value)}
+            style={inp} />
+        </Field>
+      </div>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <Field label="Exam / Target Date (optional)" half>
+          <input type="date" value={form.examDate} onChange={e => set('examDate', e.target.value)}
+            style={inp} />
+        </Field>
+        <Field label="Completed Date (optional)" half>
+          <input type="date" value={form.completedDate} onChange={e => set('completedDate', e.target.value)}
+            style={inp} />
         </Field>
       </div>
 
@@ -895,20 +909,18 @@ function PlanCard({ plan, courses, books = [], onClick, onEdit, onDelete }) {
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </button>
-          {plan.id !== 1 && (
-            <button onClick={e => { e.stopPropagation(); onDelete(plan); }} title="Delete plan" style={{
-              width: 28, height: 28, borderRadius: 8, border: '1px solid var(--border)',
-              background: 'transparent', cursor: 'pointer', color: 'var(--text-3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#fca5a5'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-3)'; }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/>
-              </svg>
-            </button>
-          )}
+          <button onClick={e => { e.stopPropagation(); onDelete(plan); }} title="Delete plan" style={{
+            width: 28, height: 28, borderRadius: 8, border: '1px solid var(--border)',
+            background: 'transparent', cursor: 'pointer', color: 'var(--text-3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#fca5a5'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-3)'; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -929,7 +941,9 @@ function PlanCard({ plan, courses, books = [], onClick, onEdit, onDelete }) {
       {/* Next line */}
       <div style={{ fontSize: 12, color: 'var(--text-3)', display: 'flex', flexWrap: 'wrap', gap: '3px 12px' }}>
         {nextLine && <span>{nextLine}</span>}
-        {plan.exam_date && !isReading && <span>Exam: {plan.exam_date}</span>}
+        {plan.start_date  && <span>Started: {/^\d{4}-\d{2}-\d{2}$/.test(plan.start_date) ? fmtShortDate(plan.start_date) : plan.start_date}</span>}
+        {plan.exam_date   && !isReading && <span>Exam: {/^\d{4}-\d{2}-\d{2}$/.test(plan.exam_date) ? fmtShortDate(plan.exam_date) : plan.exam_date}</span>}
+        {plan.completed_date && <span style={{ color: '#34d399' }}>Completed: {/^\d{4}-\d{2}-\d{2}$/.test(plan.completed_date) ? fmtShortDate(plan.completed_date) : plan.completed_date}</span>}
         {plan.passed && !isReading && <span style={{ color: '#34d399' }}>✓ Certificate earned</span>}
       </div>
     </div>
@@ -1528,6 +1542,82 @@ function PlansHub({ plans, courses, books, events, loading, onOpen, onPlanCreate
   );
 }
 
+// ── Course time tracker (timer / stopwatch) ───────────────────────────────────
+
+const TIMER_PRESETS = [15, 25, 45, 60]; // minutes
+
+function fmtHMS(sec) {
+  sec = Math.max(0, Math.round(sec));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+function fmtHoursMins(sec) {
+  if (!sec) return '0m';
+  const h = Math.floor(sec / 3600);
+  const m = Math.round((sec % 3600) / 60);
+  if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  return `${m}m`;
+}
+
+function CourseTimeTracker({ course, timer, setting, onModeChange, onDurationChange, onStart, onPause, onReset, todaySeconds, totalSeconds, accent }) {
+  const isThis = timer?.courseId === course.id;
+  const running = isThis && timer.running;
+  const mode = isThis ? timer.mode : setting.mode;
+  const durationMin = isThis ? Math.round(timer.durationSec / 60) : setting.durationMin;
+  const elapsed = isThis ? timer.elapsed : 0;
+  const remaining = mode === 'timer' ? Math.max(0, (isThis ? timer.durationSec : durationMin * 60) - elapsed) : null;
+  const showPicker = mode === 'timer' && !running && elapsed === 0;
+  const modeLocked = running || (isThis && elapsed > 0);
+
+  return (
+    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button type="button" onClick={() => onModeChange('stopwatch')} disabled={modeLocked}
+            style={{ padding: '3px 9px', borderRadius: 7, fontSize: 11, fontWeight: 700, border: `1px solid ${mode === 'stopwatch' ? accent : 'var(--border)'}`, background: mode === 'stopwatch' ? `${accent}22` : 'transparent', color: mode === 'stopwatch' ? accent : 'var(--text-3)', cursor: modeLocked ? 'default' : 'pointer', opacity: modeLocked && mode !== 'stopwatch' ? 0.5 : 1 }}>
+            ⏲ Stopwatch
+          </button>
+          <button type="button" onClick={() => onModeChange('timer')} disabled={modeLocked}
+            style={{ padding: '3px 9px', borderRadius: 7, fontSize: 11, fontWeight: 700, border: `1px solid ${mode === 'timer' ? accent : 'var(--border)'}`, background: mode === 'timer' ? `${accent}22` : 'transparent', color: mode === 'timer' ? accent : 'var(--text-3)', cursor: modeLocked ? 'default' : 'pointer', opacity: modeLocked && mode !== 'timer' ? 0.5 : 1 }}>
+            ⏱ Timer
+          </button>
+        </div>
+        {showPicker && (
+          <select value={durationMin} onChange={e => onDurationChange(Number(e.target.value))}
+            style={{ fontSize: 11, padding: '3px 6px', borderRadius: 6, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)', fontFamily: 'inherit' }}>
+            {TIMER_PRESETS.map(m => <option key={m} value={m}>{m} min</option>)}
+          </select>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: 'tabular-nums', minWidth: 64 }}>
+          {mode === 'timer' ? fmtHMS(remaining) : fmtHMS(elapsed)}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+          {!running ? (
+            <button type="button" onClick={onStart} style={{ flex: 1, padding: '7px 0', borderRadius: 9, border: 'none', background: accent, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700 }}>
+              ▶ {isThis && elapsed > 0 ? 'Resume' : 'Start'}
+            </button>
+          ) : (
+            <button type="button" onClick={onPause} style={{ flex: 1, padding: '7px 0', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700 }}>
+              ⏸ Pause
+            </button>
+          )}
+          {isThis && elapsed > 0 && (
+            <button type="button" onClick={onReset} title="Reset" style={{ width: 30, borderRadius: 9, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-3)', cursor: 'pointer' }}>↺</button>
+          )}
+        </div>
+      </div>
+      <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 6 }}>
+        Today <strong style={{ color: 'var(--text-2)' }}>{fmtHoursMins(todaySeconds)}</strong> · Total <strong style={{ color: 'var(--text-2)' }}>{fmtHoursMins(totalSeconds)}</strong>
+      </div>
+    </div>
+  );
+}
+
 // ── Plan Detail (courses / phases) ────────────────────────────────────────────
 
 function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
@@ -1546,14 +1636,152 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
   const [geminiQuotaExceeded, setGeminiQuotaExceeded] = useState(false);
   const [ollamaTimedOut,      setOllamaTimedOut]      = useState(false);
 
+  // ── Per-course timer/stopwatch ──────────────────────────────────────────────
+  // Only one course can be timed at once (you can't study two things at the same
+  // time) — `activeTimer` holds that single running/paused session. `courseSettings`
+  // remembers each course's chosen mode/duration even when it isn't the active one.
+  const [timeLogs, setTimeLogs] = useState([]); // [{ course_id, log_date, seconds }]
+  const [activeTimer, setActiveTimer] = useState(null); // { courseId, mode, durationSec, elapsed, lastFlushed, running }
+  const [courseSettings, setCourseSettings] = useState({}); // { [courseId]: { mode, durationMin } }
+  const activeTimerRef = useRef(activeTimer);
+  activeTimerRef.current = activeTimer;
+
+  useEffect(() => {
+    api.getCourseTimeLogs().then(setTimeLogs).catch(() => {});
+  }, []);
+
+  // Only advances `lastFlushed` once the server confirms the write. This is the
+  // one thing that must never be optimistic: if a flush fails (dropped wifi,
+  // dev-server restart, Neon cold start) and we advanced lastFlushed anyway,
+  // that chunk of study time is gone for good — every future retry would
+  // compute its delta from the wrong (already-advanced) baseline. Leaving
+  // lastFlushed untouched on failure means the unflushed delta keeps growing
+  // and the next periodic tick retries the *same* seconds, so nothing is lost,
+  // it's just delayed until connectivity returns.
+  async function flushTime(courseId, deltaSeconds) {
+    if (deltaSeconds <= 0) return;
+    try {
+      const row = await api.logCourseTime(courseId, deltaSeconds);
+      setTimeLogs(logs => {
+        const idx = logs.findIndex(l => l.course_id === row.course_id && l.log_date === row.log_date);
+        if (idx === -1) return [...logs, row];
+        const next = [...logs]; next[idx] = row; return next;
+      });
+      setActiveTimer(t => (t && t.courseId === courseId) ? { ...t, lastFlushed: t.lastFlushed + deltaSeconds } : t);
+    } catch { /* lastFlushed stays put — retried on the next tick */ }
+  }
+
+  // tick every second while running — pure state update only. Side effects
+  // (flushTime, confetti) must never live inside a setState updater: React
+  // StrictMode's dev-mode double-invoke can call updaters twice, which would
+  // double-log seconds to the server. They live in the effect below instead.
+  useEffect(() => {
+    if (!activeTimer?.running) return;
+    const id = setInterval(() => {
+      setActiveTimer(t => (t && t.running) ? { ...t, elapsed: t.elapsed + 1 } : t);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [activeTimer?.running, activeTimer?.courseId]);
+
+  // Countdown timer reaching zero: flush, celebrate, clear — exactly once.
+  useEffect(() => {
+    if (activeTimer?.running && activeTimer.mode === 'timer' && activeTimer.elapsed >= activeTimer.durationSec) {
+      flushTime(activeTimer.courseId, activeTimer.elapsed - activeTimer.lastFlushed);
+      fireConfetti();
+      setActiveTimer(null);
+    }
+  }, [activeTimer]);
+
+  // persist progress periodically so a dropped connection loses at most a few
+  // seconds, not the whole session (see flushTime's retry-safety note above)
+  useEffect(() => {
+    if (!activeTimer?.running) return;
+    const id = setInterval(() => {
+      const t = activeTimerRef.current;
+      if (t && t.running) {
+        const delta = t.elapsed - t.lastFlushed;
+        if (delta > 0) flushTime(t.courseId, delta);
+      }
+    }, 20000);
+    return () => clearInterval(id);
+  }, [activeTimer?.running, activeTimer?.courseId]);
+
+  // flush whatever's pending if the user navigates away from this plan
+  useEffect(() => {
+    return () => {
+      const t = activeTimerRef.current;
+      if (t) {
+        const delta = t.elapsed - t.lastFlushed;
+        if (delta > 0) flushTime(t.courseId, delta);
+      }
+    };
+  }, []);
+
+  function startTimer(courseId) {
+    const setting = courseSettings[courseId] || { mode: 'stopwatch', durationMin: 25 };
+    const prev = activeTimerRef.current;
+    if (prev && prev.courseId !== courseId && prev.running) {
+      const delta = prev.elapsed - prev.lastFlushed;
+      if (delta > 0) flushTime(prev.courseId, delta);
+    }
+    setActiveTimer(p => {
+      if (p && p.courseId === courseId) return { ...p, running: true };
+      return { courseId, mode: setting.mode, durationSec: setting.durationMin * 60, elapsed: 0, lastFlushed: 0, running: true };
+    });
+  }
+  function pauseTimer() {
+    const t = activeTimerRef.current;
+    setActiveTimer(cur => cur ? { ...cur, running: false } : cur);
+    if (t) {
+      const delta = t.elapsed - t.lastFlushed;
+      if (delta > 0) flushTime(t.courseId, delta);
+    }
+  }
+  function resetTimer(courseId) {
+    setActiveTimer(t => (t && t.courseId === courseId ? null : t));
+  }
+  function getCourseSetting(courseId) {
+    return courseSettings[courseId] || { mode: 'stopwatch', durationMin: 25 };
+  }
+  function setCourseMode(courseId, mode) {
+    setCourseSettings(s => ({ ...s, [courseId]: { ...getCourseSetting(courseId), mode } }));
+  }
+  function setCourseDuration(courseId, durationMin) {
+    setCourseSettings(s => ({ ...s, [courseId]: { ...getCourseSetting(courseId), durationMin } }));
+  }
+
+  const todayStr = todayISO();
+  const timeTodayMap = {};
+  const timeTotalMap = {};
+  timeLogs.forEach(l => {
+    timeTotalMap[l.course_id] = (timeTotalMap[l.course_id] || 0) + l.seconds;
+    if (l.log_date === todayStr) timeTodayMap[l.course_id] = (timeTodayMap[l.course_id] || 0) + l.seconds;
+  });
+  function getTodaySeconds(courseId) {
+    const base = timeTodayMap[courseId] || 0;
+    return activeTimer?.courseId === courseId ? base + (activeTimer.elapsed - activeTimer.lastFlushed) : base;
+  }
+  function getTotalSeconds(courseId) {
+    const base = timeTotalMap[courseId] || 0;
+    return activeTimer?.courseId === courseId ? base + (activeTimer.elapsed - activeTimer.lastFlushed) : base;
+  }
+  const todayTotalAllCourses = courses.reduce((sum, c) => sum + getTodaySeconds(c.id), 0);
+
   const totalSessions   = courses.reduce((a, c) => a + c.total, 0);
   const doneSessions    = courses.reduce((a, c) => a + c.done,  0);
   const coursesComplete = courses.filter(c => c.done >= c.total).length;
   const overallPct      = totalSessions > 0 ? Math.round((doneSessions / totalSessions) * 100) : 0;
   const ringDash        = 326.7 * (1 - (totalSessions > 0 ? doneSessions / totalSessions : 0));
 
-  const examDate      = plan.id === 1 ? EXAM_DATE            : (plan.exam_date       || null);
-  const estCompletion = plan.id === 1 ? EST_COMPLETION_DATE  : (plan.est_completion  || null);
+  const fmtPlanDate = d => {
+    if (!d) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return fmtShortDate(d);
+    return d; // legacy human-readable strings
+  };
+  const startDate     = fmtPlanDate(plan.start_date);
+  const completedDate = fmtPlanDate(plan.completed_date);
+  const examDate      = plan.id === 1 ? EXAM_DATE           : fmtPlanDate(plan.exam_date);
+  const estCompletion = plan.id === 1 ? EST_COMPLETION_DATE : fmtPlanDate(plan.est_completion);
   const certName      = plan.cert_name || (plan.id === 1 ? 'Claude Certified Associate — Foundational' : plan.title);
   const isPassed      = plan.passed || (plan.id === 1 && state.examDone);
 
@@ -1566,6 +1794,27 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
   const manualPhaseOpts = plan.id === 1
     ? PHASE_NAMES.map((n, i) => ({ value: i, label: n }))
     : [0,1,2,3].map(i => ({ value: i, label: `Phase ${i+1}` }));
+
+  const pinnedCourses = state.pinnedCourses || [];
+
+  async function handleTogglePin(courseId) {
+    const isPinned = pinnedCourses.includes(courseId);
+    if (isPinned) {
+      dispatch({ type: 'UNPIN_COURSE', id: courseId });
+      try {
+        await api.unpinCourse(courseId);
+      } catch (e) {
+        console.error('Failed to unpin course:', e);
+      }
+    } else {
+      dispatch({ type: 'PIN_COURSE', id: courseId });
+      try {
+        await api.pinCourse(courseId);
+      } catch (e) {
+        console.error('Failed to pin course:', e);
+      }
+    }
+  }
 
   function handleAddSession(id) {
     const course = courses.find(c => c.id === id);
@@ -1754,8 +2003,10 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
               <div style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{doneSessions}/{totalSessions}</div>
               <div style={{ fontSize: 12, color: 'var(--text-3)' }}>sessions</div>
             </div>
+            {startDate     && <div><div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.5 }}>{startDate}</div><div style={{ fontSize: 12, color: 'var(--text-3)' }}>started</div></div>}
             {estCompletion && <div><div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.5 }}>{estCompletion}</div><div style={{ fontSize: 12, color: 'var(--text-3)' }}>est. completion</div></div>}
             {examDate      && <div><div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.5 }}>{examDate}</div><div style={{ fontSize: 12, color: 'var(--text-3)' }}>exam date</div></div>}
+            {completedDate && <div><div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.5, color: '#34d399' }}>{completedDate}</div><div style={{ fontSize: 12, color: 'var(--text-3)' }}>completed</div></div>}
           </div>
           {plan.description && <p style={{ fontSize: 13, color: 'var(--text-3)', margin: '10px 0 0', lineHeight: 1.6 }}>{plan.description}</p>}
         </div>
@@ -1765,6 +2016,19 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: 'var(--text-3)', marginBottom: 18, paddingLeft: 2 }}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         Smart scheduling · weekdays only (Mon–Fri) · missed sessions auto-push forward
+      </div>
+
+      {/* Today's study time */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 14, background: `${plan.color}14`, border: `1px solid ${plan.color}30`, marginBottom: 18, fontSize: 13 }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={plan.color} strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span style={{ color: 'var(--text-2)' }}>Today's study time</span>
+        <strong style={{ fontSize: 15 }}>{fmtHoursMins(todayTotalAllCourses)}</strong>
+        {activeTimer?.running && (
+          <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: plan.color, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: plan.color, animation: 'om-pulse 1.4s infinite' }} />
+            {courses.find(c => c.id === activeTimer.courseId)?.name} running
+          </span>
+        )}
       </div>
 
       {/* Import bar */}
@@ -2059,6 +2323,23 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
                               </svg>
                             </a>
                           )}
+                          <button
+                            onClick={() => handleTogglePin(c.id)}
+                            title={pinnedCourses.includes(c.id) ? 'Unpin from Today Dashboard' : 'Pin to Today Dashboard'}
+                            style={{
+                              background: 'transparent', border: 'none', cursor: 'pointer',
+                              padding: '2px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: pinnedCourses.includes(c.id) ? '#fcd34d' : 'var(--text-3)',
+                              opacity: pinnedCourses.includes(c.id) ? 1 : 0.4,
+                              transition: 'all 0.15s ease', flexShrink: 0,
+                            }}
+                            onMouseEnter={e => { if (!pinnedCourses.includes(c.id)) e.currentTarget.style.opacity = 0.8; }}
+                            onMouseLeave={e => { if (!pinnedCourses.includes(c.id)) e.currentTarget.style.opacity = 0.4; }}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill={pinnedCourses.includes(c.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                          </button>
                           <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 99, whiteSpace: 'nowrap', background: st.pillBg, color: st.color }}>{st.label}</span>
                           <button onClick={() => setDeleteTarget(c)} title="Remove course" style={{
                             width: 28, height: 28, borderRadius: 8, border: '1px solid var(--border)',
@@ -2108,6 +2389,19 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
                           >✕</button>
                         )}
                       </div>
+                      <CourseTimeTracker
+                        course={c}
+                        timer={activeTimer}
+                        setting={getCourseSetting(c.id)}
+                        onModeChange={mode => setCourseMode(c.id, mode)}
+                        onDurationChange={min => setCourseDuration(c.id, min)}
+                        onStart={() => startTimer(c.id)}
+                        onPause={pauseTimer}
+                        onReset={() => resetTimer(c.id)}
+                        todaySeconds={getTodaySeconds(c.id)}
+                        totalSeconds={getTotalSeconds(c.id)}
+                        accent={plan.color}
+                      />
                     </div>
                   );
                 })}

@@ -144,13 +144,13 @@ function FestivalsTab() {
 
   const activeSubs = useMemo(() => state.subscribedCalendars || [], [state.subscribedCalendars]);
 
-  // Load all festivals from the DB
+  // Load all festivals from the DB — re-fetch when subscriptions change so
+  // updates made in Settings are reflected immediately without a full page reload.
   useEffect(() => {
-    fetch('/api/festivals')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => [])
-      .then(rows => setDbRows(Array.isArray(rows) ? rows : []));
-  }, []);
+    api.getFestivals()
+      .then(rows => setDbRows(Array.isArray(rows) ? rows : []))
+      .catch(() => setDbRows([]));
+  }, [activeSubs]);
 
   // DB rows → display items
   const allEvents = useMemo(() => {

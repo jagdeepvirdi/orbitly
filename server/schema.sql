@@ -11,18 +11,21 @@ CREATE TABLE tasks (
   status      VARCHAR(20)  NOT NULL DEFAULT 'todo' CHECK (status IN ('todo','doing','done')),
   overdue     BOOLEAN      NOT NULL DEFAULT FALSE,
   recurring   BOOLEAN      NOT NULL DEFAULT FALSE,
+  project     VARCHAR(100),
   user_id     TEXT         NOT NULL DEFAULT '',
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 -- ─── Medications ────────────────────────────────────────────────────────────────
 CREATE TABLE medications (
-  id          VARCHAR(50) PRIMARY KEY,
-  name        VARCHAR(200) NOT NULL,
-  dose        VARCHAR(200),
-  time        VARCHAR(20)  CHECK (time IN ('Morning','Evening')),
-  sort_order  SMALLINT     NOT NULL DEFAULT 0,
-  user_id     TEXT         NOT NULL DEFAULT ''
+  id            VARCHAR(50)  PRIMARY KEY,
+  name          VARCHAR(200) NOT NULL,
+  dose          VARCHAR(200),
+  time          VARCHAR(60),  -- free-form, e.g. "Morning, Night" (multiple slots)
+  sort_order    SMALLINT     NOT NULL DEFAULT 0,
+  days_of_week  SMALLINT[]   NOT NULL DEFAULT '{0,1,2,3,4,5,6}',  -- 0=Sun..6=Sat; all 7 = every day
+  food_timing   VARCHAR(20)  CHECK (food_timing IS NULL OR food_timing IN ('before_food','after_food','with_food')),
+  user_id       TEXT         NOT NULL DEFAULT ''
 );
 
 -- Per-day check-off (one row per med per calendar date)
@@ -72,7 +75,7 @@ CREATE TABLE shopping_items (
 
 -- ─── Learning courses ───────────────────────────────────────────────────────────
 CREATE TABLE courses (
-  id          VARCHAR(10)  PRIMARY KEY,
+  id          VARCHAR(50)  PRIMARY KEY,
   name        VARCHAR(300) NOT NULL,
   phase       SMALLINT     NOT NULL,
   total       SMALLINT     NOT NULL,
@@ -82,6 +85,18 @@ CREATE TABLE courses (
   sort_order  SMALLINT     NOT NULL DEFAULT 0,
   user_id     TEXT         NOT NULL DEFAULT ''
 );
+
+-- Daily study-time log per course, in seconds. One row per (course, user, day);
+-- the timer/stopwatch widget increments it periodically while running.
+CREATE TABLE course_time_logs (
+  id         VARCHAR(50) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  course_id  VARCHAR(50) NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  log_date   DATE        NOT NULL,
+  seconds    INTEGER     NOT NULL DEFAULT 0,
+  user_id    TEXT        NOT NULL DEFAULT '',
+  UNIQUE (course_id, user_id, log_date)
+);
+CREATE INDEX idx_course_time_logs_user_id ON course_time_logs(user_id);
 
 -- ─── Family ─────────────────────────────────────────────────────────────────────
 CREATE TABLE family_groups (
@@ -134,6 +149,7 @@ CREATE TABLE finance_subscriptions (
   currency    VARCHAR(5),
   billing_day SMALLINT       CHECK (billing_day BETWEEN 1 AND 31),
   cycle       VARCHAR(20)    NOT NULL DEFAULT 'monthly',
+  start_date  DATE,
   user_id     TEXT           NOT NULL DEFAULT ''
 );
 
@@ -144,6 +160,7 @@ CREATE TABLE finance_loans (
   emi      NUMERIC(12,2),
   currency VARCHAR(5),
   due_day  SMALLINT      CHECK (due_day BETWEEN 1 AND 31),
+  emoji    VARCHAR(10),
   user_id  TEXT          NOT NULL DEFAULT ''
 );
 
@@ -154,6 +171,7 @@ CREATE TABLE finance_credit_cards (
   statement_day SMALLINT     CHECK (statement_day BETWEEN 1 AND 31),
   due_day       SMALLINT     CHECK (due_day       BETWEEN 1 AND 31),
   currency      VARCHAR(5),
+  emoji         VARCHAR(10),
   user_id       TEXT         NOT NULL DEFAULT ''
 );
 
@@ -167,6 +185,8 @@ CREATE TABLE finance_bills (
   due_day        SMALLINT     CHECK (due_day        BETWEEN 1 AND 31),
   amount         NUMERIC(10,2),
   currency       VARCHAR(5),
+  cycle          VARCHAR(20)  NOT NULL DEFAULT 'monthly',
+  start_date     DATE,
   user_id        TEXT         NOT NULL DEFAULT ''
 );
 
@@ -226,6 +246,23 @@ CREATE INDEX idx_habit_checkins_user_id ON habit_checkins(user_id);
 CREATE INDEX idx_appointments_user_id ON appointments(user_id);
 CREATE INDEX idx_courses_user_id ON courses(user_id);
 CREATE INDEX idx_finance_subscriptions_user_id ON finance_subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS finance_insurance (
+  id          VARCHAR(50)    PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name        VARCHAR(200)   NOT NULL,
+  provider    VARCHAR(200),
+  type        VARCHAR(50)    NOT NULL DEFAULT 'other',
+  emoji       VARCHAR(10),
+  amount      NUMERIC(10,2),
+  currency    VARCHAR(5)     NOT NULL DEFAULT 'INR',
+  billing_day SMALLINT       CHECK (billing_day BETWEEN 1 AND 31),
+  country     VARCHAR(10)    NOT NULL DEFAULT 'IN',
+  policy_number VARCHAR(100),
+  cycle       VARCHAR(20)    NOT NULL DEFAULT 'monthly',
+  start_date  DATE,
+  user_id     TEXT           NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_finance_insurance_user_id ON finance_insurance(user_id);
 CREATE INDEX idx_finance_loans_user_id ON finance_loans(user_id);
 CREATE INDEX idx_finance_credit_cards_user_id ON finance_credit_cards(user_id);
 CREATE INDEX idx_finance_bills_user_id ON finance_bills(user_id);

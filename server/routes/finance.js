@@ -17,14 +17,31 @@ router.get('/subscriptions', async (req, res) => {
 });
 
 router.post('/subscriptions', async (req, res) => {
-  const { name, country, cat, emoji, amount, currency, billing_day, cycle = 'monthly' } = req.body;
+  const { name, country, cat, emoji, amount, currency, billing_day, cycle = 'monthly', start_date } = req.body;
   try {
     const { rows } = await db.query(
-      `INSERT INTO finance_subscriptions (name, country, cat, emoji, amount, currency, billing_day, cycle, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [name, country, cat, emoji, amount, currency, billing_day, cycle, req.userId]
+      `INSERT INTO finance_subscriptions (name, country, cat, emoji, amount, currency, billing_day, cycle, start_date, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [name, country, cat, emoji, amount, currency, billing_day, cycle, start_date || null, req.userId]
     );
     res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/subscriptions/:id', async (req, res) => {
+  const { name, country, cat, emoji, amount, currency, billing_day, cycle = 'monthly', start_date } = req.body;
+  try {
+    const { rows } = await db.query(
+      `UPDATE finance_subscriptions
+       SET name=$1, country=$2, cat=$3, emoji=$4, amount=$5, currency=$6, billing_day=$7, cycle=$8, start_date=$9
+       WHERE id=$10 AND user_id=$11
+       RETURNING *`,
+      [name, country, cat, emoji, amount, currency, billing_day, cycle, start_date || null, req.params.id, req.userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -53,14 +70,29 @@ router.get('/loans', async (req, res) => {
 });
 
 router.post('/loans', async (req, res) => {
-  const { name, bank, emi, currency, due_day } = req.body;
+  const { name, bank, emi, currency, due_day, emoji } = req.body;
   try {
     const { rows } = await db.query(
-      `INSERT INTO finance_loans (name, bank, emi, currency, due_day, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [name, bank, emi, currency, due_day, req.userId]
+      `INSERT INTO finance_loans (name, bank, emi, currency, due_day, emoji, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [name, bank, emi, currency, due_day, emoji || null, req.userId]
     );
     res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/loans/:id', async (req, res) => {
+  const { name, bank, emi, currency, due_day, emoji } = req.body;
+  try {
+    const { rows } = await db.query(
+      `UPDATE finance_loans SET name=$1, bank=$2, emi=$3, currency=$4, due_day=$5, emoji=$6
+       WHERE id=$7 AND user_id=$8 RETURNING *`,
+      [name, bank, emi, currency, due_day, emoji || null, req.params.id, req.userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -89,14 +121,29 @@ router.get('/credit-cards', async (req, res) => {
 });
 
 router.post('/credit-cards', async (req, res) => {
-  const { name, bank, statement_day, due_day, currency } = req.body;
+  const { name, bank, statement_day, due_day, currency, emoji } = req.body;
   try {
     const { rows } = await db.query(
-      `INSERT INTO finance_credit_cards (name, bank, statement_day, due_day, currency, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [name, bank, statement_day, due_day, currency, req.userId]
+      `INSERT INTO finance_credit_cards (name, bank, statement_day, due_day, currency, emoji, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [name, bank, statement_day, due_day, currency, emoji || null, req.userId]
     );
     res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/credit-cards/:id', async (req, res) => {
+  const { name, bank, statement_day, due_day, currency, emoji } = req.body;
+  try {
+    const { rows } = await db.query(
+      `UPDATE finance_credit_cards SET name=$1, bank=$2, statement_day=$3, due_day=$4, currency=$5, emoji=$6
+       WHERE id=$7 AND user_id=$8 RETURNING *`,
+      [name, bank, statement_day, due_day, currency, emoji || null, req.params.id, req.userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -125,14 +172,29 @@ router.get('/bills', async (req, res) => {
 });
 
 router.post('/bills', async (req, res) => {
-  const { name, country, type, emoji, generation_day, due_day, amount, currency } = req.body;
+  const { name, country, type, emoji, generation_day, due_day, amount, currency, cycle = 'monthly', start_date } = req.body;
   try {
     const { rows } = await db.query(
-      `INSERT INTO finance_bills (name, country, type, emoji, generation_day, due_day, amount, currency, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [name, country, type, emoji, generation_day, due_day, amount, currency, req.userId]
+      `INSERT INTO finance_bills (name, country, type, emoji, generation_day, due_day, amount, currency, cycle, start_date, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [name, country, type, emoji, generation_day || null, due_day || null, amount, currency, cycle, start_date || null, req.userId]
     );
     res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/bills/:id', async (req, res) => {
+  const { name, country, type, emoji, generation_day, due_day, amount, currency, cycle = 'monthly', start_date } = req.body;
+  try {
+    const { rows } = await db.query(
+      `UPDATE finance_bills SET name=$1, country=$2, type=$3, emoji=$4, generation_day=$5, due_day=$6, amount=$7, currency=$8, cycle=$9, start_date=$10
+       WHERE id=$11 AND user_id=$12 RETURNING *`,
+      [name, country, type, emoji, generation_day || null, due_day || null, amount || null, currency, cycle, start_date || null, req.params.id, req.userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -141,6 +203,57 @@ router.post('/bills', async (req, res) => {
 router.delete('/bills/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM finance_bills WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Insurance ─────────────────────────────────────────────────
+router.get('/insurance', async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT * FROM finance_insurance WHERE user_id = $1 ORDER BY name',
+      [req.userId]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/insurance', async (req, res) => {
+  const { name, provider, type = 'other', emoji, amount, currency, billing_day, country, policy_number, cycle = 'monthly', start_date } = req.body;
+  try {
+    const { rows } = await db.query(
+      `INSERT INTO finance_insurance (name, provider, type, emoji, amount, currency, billing_day, country, policy_number, cycle, start_date, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+      [name, provider, type, emoji, amount, currency, billing_day || null, country, policy_number || null, cycle, start_date || null, req.userId]
+    );
+    res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/insurance/:id', async (req, res) => {
+  const { name, provider, type = 'other', emoji, amount, currency, billing_day, country, policy_number, cycle = 'monthly', start_date } = req.body;
+  try {
+    const { rows } = await db.query(
+      `UPDATE finance_insurance SET name=$1, provider=$2, type=$3, emoji=$4, amount=$5, currency=$6, billing_day=$7, country=$8, policy_number=$9, cycle=$10, start_date=$11
+       WHERE id=$12 AND user_id=$13 RETURNING *`,
+      [name, provider, type, emoji, amount, currency, billing_day || null, country, policy_number || null, cycle, start_date || null, req.params.id, req.userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.delete('/insurance/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM finance_insurance WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
