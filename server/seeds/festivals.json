@@ -1610,26 +1610,6 @@
     "event_date": "2026-03-14"
   },
   {
-    "name": "Baisakhi — Khalsa Sajna Diwas",
-    "cat": "gurpurab",
-    "emoji": "🌾",
-    "action": null,
-    "reminder": "1 week before",
-    "calendar": "sikh",
-    "description": "327th anniversary of the creation of the Khalsa Panth by Guru Gobind Singh Ji (1699)",
-    "event_date": "2026-04-14"
-  },
-  {
-    "name": "Martyrdom of Guru Arjan Dev Ji",
-    "cat": "shahidi",
-    "emoji": "🕯️",
-    "action": null,
-    "reminder": "3 days before",
-    "calendar": "sikh",
-    "description": "Shaheedi Diwas — First Sikh martyr, the 5th Guru, compiled the original Sri Guru Granth Sahib",
-    "event_date": "2026-06-16"
-  },
-  {
     "name": "Guru Har Krishan Ji Gurpurab",
     "cat": "gurpurab",
     "emoji": "👑",
@@ -1653,7 +1633,7 @@
     "name": "Bandi Chhor Diwas",
     "cat": "gurpurab",
     "emoji": "🔓",
-    "action": null,
+    "action": "Gurpurab celebrations",
     "reminder": "1 week before",
     "calendar": "sikh",
     "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort — coincides with Diwali",
@@ -1720,16 +1700,6 @@
     "event_date": "2027-03-04"
   },
   {
-    "name": "Baisakhi — Khalsa Sajna Diwas",
-    "cat": "gurpurab",
-    "emoji": "🌾",
-    "action": null,
-    "reminder": "1 week before",
-    "calendar": "sikh",
-    "description": "328th anniversary of the creation of the Khalsa Panth",
-    "event_date": "2027-04-14"
-  },
-  {
     "name": "Vaisakhi / Khalsa Sajna Diwas",
     "event_date": "2026-04-14",
     "cat": "gurpurab",
@@ -1737,7 +1707,7 @@
     "action": "Celebrate harvest festival",
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": null
+    "description": "327th anniversary of the creation of the Khalsa Panth by Guru Gobind Singh Ji (1699)"
   },
   {
     "name": "Guru Arjan Dev Ji Shaheedi Diwas",
@@ -1748,16 +1718,6 @@
     "reminder": "3 days before",
     "calendar": "sikh",
     "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
-  },
-  {
-    "name": "Bandi Chhor Divas",
-    "event_date": "2026-10-20",
-    "cat": "gurpurab",
-    "emoji": "🔓",
-    "action": "Gurpurab celebrations",
-    "reminder": "1 week before",
-    "calendar": "sikh",
-    "description": "Celebrates Guru Hargobind Ji securing release of 52 kings from Gwalior Fort"
   },
   {
     "name": "Guru Gobind Singh Ji Gurpurab",
@@ -1777,7 +1737,7 @@
     "action": "Celebrate harvest festival",
     "reminder": "3 days before",
     "calendar": "sikh",
-    "description": null
+    "description": "328th anniversary of the creation of the Khalsa Panth"
   },
   {
     "name": "Guru Arjan Dev Ji Shaheedi Diwas",
@@ -1790,7 +1750,7 @@
     "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
   },
   {
-    "name": "Bandi Chhor Divas",
+    "name": "Bandi Chhor Diwas",
     "event_date": "2027-11-09",
     "cat": "gurpurab",
     "emoji": "🔓",
@@ -1850,7 +1810,7 @@
     "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
   },
   {
-    "name": "Bandi Chhor Divas",
+    "name": "Bandi Chhor Diwas",
     "event_date": "2028-10-28",
     "cat": "gurpurab",
     "emoji": "🔓",
@@ -1910,7 +1870,7 @@
     "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
   },
   {
-    "name": "Bandi Chhor Divas",
+    "name": "Bandi Chhor Diwas",
     "event_date": "2029-10-18",
     "cat": "gurpurab",
     "emoji": "🔓",
@@ -1970,7 +1930,7 @@
     "description": "Shaheedi Diwas — Martyrdom of the 5th Guru, who compiled the Adi Granth"
   },
   {
-    "name": "Bandi Chhor Divas",
+    "name": "Bandi Chhor Diwas",
     "event_date": "2030-11-06",
     "cat": "gurpurab",
     "emoji": "🔓",
