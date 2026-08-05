@@ -221,7 +221,7 @@ function ExtractedMedsPanel({ meds, rxId, who, onAdded }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
         {meds.map((med, i) => (
           <label key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-            <span style={{ flex: '0 0 20px', width: 20, height: 20, borderRadius: 6, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${checked[i] ? '#6366f1' : 'var(--border-strong)'}`, background: checked[i] ? 'rgba(99,102,241,0.2)' : 'transparent', cursor: 'pointer', flexShrink: 0 }}
+            <span style={{ flex: '0 0 20px', width: 20, height: 20, borderRadius: 6, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${checked[i] ? 'var(--accent)' : 'var(--border-strong)'}`, background: checked[i] ? 'var(--accent-soft)' : 'transparent', cursor: 'pointer', flexShrink: 0 }}
               onClick={() => toggle(i)}>
               {checked[i] && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
             </span>
@@ -235,7 +235,7 @@ function ExtractedMedsPanel({ meds, rxId, who, onAdded }) {
         ))}
       </div>
       <button type="button" onClick={handleAdd} disabled={adding || count === 0}
-        style={{ width: '100%', padding: '9px 0', borderRadius: 10, border: 'none', background: count > 0 ? '#6366f1' : 'var(--surface-2)', color: count > 0 ? '#fff' : 'var(--text-3)', cursor: count > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, opacity: adding ? 0.7 : 1 }}>
+        style={{ width: '100%', padding: '9px 0', borderRadius: 10, border: 'none', background: count > 0 ? 'var(--accent)' : 'var(--surface-2)', color: count > 0 ? '#fff' : 'var(--text-3)', cursor: count > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, opacity: adding ? 0.7 : 1 }}>
         {adding ? 'Adding…' : `Add ${count} medication${count !== 1 ? 's' : ''} to checklist`}
       </button>
     </div>
@@ -1082,8 +1082,8 @@ export default function HealthWellness() {
         <section style={{ gridColumn: `span ${habitsSpan}`, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#6366f1' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#a5b4fc' }}>Daily Habits</span>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--accent)' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent)' }}>Daily Habits</span>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1277,8 +1277,8 @@ export default function HealthWellness() {
         <section style={{ gridColumn: '1 / -1', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 22, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#6366f1' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#a5b4fc' }}>Test Results</span>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--accent)' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent)' }}>Test Results</span>
               {testResults.length > 0 && <span style={{ fontSize: 12, color: 'var(--text-3)', background: 'var(--surface-2)', padding: '2px 9px', borderRadius: 99 }}>{testResults.length} stored</span>}
             </div>
             <SectionUploadBtn onClick={() => setTrModal(true)} label="Upload test result" />

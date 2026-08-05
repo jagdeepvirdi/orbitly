@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { APP_TODAY } from '../../utils/dateUtils';
 
-const HOBBY_COLORS = ['#f97316','#6366f1','#10b981','#f43f5e','#f59e0b','#a855f7','#0ea5e9','#84cc16'];
+const HOBBY_COLORS = ['#f97316','#6366f1','#10b981','#f43f5e','#f59e0b','#a855f7','#0ea5e9','#84cc16']; // eslint-disable-line no-restricted-syntax -- user-selectable hobby-project color palette, not the brand accent
 
 const HOBBY_TYPES = ['Art & Craft','Photography','Music','Reading','Gaming','Cooking','Gardening','Fitness','Travel','Writing','DIY','Other'];
 
@@ -365,7 +365,7 @@ export default function HobbyTracker() {
             </svg>
           </div>
           <div>
-            <div style={{ fontFamily: "'Newsreader', serif", fontSize: 28, fontWeight: 600, fontStyle: 'italic' }}>Hobby Tracker</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700 }}>Hobby Tracker</div>
             <div style={{ fontSize: 13.5, color: 'var(--text-2)', marginTop: 2 }}>
               {hobbyCount > 0 ? `${hobbyCount} upcoming event${hobbyCount !== 1 ? 's' : ''} · ` : ''}
               {(state.hobbyProjects || []).length} project{(state.hobbyProjects || []).length !== 1 ? 's' : ''} · {(state.hobbyLog || []).length} logged

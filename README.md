@@ -1,4 +1,6 @@
-# Orbitly
+# Mosaic Life
+
+*Everything. Together. Balanced.*
 
 A personal life operating system for managing everything that matters — learning, health, family, finances, sports, and daily tasks — in one unified dashboard.
 

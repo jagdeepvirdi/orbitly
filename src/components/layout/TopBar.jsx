@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { USERS } from '../../data/users';
 import { APP_TODAY, formatDate } from '../../utils/dateUtils';
+import { ACCENT_SWATCHES } from '../../utils/colorUtils';
 
 const SECTION_LABELS = {
   today: 'Today', calendar: 'Calendar', learning: 'Learning', tasks: 'Tasks',
@@ -48,6 +49,28 @@ export default function TopBar() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Accent picker */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} title="Your accent">
+          {ACCENT_SWATCHES.map(color => {
+            const active = state.accent === color;
+            return (
+              <button
+                key={color}
+                onClick={() => dispatch({ type: 'SET_ACCENT', color })}
+                aria-label={`Set accent ${color}`}
+                style={{
+                  width: active ? 15 : 12, height: active ? 15 : 12, borderRadius: '50%',
+                  border: 'none', cursor: 'pointer', padding: 0, background: color,
+                  boxShadow: active
+                    ? `0 0 0 2px var(--surface-solid), 0 0 0 4px ${color}`
+                    : '0 0 0 1px rgba(255,255,255,0.14)',
+                  transition: 'all .15s',
+                }}
+              />
+            );
+          })}
+        </div>
+
         {/* Search */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -59,7 +82,7 @@ export default function TopBar() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>
           </svg>
-          <span>Search Orbitly…</span>
+          <span>Search Mosaic Life…</span>
           <span style={{
             marginLeft: 'auto', fontSize: 11,
             border: '1px solid var(--border)', borderRadius: 5, padding: '1px 5px',
@@ -142,8 +165,8 @@ export default function TopBar() {
             title={user.name}
             style={{
               width: 34, height: 34, borderRadius: '50%',
-              border: `2px solid ${user.accent}`,
-              background: user.accent, color: '#fff',
+              border: '2px solid var(--accent)',
+              background: 'var(--accent)', color: '#fff',
               fontSize: 12, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: `0 0 0 3px var(--surface-solid)`,

@@ -29,7 +29,7 @@ async function patchCourse(id, fields) {
 
 function courseStatus(c) {
   if (c.done >= c.total) return { label: 'Completed', color: '#34d399', pillBg: 'rgba(16,185,129,0.16)', bar: '#10b981' };
-  if (c.done > 0)        return { label: 'In progress', color: '#a5b4fc', pillBg: 'rgba(99,102,241,0.16)', bar: '#6366f1' };
+  if (c.done > 0)        return { label: 'In progress', color: '#a5b4fc', pillBg: 'rgba(99,102,241,0.16)', bar: '#6366f1' }; // eslint-disable-line no-restricted-syntax -- fixed course-status color, not the brand accent
   return { label: 'Upcoming', color: 'var(--text-3)', pillBg: 'var(--surface-2)', bar: 'var(--border-strong)' };
 }
 
@@ -47,14 +47,14 @@ const BOOK_STATUS = {
   'finished': { label: 'Finished', bg: 'rgba(16,185,129,0.18)',  color: '#34d399' },
 };
 
-const PLAN_COLORS = ['#6366f1','#a855f7','#ec4899','#ef4444','#f59e0b','#10b981','#06b6d4','#3b82f6'];
+const PLAN_COLORS = ['#6366f1','#a855f7','#ec4899','#ef4444','#f59e0b','#10b981','#06b6d4','#3b82f6']; // eslint-disable-line no-restricted-syntax -- user-selectable plan color palette, not the brand accent
 const PLAN_ICONS  = ['📚','🎓','🤖','💡','⚡','🔬','🛠️','🧠','🌐','🚀','📊','✍️','📖','🏆','🎯','🌱'];
 
 const EVENT_TYPES = {
-  webinar:    { label: 'Webinar',    emoji: '🎥', color: '#6366f1', bg: 'rgba(99,102,241,0.15)'   },
+  webinar:    { label: 'Webinar',    emoji: '🎥', color: '#6366f1', bg: 'rgba(99,102,241,0.15)'   }, // eslint-disable-line no-restricted-syntax -- fixed event-type color, not the brand accent
   meeting:    { label: 'Meeting',    emoji: '💬', color: '#0ea5e9', bg: 'rgba(14,165,233,0.15)'   },
   workshop:   { label: 'Workshop',   emoji: '🔧', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'   },
-  conference: { label: 'Conference', emoji: '📢', color: '#a855f7', bg: 'rgba(168,85,247,0.15)'   },
+  conference: { label: 'Conference', emoji: '📢', color: '#a855f7', bg: 'rgba(168,85,247,0.15)'   }, // eslint-disable-line no-restricted-syntax -- fixed event-type color, not the brand accent
   seminar:    { label: 'Seminar',    emoji: '🎙️',color: '#10b981', bg: 'rgba(16,185,129,0.15)'   },
   training:   { label: 'Training',   emoji: '🏫', color: '#ef4444', bg: 'rgba(239,68,68,0.15)'    },
   course:     { label: 'Course',     emoji: '🎓', color: '#d4af37', bg: 'rgba(212,175,55,0.15)'   },
@@ -139,7 +139,7 @@ function PlanFormModal({ plan = null, onClose, onSave }) {
     title:         plan?.title           || '',
     type:          plan?.type            || 'certification',
     icon:          plan?.icon            || '📚',
-    color:         plan?.color           || '#6366f1',
+    color:         plan?.color           || '#6366f1', // eslint-disable-line no-restricted-syntax -- default from the PLAN_COLORS palette above, not the brand accent
     startDate:     plan?.start_date      || '',
     examDate:      plan?.exam_date       || '',
     estCompletion: plan?.est_completion  || '',
@@ -493,7 +493,7 @@ function BookFormModal({ book = null, planId, onClose, onSave }) {
         <button onClick={handleSave} disabled={!form.title.trim() || saving} style={{
           flex: 2, padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
           fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#fff',
-          background: 'linear-gradient(120deg,#6366f1,#a855f7)',
+          background: 'var(--accent)',
           opacity: form.title.trim() && !saving ? 1 : 0.5,
         }}>{saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Book'}</button>
       </div>
@@ -622,7 +622,7 @@ function BookCard({ book, onEdit, onDelete, onStatusChange }) {
 
 // ── Reading Plan Detail ───────────────────────────────────────────────────────
 
-function ReadingPlanDetail({ plan, books, onBack, onPlanUpdate, onAddBook, onUpdateBook, onDeleteBook }) {
+function ReadingPlanDetail({ plan, books, onBack, onAddBook, onUpdateBook, onDeleteBook }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddBook,  setShowAddBook]  = useState(false);
   const [editBook,     setEditBook]     = useState(null);
@@ -702,7 +702,7 @@ function ReadingPlanDetail({ plan, books, onBack, onPlanUpdate, onAddBook, onUpd
           <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: plan.color, marginBottom: 2 }}>
             Reading List
           </div>
-          <h2 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 30, margin: '4px 0 14px' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 30, margin: '4px 0 14px' }}>
             {plan.icon} {plan.title}
           </h2>
           <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
@@ -1278,7 +1278,7 @@ function LearningEventsSection({ events, plans, onCreated, onUpdated, onDeleted 
     <div style={{ marginTop: 40 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div>
-          <h3 style={{ margin: '0 0 4px', fontSize: 22, fontFamily: "'Newsreader', serif", fontWeight: 500 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 22, fontFamily: 'var(--font-heading)', fontWeight: 700 }}>
             Learning Events
           </h3>
           <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-3)' }}>
@@ -1289,8 +1289,8 @@ function LearningEventsSection({ events, plans, onCreated, onUpdated, onDeleted 
           display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px',
           borderRadius: 12, border: 'none', cursor: 'pointer',
           fontFamily: 'inherit', fontSize: 13, fontWeight: 700, color: '#fff',
-          background: 'linear-gradient(120deg,#6366f1,#a855f7)',
-          boxShadow: '0 4px 14px rgba(99,102,241,0.28)',
+          background: 'var(--accent)',
+          boxShadow: '0 4px 14px var(--glow)',
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Add Event
@@ -1451,7 +1451,7 @@ function PlansHub({ plans, courses, books, events, loading, onOpen, onPlanCreate
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h2 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 32, margin: '0 0 4px' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 32, margin: '0 0 4px' }}>
             Learning Plans
           </h2>
           <p style={{ fontSize: 14, color: 'var(--text-3)', margin: 0 }}>
@@ -1471,8 +1471,8 @@ function PlansHub({ plans, courses, books, events, loading, onOpen, onPlanCreate
             display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px',
             borderRadius: 13, border: 'none', cursor: 'pointer',
             fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, color: '#fff',
-            background: 'linear-gradient(120deg,#6366f1,#a855f7)',
-            boxShadow: '0 6px 18px rgba(99,102,241,0.3)',
+            background: 'var(--accent)',
+            boxShadow: '0 6px 18px var(--glow)',
           }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             New Plan
@@ -1644,7 +1644,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
   const [activeTimer, setActiveTimer] = useState(null); // { courseId, mode, durationSec, elapsed, lastFlushed, running }
   const [courseSettings, setCourseSettings] = useState({}); // { [courseId]: { mode, durationMin } }
   const activeTimerRef = useRef(activeTimer);
-  activeTimerRef.current = activeTimer;
+  useEffect(() => { activeTimerRef.current = activeTimer; }, [activeTimer]);
 
   useEffect(() => {
     api.getCourseTimeLogs().then(setTimeLogs).catch(() => {});
@@ -1991,7 +1991,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
           <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: plan.color, marginBottom: 2 }}>
             {(TYPE_META[plan.type] || TYPE_META.other).label}
           </div>
-          <h2 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 30, margin: '4px 0 12px' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 30, margin: '4px 0 12px' }}>
             {plan.icon} {plan.title}
           </h2>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
@@ -2059,7 +2059,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
             border: 'none', cursor: importVal.trim() && !importing ? 'pointer' : 'not-allowed',
             fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, color: '#fff',
             opacity: importVal.trim() && !importing ? 1 : 0.5,
-            background: 'linear-gradient(120deg,#6366f1,#a855f7)', transition: 'opacity .2s',
+            background: 'var(--accent)', transition: 'opacity .2s',
           }}>
             {importing
               ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ animation: 'om-spin 0.8s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>
@@ -2175,15 +2175,15 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
                       })} style={{
                         display: 'flex', alignItems: 'flex-start', gap: 10,
                         padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
-                        background: checked ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${checked ? 'rgba(99,102,241,0.35)' : 'var(--border)'}`,
+                        background: checked ? 'var(--accent-soft)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${checked ? 'var(--accent-soft)' : 'var(--border)'}`,
                         transition: 'background .12s, border-color .12s',
                       }}>
                         {/* Checkbox */}
                         <div style={{
                           width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
-                          border: `2px solid ${checked ? '#6366f1' : 'var(--border-strong)'}`,
-                          background: checked ? '#6366f1' : 'transparent',
+                          border: `2px solid ${checked ? 'var(--accent)' : 'var(--border-strong)'}`,
+                          background: checked ? 'var(--accent)' : 'transparent',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           transition: 'all .12s',
                         }}>
@@ -2467,7 +2467,7 @@ function PlanDetail({ plan, courses, onBack, onPlanUpdate, dispatch, state }) {
 
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h3 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 22, margin: 0 }}>{certName}</h3>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 22, margin: 0 }}>{certName}</h3>
               {isPassed && <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 99, background: 'rgba(16,185,129,0.16)', color: '#34d399' }}>PASSED</span>}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-2)' }}>
@@ -2577,7 +2577,7 @@ export default function LearningPlanner() {
         dispatch({ type: 'SYNC_COURSES', courses: courseRows.map(rowToLocal) });
       }
     }).finally(() => setLoadingPlans(false));
-  }, []);
+  }, [dispatch]);
 
   const courses = state.courses;
 

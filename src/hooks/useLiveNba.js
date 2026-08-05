@@ -8,9 +8,11 @@ export function useLiveNba() {
   const [error, setError] = useState(null);
   const [tick, setTick] = useState(0);
 
+  // `loading` starts true (useState(true)) so the initial mount fetch needs no
+  // reset here; refresh() resets it itself before bumping `tick`, since that
+  // happens in a click handler rather than this effect.
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     api.nbaGames()
       .then(res => {
         if (cancelled) return;
@@ -28,6 +30,7 @@ export function useLiveNba() {
   }, [tick]);
 
   const refresh = useCallback(async () => {
+    setLoading(true);
     await api.nbaRefresh();
     setTick(t => t + 1);
   }, []);

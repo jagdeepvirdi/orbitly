@@ -114,7 +114,7 @@ function StandingsTable({ title, rows, showWins }) {
   );
 }
 
-function F1Section({ dispatch }) {
+function F1Section() {
   const { state } = useAppStore();
   const mob = state.isMobile;
   const { schedule, standings, constructors, raceResults, loading, error, refresh, fetchedAt, season } = useLiveF1();
@@ -125,7 +125,7 @@ function F1Section({ dispatch }) {
   const rawResults      = raceResults   || F1_RACE_RESULTS;
   const isLive = !!schedule;
 
-  // Annotate each race with days-away; split into upcoming vs completed
+  // Annotate each race with days-away, then keep only the upcoming ones
   const annotated = rawCalendar.map(r => {
     // Live data uses ISO date string; seed data uses year/month/day
     let days;
@@ -138,8 +138,7 @@ function F1Section({ dispatch }) {
     return { ...r, days };
   });
 
-  const upcoming  = annotated.filter(r => r.days >= 0).sort((a, b) => a.days - b.days);
-  const completed = annotated.filter(r => r.days  < 0).sort((a, b) => b.days - a.days); // most recent first
+  const upcoming = annotated.filter(r => r.days >= 0).sort((a, b) => a.days - b.days);
 
   // For "Recent Results", prefer live raceResults API; fall back to seed F1_RACE_RESULTS
   // Live raceResults are already completed races ordered by round
@@ -301,7 +300,7 @@ function RefreshBtn({ onClick, loading }) {
 }
 
 function CricketSection() {
-  const { matches, loading, placeholder, error, refresh } = useLiveCricket();
+  const { matches, loading, placeholder, refresh } = useLiveCricket();
   const displayMatches = matches || CRICKET_MATCHES;
   const isLive = !!matches;
 
@@ -346,7 +345,7 @@ function CricketSection() {
 // ─── Football section ───────────────────────────────────────────────────────────
 
 function FootballSection({ competitions }) {
-  const { matches, loading, placeholder, error, refresh } = useLiveFootball(competitions);
+  const { matches, loading, placeholder, refresh } = useLiveFootball(competitions);
   const displayMatches = matches || FOOTBALL_FIXTURES;
   const isLive = !!matches;
 
@@ -428,7 +427,7 @@ function MatchCard({ m, showComp }) {
 // ─── NBA section ───────────────────────────────────────────────────────────────
 
 function NBASection() {
-  const { games, loading, live: isLive, error, refresh } = useLiveNba();
+  const { games, loading, live: isLive, refresh } = useLiveNba();
   const displayGames = games || NBA_FIXTURES;
 
   return (
@@ -562,9 +561,9 @@ export default function SportsTracker() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{
             width: 52, height: 52, borderRadius: 16,
-            background: 'linear-gradient(140deg, #6366f1, #a855f7)',
+            background: 'var(--accent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 20px rgba(99,102,241,0.3)',
+            boxShadow: '0 8px 20px var(--glow)',
           }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8">
               <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
@@ -572,7 +571,7 @@ export default function SportsTracker() {
             </svg>
           </div>
           <div>
-            <div style={{ fontFamily: "'Newsreader', serif", fontSize: 28, fontWeight: 600, fontStyle: 'italic' }}>Sports Tracker</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700 }}>Sports Tracker</div>
             <div style={{ fontSize: 13.5, color: 'var(--text-2)', marginTop: 2 }}>
               Follow your favorite leagues, matches, and race results live
             </div>
@@ -608,7 +607,7 @@ export default function SportsTracker() {
         </div>
       ) : (
         sportSubscriptions.map(sub => {
-          if (sub.sport === 'f1') return <F1Section key="f1" dispatch={dispatch} />;
+          if (sub.sport === 'f1') return <F1Section key="f1" />;
           if (sub.sport === 'cricket') return <CricketSection key="cricket" />;
           if (sub.sport === 'football') return <FootballSection key="football" competitions={competitions} />;
           if (sub.sport === 'nba') return <NBASection key="nba" />;

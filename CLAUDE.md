@@ -1,23 +1,31 @@
-# Orbitly — CLAUDE.md
+# Mosaic Life — CLAUDE.md
 
 ## Project Overview
-Orbitly is a personal life operating system for Jagdeep Singh Virdi and family.
+Mosaic Life (formerly "Orbitly") is a personal life operating system for
+Jagdeep Singh Virdi and family. Tagline: *Everything. Together. Balanced.*
 It is a multi-user, multi-section web app covering: Today dashboard, Calendar,
 Learning Planner, Tasks, Health & Wellness, Festivals & Recurring events,
 Sports Tracker, Family Space, and Settings.
 
-The design source of truth is `Orbitly.dc.html` from the Claude Design handoff
-(`Orbitly-handoff.zip`). Your job is to implement it **pixel-perfectly** in
-React + Tailwind, matching all visual output from the prototype.
+The original design source of truth was `Orbitly.dc.html` from the Claude
+Design handoff (`Orbitly-handoff.zip`); the app was rebranded per the
+`Mosaic Life Dashboard.dc.html` handoff (`OrbitlyDashboardReDesign-handoff.zip`)
+— new logo (`public/mosaic-heart-logo.png`), Poppins + Hanken Grotesk fonts,
+darker palette, and a live user-selectable accent picker (see Design Tokens
+below). Internal identifiers (repo/folder name, `package.json` name, the
+`orbitly-state` localStorage key, DB name) intentionally kept the old
+"orbitly" name — only user-visible branding changed.
 
 ---
 
 ## Primary Users
-| User     | Role     | Accent color | Initials |
-|----------|----------|--------------|----------|
-| Jagdeep  | Admin    | #6366f1      | JS       |
-| Simran   | Partner  | #f43f5e      | SK       |
-| Anaya    | Child    | #f59e0b      | AN       |
+| User     | Role     | Initials |
+|----------|----------|----------|
+| Jagdeep  | Admin    | JS       |
+
+Other family members live in dynamic `state.familyMembers` (loaded from DB),
+not the static `USERS` object. Accent color is no longer fixed per person —
+see the shared accent picker in Design Tokens below.
 
 Timezone: **Asia/Bangkok (ICT, UTC+7)**
 Current date in app: **Thursday, 11 June 2026**
@@ -29,7 +37,7 @@ Current date in app: **Thursday, 11 June 2026**
 - **Styling**: Tailwind CSS (utility classes only — no custom CSS unless required)
 - **State**: React useState / useReducer (local state, no Redux needed for v1)
 - **Routing**: React Router v6 (one route per section)
-- **Fonts**: Newsreader (serif headings) + Hanken Grotesk (body) via Google Fonts
+- **Fonts**: Poppins (headings, via the `--font-heading` CSS var) + Hanken Grotesk (body) via Google Fonts
 - **Icons**: Inline SVG only — no icon library (match the SVGs in the .dc.html exactly)
 - **Animations**: Tailwind transitions + keyframes defined in tailwind.config.js
 - **Data**: Local state seeded from constants files (no backend in v1)
@@ -41,18 +49,48 @@ Current date in app: **Thursday, 11 June 2026**
 
 ### Dark mode (default)
 ```
---bg: #0a0a0f
---sidebar: #0c0c12
---bar: rgba(10,10,15,0.72)
+--font-heading: 'Poppins', sans-serif
+--bg: #08080c
+--sidebar: #0b0b10
+--bar: rgba(8,8,12,0.72)
 --surface: rgba(255,255,255,0.045)
 --surface-2: rgba(255,255,255,0.075)
---surface-solid: #15151d
---border: rgba(255,255,255,0.09)
+--surface-solid: #101018
+--border: rgba(255,255,255,0.08)
 --border-strong: rgba(255,255,255,0.17)
---text: #f5f5f8
---text-2: #a6a6b8
---text-3: #6c6c80
+--text: #f2f2f7
+--text-2: #8888a0
+--text-3: #5c5c6e
 ```
+
+### Accent picker (replaces the old fixed per-user accent)
+`--accent`, `--accent-soft`, `--glow`, `--hero-a`, `--hero-b` are no longer
+static CSS values — they're computed at runtime in `src/store/appStore.js`
+from `state.accent` (persisted, default `#1d98d9`) via `hexToRgba()` in
+`src/utils/colorUtils.js`. The user picks from 6 swatches
+(`ACCENT_SWATCHES`, exposed in the TopBar):
+```
+#1d98d9  blue (default)
+#86ba46  green
+#9460c1  purple
+#fea91a  orange
+#ff6d53  coral
+#2bb9bb  teal
+```
+Category colors (work/learning/family/health/sports/festival/recurring —
+see `CAT` below) are unaffected by the accent picker; they stay fixed.
+
+**Enforced by lint**: `eslint.config.js` has a `no-restricted-syntax` rule
+that errors on the literal strings `#6366f1`/`#a855f7` (the old fixed brand
+color) anywhere in `.js`/`.jsx`, including inside template literals. This is
+what the accent picker actually relies on staying true — a hardcoded hex
+value silently stops following the user's chosen accent, which is exactly
+how several sections drifted out of sync with Today during the Mosaic Life
+rebrand. If you hit this error: use `var(--accent)` / `var(--accent-soft)`
+/ `var(--glow)` instead. If the color is genuinely fixed and unrelated to
+the brand accent (a category palette, confetti colors, etc.), add
+`// eslint-disable-line no-restricted-syntax -- <reason>` rather than
+disabling or removing the rule.
 
 ### Light mode
 ```
@@ -375,3 +413,4 @@ The app has a full Node.js/Express backend (added in Phase 14+). Key points:
 - Do not add features not in the prototype without asking first
 - Do not import static festival/holiday data files in frontend components — use `GET /api/festivals` instead
 - Do not call `clerkClient.verifyToken()` — it does not exist in `@clerk/backend` v3; use the standalone `verifyToken` export
+- Do not hardcode `#6366f1`/`#a855f7` (the old fixed brand color) — use `var(--accent)`/`var(--accent-soft)`/`var(--glow)` so it follows the user's accent picker. This is lint-enforced (`no-restricted-syntax` in `eslint.config.js`) — see the Accent picker section above

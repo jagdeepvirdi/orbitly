@@ -2,14 +2,13 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { fmtBday, nextBdayDays } from '../../utils/dateUtils';
 import { api } from '../../api/client';
-import CheckRow from '../ui/CheckRow';
 import EmojiPicker from '../ui/EmojiPicker';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MOMENT_EMOJIS = ['📸','🎉','🎂','🏖️','🎬','🍳','🌳','🎨','☕','🏊','🎵','🥳','❤️','🌸','⭐','🏡','✈️','🐾','🌅','🎁'];
 const FAMILY_GROUP_EMOJIS = ['👥','👨‍👩‍👧‍👦','❤️','🏡','👪','🤝','👴','👵','🐶','🐱','🌟','🏆','📖','🎯','🧡','💙','💚','🫂','🎗️','🧑‍🤝‍🧑'];
-const TERM_COLORS   = ['#6366f1','#f59e0b','#10b981','#ef4444','#a855f7','#0ea5e9','#f43f5e','#f97316','#64748b','#d4af37'];
+const TERM_COLORS   = ['#6366f1','#f59e0b','#10b981','#ef4444','#a855f7','#0ea5e9','#f43f5e','#f97316','#64748b','#d4af37']; // eslint-disable-line no-restricted-syntax -- user-selectable school-term color palette, not the brand accent
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 
@@ -837,7 +836,7 @@ function SchoolTermFormModal({ term, onClose, onSave }) {
     label:        term?.label        || '',
     date_display: term?.date_display || '',
     date_start:   term?.date_start   || '',
-    color:        term?.color        || '#6366f1',
+    color:        term?.color        || '#6366f1', // eslint-disable-line no-restricted-syntax -- default from the TERM_COLORS palette above, not the brand accent
     sort_order:   term?.sort_order   ?? 0,
   });
   const valid = form.label.trim();
@@ -959,7 +958,7 @@ function MomentCard({ m, onEdit, onDelete, fmtDate }) {
 
 // ─── Family Wall ──────────────────────────────────────────────────────────────
 
-function FamilyWall({ state, dispatch }) {
+function FamilyWall() {
   const [moments,      setMoments]      = useState([]);
   const [momLoading,   setMomLoading]   = useState(true);
   const [momModal,     setMomModal]     = useState(null);
@@ -1148,7 +1147,7 @@ export default function FamilySpace() {
           >{t.label}</button>
         ))}
       </div>
-      {tab === 'wall'      && <FamilyWall      state={state} dispatch={dispatch} />}
+      {tab === 'wall'      && <FamilyWall />}
       {tab === 'directory' && <DirectoryView   state={state} dispatch={dispatch} />}
     </div>
   );

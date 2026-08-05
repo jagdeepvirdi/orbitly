@@ -38,18 +38,7 @@ export default function InviteAcceptModal({ token, onClose }) {
         boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
       }}>
         {/* Logo */}
-        <div style={{
-          width: 60, height: 60, borderRadius: 18, margin: '0 auto 24px',
-          background: 'linear-gradient(140deg,#6366f1,#a855f7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 28px rgba(99,102,241,0.45)',
-        }}>
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3" fill="#fff"/>
-            <ellipse cx="12" cy="12" rx="10" ry="4.4" stroke="#fff" strokeWidth="1.6" opacity="0.95"/>
-            <ellipse cx="12" cy="12" rx="10" ry="4.4" stroke="#fff" strokeWidth="1.6" transform="rotate(60 12 12)" opacity="0.6"/>
-          </svg>
-        </div>
+        <img src="/mosaic-heart-logo.png" alt="Mosaic Life" style={{ width: 60, height: 60, objectFit: 'contain', margin: '0 auto 24px', display: 'block' }} />
 
         {/* Error state */}
         {error && (
@@ -77,7 +66,7 @@ export default function InviteAcceptModal({ token, onClose }) {
         {!error && !invite && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
             <div style={{
-              width: 28, height: 28, border: '3px solid #6366f1',
+              width: 28, height: 28, border: '3px solid var(--accent)',
               borderTopColor: 'transparent', borderRadius: '50%',
               animation: 'om-spin 1s linear infinite',
             }} />
@@ -97,8 +86,8 @@ export default function InviteAcceptModal({ token, onClose }) {
             <div style={{
               fontSize: 18, fontWeight: 700, margin: '14px 0 28px',
               padding: '14px 24px', borderRadius: 14,
-              background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
-              color: '#818cf8',
+              background: 'var(--accent-soft)', border: '1px solid var(--accent-soft)',
+              color: 'var(--accent)',
             }}>
               {invite.household_name}
             </div>

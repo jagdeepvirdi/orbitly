@@ -3,12 +3,12 @@ import { parseICS } from '../../utils/icsParser';
 
 const CATS = [
   { key: 'work',      label: 'Work',      color: '#64748b' },
-  { key: 'learning',  label: 'Learning',  color: '#6366f1' },
+  { key: 'learning',  label: 'Learning',  color: '#6366f1' }, // eslint-disable-line no-restricted-syntax -- CAT.learning, not the brand accent
   { key: 'family',    label: 'Family',    color: '#f59e0b' },
   { key: 'health',    label: 'Health',    color: '#10b981' },
   { key: 'sports',    label: 'Sports',    color: '#ef4444' },
   { key: 'festival',  label: 'Festival',  color: '#d4af37' },
-  { key: 'recurring', label: 'Recurring', color: '#a855f7' },
+  { key: 'recurring', label: 'Recurring', color: '#a855f7' }, // eslint-disable-line no-restricted-syntax -- CAT.recurring, not the brand accent
   { key: 'hobby',     label: 'Hobby',     color: '#f97316' },
   { key: 'food',      label: 'Food',      color: '#84cc16' },
 ];

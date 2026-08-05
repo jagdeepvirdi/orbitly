@@ -173,14 +173,14 @@ export default function BirthdaysAnniversaries() {
 
       {/* Anniversaries (later) */}
       {laterEvents.length > 0 && (
-        <Section label="💑 Anniversaries" accent="#a855f7">
+        <Section label="💑 Anniversaries" accent="#a855f7"> {/* eslint-disable-line no-restricted-syntax -- fixed event-type color, not the brand accent */}
           {laterEvents.map(e => <AnniversaryCard key={e.id} ev={e} />)}
         </Section>
       )}
 
       {/* All birthdays */}
       {laterBdays.length > 0 && (
-        <Section label="🎂 All Birthdays" accent="#6366f1">
+        <Section label="🎂 All Birthdays" accent="#6366f1"> {/* eslint-disable-line no-restricted-syntax -- fixed event-type color, not the brand accent */}
           {laterBdays.map(p => <BirthdayCard key={p.id} person={p} />)}
         </Section>
       )}

@@ -10,8 +10,8 @@ export default function EmojiPicker({ value, onChange, options, size = 34 }) {
             style={{
               width: size, height: size, borderRadius: 9, fontSize: Math.round(size * 0.55),
               lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: `2px solid ${value === em ? '#6366f1' : 'var(--border)'}`,
-              background: value === em ? 'rgba(99,102,241,0.15)' : 'var(--surface-2)',
+              border: `2px solid ${value === em ? 'var(--accent)' : 'var(--border)'}`,
+              background: value === em ? 'var(--accent-soft)' : 'var(--surface-2)',
               cursor: 'pointer',
             }}>
             {em}

@@ -1,4 +1,4 @@
-export default function ProgressRing({ size = 120, radius = 52, strokeWidth = 9, percent = 0, color = '#6366f1', children }) {
+export default function ProgressRing({ size = 120, radius = 52, strokeWidth = 9, percent = 0, color = 'var(--accent)', children }) {
   const circumference = 2 * Math.PI * radius;
   const dash = circumference * (1 - percent / 100);
 

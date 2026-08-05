@@ -6,7 +6,7 @@ export default function SignupPage() {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       minHeight: '100vh', background: 'var(--bg)',
     }}>
-      <SignUp routing="hash" appearance={{ variables: { colorPrimary: '#6366f1' } }} />
+      <SignUp routing="hash" appearance={{ variables: { colorPrimary: '#1d98d9' } }} />
     </div>
   );
 }

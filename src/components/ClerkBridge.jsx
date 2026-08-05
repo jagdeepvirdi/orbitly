@@ -28,7 +28,7 @@ export function ClerkAuthGuard({ children }) {
         height: '100vh', background: 'var(--bg)',
       }}>
         <div style={{
-          width: 36, height: 36, border: '3px solid #6366f1',
+          width: 36, height: 36, border: '3px solid var(--accent)',
           borderTopColor: 'transparent', borderRadius: '50%',
           animation: 'om-spin 1s linear infinite',
         }} />

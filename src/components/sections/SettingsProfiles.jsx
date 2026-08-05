@@ -177,7 +177,7 @@ function AiBackendsPanel() {
       {/* Server unreachable */}
       {error && (
         <div style={{ margin: '0 22px 14px', padding: '10px 14px', borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', fontSize: 12.5, color: '#fca5a5' }}>
-          Could not reach the Orbitly server. Make sure <code>npm run dev</code> is running.
+          Could not reach the Mosaic Life server. Make sure <code>npm run dev</code> is running.
         </div>
       )}
 
@@ -489,7 +489,7 @@ export default function SettingsProfiles() {
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto', padding: '26px 34px 60px' }}>
-      <h2 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 30, margin: '0 0 22px' }}>
+      <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 30, margin: '0 0 22px' }}>
         Settings & Profiles
       </h2>
 
@@ -998,7 +998,7 @@ export default function SettingsProfiles() {
               Discover Integrations
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 16 }}>
-              Connect Orbitly with your favorite services to automate workflows, sync data, and import habits.
+              Connect Mosaic Life with your favorite services to automate workflows, sync data, and import habits.
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -1013,7 +1013,7 @@ export default function SettingsProfiles() {
                     <span style={{ fontSize: 9, padding: '2px 6px', background: 'var(--surface-3)', color: 'var(--text-3)', borderRadius: 99, fontWeight: 700, textTransform: 'uppercase' }}>Coming Soon</span>
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-3)', marginTop: 4, lineHeight: 1.4 }}>
-                    Two-way calendar synchronization. View events and push Orbitly tasks directly to Google.
+                    Two-way calendar synchronization. View events and push Mosaic Life tasks directly to Google.
                   </div>
                 </div>
               </div>
@@ -1077,7 +1077,7 @@ export default function SettingsProfiles() {
                     <span style={{ fontSize: 9, padding: '2px 6px', background: 'var(--surface-3)', color: 'var(--text-3)', borderRadius: 99, fontWeight: 700, textTransform: 'uppercase' }}>Coming Soon</span>
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-3)', marginTop: 4, lineHeight: 1.4 }}>
-                    Sync task lists to import, edit, and check off Todoist tasks inside Orbitly Kanban.
+                    Sync task lists to import, edit, and check off Todoist tasks inside Mosaic Life Kanban.
                   </div>
                 </div>
               </div>
@@ -1101,7 +1101,7 @@ export default function SettingsProfiles() {
 
             <div style={{ marginTop: 16, textAlign: 'center' }}>
               <a
-                href="mailto:jagdeep.singh.virdi@gmail.com?subject=Orbitly:%20Integration%20Request"
+                href="mailto:jagdeep.singh.virdi@gmail.com?subject=Mosaic%20Life:%20Integration%20Request"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}
               >
                 Request an integration &rarr;
@@ -1156,11 +1156,11 @@ export default function SettingsProfiles() {
             <div style={{ padding: 22, borderRadius: 18, border: '1px solid rgba(245,158,11,0.3)', background: 'linear-gradient(135deg, rgba(245,158,11,0.07) 0%, rgba(99,102,241,0.07) 100%)', display: 'flex', alignItems: 'center', gap: 18 }}>
               <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 48px', fontSize: 24 }}>✨</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Orbitly Pro</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Mosaic Life Pro</div>
                 <div style={{ fontSize: 13, color: 'var(--text-3)' }}>Unlimited AI extractions, priority support, and future premium features</div>
               </div>
               <button
-                onClick={() => window.open('mailto:jagdeep.singh.virdi@gmail.com?subject=Orbitly%20Pro%20Enquiry', '_blank')}
+                onClick={() => window.open('mailto:jagdeep.singh.virdi@gmail.com?subject=Mosaic%20Life%20Pro%20Enquiry', '_blank')}
                 style={{ padding: '11px 20px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.14)', color: '#fcd34d', whiteSpace: 'nowrap' }}
               >Enquire</button>
             </div>

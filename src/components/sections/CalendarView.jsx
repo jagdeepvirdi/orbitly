@@ -177,7 +177,7 @@ export default function CalendarView() {
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-          <h2 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 27, margin: 0, minWidth: 185 }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 27, margin: 0, minWidth: 185 }}>
             {MONTHS[state.calMonth]} {state.calYear}
           </h2>
           <button

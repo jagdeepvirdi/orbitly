@@ -96,7 +96,7 @@ function FestivalCard({ item, isPinned, onTogglePin }) {
               </svg>
             </button>
           </div>
-          <h3 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 18, margin: 0, lineHeight: 1.25 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 18, margin: 0, lineHeight: 1.25 }}>
             {item.emoji} {item.name}
           </h3>
         </div>

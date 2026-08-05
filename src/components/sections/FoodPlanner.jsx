@@ -13,7 +13,7 @@ const SOURCE_ICONS = { text: '📝', pdf: '📄', image: '🖼️', youtube: '�
 const SLOT_COLORS = {
   Breakfast: { bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.3)', accent: '#fbbf24' },
   Lunch:     { bg: 'rgba(16,185,129,0.1)',  border: 'rgba(16,185,129,0.25)', accent: '#10b981' },
-  Dinner:    { bg: 'rgba(99,102,241,0.1)',  border: 'rgba(99,102,241,0.25)', accent: '#6366f1' },
+  Dinner:    { bg: 'rgba(99,102,241,0.1)',  border: 'rgba(99,102,241,0.25)', accent: '#6366f1' }, // eslint-disable-line no-restricted-syntax -- fixed meal-slot color, not the brand accent
 };
 
 function getWeekDays(offset = 0) {
@@ -121,7 +121,7 @@ function MealPlanView({ recipes, mealPlan, dispatch, shopList }) {
         <button onClick={() => setWeekOffset(o => o - 1)} style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <div style={{ fontFamily: "'Newsreader', serif", fontSize: 22, fontWeight: 500 }}>Week of {fmtWeekRange(days)}</div>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 22, fontWeight: 700 }}>Week of {fmtWeekRange(days)}</div>
         <button onClick={() => setWeekOffset(o => o + 1)} style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
         </button>
@@ -705,6 +705,10 @@ function DiscoverView({ recipes, dispatch }) {
         if (isMounted) setError(err.message || 'Failed to load filters');
       });
     return () => { isMounted = false; };
+    // Runs once on mount only — selectedCategory/selectedArea/searchQuery are
+    // read to check they're still at their initial defaults, not to react to
+    // their later changes (that would re-fetch categories/areas needlessly).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debounce search query
@@ -1223,7 +1227,7 @@ function DiscoverView({ recipes, dispatch }) {
 
                 {/* Title overlay */}
                 <div style={{ position: 'absolute', bottom: 16, left: 20, right: 20 }}>
-                  <div style={{ fontFamily: "'Newsreader', serif", fontSize: 24, fontWeight: 600, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)', lineHeight: 1.2 }}>
+                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: 24, fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)', lineHeight: 1.2 }}>
                     {drawerRecipe.strMeal}
                   </div>
                 </div>
@@ -1479,7 +1483,7 @@ export default function FoodPlanner() {
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "'Newsreader', serif", fontSize: 28, fontWeight: 600, fontStyle: 'italic' }}>Food Planner</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700 }}>Food Planner</div>
             <div style={{ fontSize: 13.5, color: 'var(--text-2)', marginTop: 2 }}>
               {mealsPlanned} meal{mealsPlanned !== 1 ? 's' : ''} planned · {recipesCount} recipe{recipesCount !== 1 ? 's' : ''} in library
             </div>

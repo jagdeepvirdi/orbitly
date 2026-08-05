@@ -411,10 +411,10 @@ export default function TodayDashboard() {
             {formatDate(APP_TODAY)}
           </div>
           <h1 style={{
-            fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: mob ? 28 : 42,
-            lineHeight: 1.08, letterSpacing: '-0.015em', margin: '8px 0 6px',
+            fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: mob ? 28 : 42,
+            lineHeight: 1.08, letterSpacing: '-0.025em', margin: '8px 0 6px',
           }}>
-            {greeting}, <em>{user.first}</em> {greetingIcon}
+            {greeting}, {user.first} {greetingIcon}
           </h1>
           <p style={{ fontSize: 16, color: 'var(--text-2)', margin: '0 0 22px', maxWidth: 560 }}>
             {heroSub}
@@ -447,9 +447,9 @@ export default function TodayDashboard() {
 
         {/* LEARNING SESSION TIMER */}
         <Card span={7}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,#6366f1,#a855f7)' }} />
-          <SectionLabel dot="#6366f1" color="#a5b4fc" text="Today's Learning Session" />
-          <h3 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 25, margin: '6px 0 2px' }}>{sessionTitle}</h3>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--accent)' }} />
+          <SectionLabel dot="var(--accent)" color="var(--accent)" text="Today's Learning Session" />
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 25, margin: '6px 0 2px' }}>{sessionTitle}</h3>
           {activeCourse ? (
             <div style={{ fontSize: 13.5, color: 'var(--text-3)', marginBottom: 18 }}>{sessionSub}</div>
           ) : (
@@ -465,7 +465,7 @@ export default function TodayDashboard() {
               <svg width="128" height="128" viewBox="0 0 128 128" style={{ transform: 'rotate(-90deg)' }}>
                 <circle cx="64" cy="64" r="56" fill="none" stroke="var(--border)" strokeWidth="9"/>
                 <circle
-                  cx="64" cy="64" r="56" fill="none" stroke="#6366f1"
+                  cx="64" cy="64" r="56" fill="none" stroke="var(--accent)"
                   strokeWidth="9" strokeLinecap="round"
                   strokeDasharray="351.8"
                   strokeDashoffset={timerDash}
@@ -489,8 +489,8 @@ export default function TodayDashboard() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
                   width: '100%', padding: 13, borderRadius: 13, border: 'none', cursor: 'pointer',
                   fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#fff',
-                  background: state.timerRunning ? '#a855f7' : '#6366f1',
-                  boxShadow: '0 8px 22px rgba(99,102,241,0.35)',
+                  background: 'var(--accent)',
+                  boxShadow: '0 8px 22px var(--glow)',
                 }}
               >
                 <span dangerouslySetInnerHTML={{ __html: state.timerRunning
@@ -716,7 +716,7 @@ export default function TodayDashboard() {
               <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#c084fc', marginBottom: 6 }}>
                 {festivalsArePinned ? 'Pinned Alert' : 'Upcoming Festival'}
               </div>
-              <h3 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 24, margin: '2px 0' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 24, margin: '2px 0' }}>
                 {pinnedUpcoming[0].emoji} {pinnedUpcoming[0].name}
               </h3>
               <div style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 12 }}>
@@ -762,7 +762,7 @@ export default function TodayDashboard() {
         {/* UPCOMING 48H */}
         <Card span={7}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#a855f7' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#a855f7' }} /> {/* eslint-disable-line no-restricted-syntax -- CAT.recurring, not the brand accent */}
             <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d8b4fe' }}>
               Upcoming · Next 48 hours
             </span>

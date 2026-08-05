@@ -158,6 +158,28 @@ function ChoreRow({ chore, onDone, onEdit, onDelete }) {
   );
 }
 
+function ChoreGroup({ label, items, color, onDone, onEdit, onDelete }) {
+  if (!items.length) return null;
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0 4px', marginBottom: 2 }}>
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'inline-block' }} />
+        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)' }}>{label}</span>
+        <span style={{ fontSize: 11, color: 'var(--text-3)' }}>({items.length})</span>
+      </div>
+      {items.map(c => (
+        <ChoreRow
+          key={c.id}
+          chore={c}
+          onDone={() => onDone(c.id)}
+          onEdit={() => onEdit(c)}
+          onDelete={() => onDelete(c.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
 const INP = {
   width: '100%', padding: '10px 13px', borderRadius: 11, fontSize: 13.5,
   background: 'var(--surface-2)', border: '1px solid var(--border)',
@@ -314,36 +336,13 @@ export default function HomeManagement() {
     dispatch({ type: 'CLEAR_DONE_SHOP' });
   }
 
-  // ── Section group helper
-  function ChoreGroup({ label, items, color }) {
-    if (!items.length) return null;
-    return (
-      <div style={{ marginBottom: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0 4px', marginBottom: 2 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'inline-block' }} />
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-3)' }}>{label}</span>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>({items.length})</span>
-        </div>
-        {items.map(c => (
-          <ChoreRow
-            key={c.id}
-            chore={c}
-            onDone={() => handleDone(c.id)}
-            onEdit={() => setChoreModal(c)}
-            onDelete={() => handleDeleteChore(c.id)}
-          />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '30px 34px 60px' }}>
 
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 30, margin: '0 0 5px' }}>Home Management</h2>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 30, margin: '0 0 5px' }}>Home Management</h2>
           <p style={{ fontSize: 13.5, color: 'var(--text-3)', margin: 0 }}>Maintenance tasks & shopping — shareable with your family when connected.</p>
         </div>
         <button
@@ -409,9 +408,9 @@ export default function HomeManagement() {
             </div>
           ) : (
             <div>
-              <ChoreGroup label="Overdue" items={overdue}  color="#ef4444" />
-              <ChoreGroup label="Due this week" items={dueSoon}  color="#f59e0b" />
-              <ChoreGroup label="Upcoming" items={upcoming} color="#64748b" />
+              <ChoreGroup label="Overdue" items={overdue}  color="#ef4444" onDone={handleDone} onEdit={setChoreModal} onDelete={handleDeleteChore} />
+              <ChoreGroup label="Due this week" items={dueSoon}  color="#f59e0b" onDone={handleDone} onEdit={setChoreModal} onDelete={handleDeleteChore} />
+              <ChoreGroup label="Upcoming" items={upcoming} color="#64748b" onDone={handleDone} onEdit={setChoreModal} onDelete={handleDeleteChore} />
             </div>
           )}
         </section>

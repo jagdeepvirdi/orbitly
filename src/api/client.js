@@ -155,7 +155,7 @@ export const api = {
     localStorage.removeItem(LS_PREFIX + 'cricket-matches');
     await fetch('/api/cricket/refresh', { method: 'POST' });
   },
-  footballRefresh: async (comps) => {
+  footballRefresh: async () => {
     // Clear all football match cache keys
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);

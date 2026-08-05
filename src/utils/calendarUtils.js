@@ -113,7 +113,7 @@ export function mergeCalEvents(base, extra) {
 
 export const DAY_AGENDA = [
   { time: '08:00', items: [] },
-  { time: '09:00', items: [{ t: 'Claude 101 — Day 1', sub: 'Learning · 1 hour', color: '#6366f1' }] },
+  { time: '09:00', items: [{ t: 'Claude 101 — Day 1', sub: 'Learning · 1 hour', color: '#6366f1' }] }, // eslint-disable-line no-restricted-syntax -- CAT.learning, not the brand accent
   { time: '10:00', items: [{ t: 'Team standup', sub: 'Work · 30 min', color: '#64748b' }] },
   { time: '12:00', items: [{ t: 'Lunch', sub: 'Break', color: '#94a3b8' }] },
   { time: '15:00', items: [] },

@@ -96,20 +96,14 @@ export default function Sidebar() {
       padding: '20px 14px', zIndex: 2, overflow: 'hidden',
     }}>
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '6px 10px 18px' }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 11,
-          background: 'linear-gradient(140deg,#6366f1,#a855f7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 6px 18px rgba(99,102,241,0.4)',
-        }}>
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3" fill="#fff"/>
-            <ellipse cx="12" cy="12" rx="10" ry="4.4" stroke="#fff" strokeWidth="1.6" opacity="0.95"/>
-            <ellipse cx="12" cy="12" rx="10" ry="4.4" stroke="#fff" strokeWidth="1.6" transform="rotate(60 12 12)" opacity="0.6"/>
-          </svg>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px 18px' }}>
+        <img src="/mosaic-heart-logo.png" alt="Mosaic Life" style={{ width: 34, height: 34, objectFit: 'contain', flex: '0 0 34px' }} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1, color: 'var(--text)' }}>Mosaic Life</div>
+          <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 8, letterSpacing: '.08em', textTransform: 'uppercase', marginTop: 2, whiteSpace: 'nowrap' }}>
+            <span style={{ color: '#1d98d9' }}>Everything.</span> <span style={{ color: '#86ba46' }}>Together.</span> <span style={{ color: '#fea91a' }}>Balanced.</span>
+          </div>
         </div>
-        <div style={{ fontFamily: "'Newsreader', serif", fontSize: 23, fontWeight: 600, letterSpacing: '-0.01em' }}>Orbitly</div>
       </div>
 
       {/* User profile pill */}
@@ -121,7 +115,7 @@ export default function Sidebar() {
       }}>
         <div style={{
           width: 32, height: 32, borderRadius: 10,
-          background: user.accent,
+          background: 'var(--accent)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontWeight: 700, fontSize: 13, color: '#fff', flex: '0 0 32px',
         }}>

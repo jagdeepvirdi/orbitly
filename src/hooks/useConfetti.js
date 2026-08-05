@@ -1,5 +1,5 @@
 export function fireConfetti() {
-  const colors = ['#6366f1', '#a855f7', '#f43f5e', '#f59e0b', '#10b981', '#eab308'];
+  const colors = ['#6366f1', '#a855f7', '#f43f5e', '#f59e0b', '#10b981', '#eab308']; // eslint-disable-line no-restricted-syntax -- confetti particle palette, not the brand accent
   for (let i = 0; i < 90; i++) {
     const p = document.createElement('div');
     const sz = 6 + Math.random() * 8;

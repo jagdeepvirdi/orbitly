@@ -10,9 +10,11 @@ export function useLiveF1() {
   const [error,    setError]    = useState(null);
   const [fetchedAt, setFetchedAt] = useState(null);
 
+  // Fetch + resolve only — no synchronous state reset here, so this is safe
+  // to call directly from the mount effect below. `loading`/`error` already
+  // start at their reset values (useState(true) / useState(null)); refresh()
+  // resets them itself, since that runs from a click handler, not an effect.
   const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
     Promise.all([
       api.f1Schedule(),
       api.f1Standings(),
@@ -36,6 +38,8 @@ export function useLiveF1() {
   useEffect(() => { load(); }, [load]);
 
   const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     await api.f1Refresh();
     load();
   }, [load]);

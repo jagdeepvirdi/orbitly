@@ -10,23 +10,12 @@ export default function LoginPage() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 11, justifyContent: 'center', marginBottom: 32,
         }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 13,
-            background: 'linear-gradient(140deg,#6366f1,#a855f7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(99,102,241,0.4)',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="3" fill="#fff"/>
-              <ellipse cx="12" cy="12" rx="10" ry="4.4" stroke="#fff" strokeWidth="1.6" opacity="0.95"/>
-              <ellipse cx="12" cy="12" rx="10" ry="4.4" stroke="#fff" strokeWidth="1.6" transform="rotate(60 12 12)" opacity="0.6"/>
-            </svg>
-          </div>
-          <div style={{ fontFamily: "'Newsreader', serif", fontSize: 28, fontWeight: 600, color: 'var(--text)' }}>
-            Orbitly
+          <img src="/mosaic-heart-logo.png" alt="Mosaic Life" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+            Mosaic Life
           </div>
         </div>
-        <SignIn routing="hash" appearance={{ variables: { colorPrimary: '#6366f1' } }} />
+        <SignIn routing="hash" appearance={{ variables: { colorPrimary: '#1d98d9' } }} />
       </div>
     </div>
   );

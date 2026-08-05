@@ -1,20 +1,20 @@
 import { createContext, useContext, useReducer, useEffect, createElement } from 'react';
-import { USERS } from '../data/users';
 import { SEED_WORK_TASKS, SEED_PERSONAL_TASKS } from '../data/seedTasks';
 import { SEED_CHORES } from '../data/seedChores';
 import { CERT_COURSES } from '../data/certPlan';
 import { addWorkdayToISO, fmtShortDate } from '../utils/dateUtils';
+import { hexToRgba } from '../utils/colorUtils';
 
 
 
 export const CAT = {
   work: '#64748b',
-  learning: '#6366f1',
+  learning: '#6366f1', // eslint-disable-line no-restricted-syntax -- fixed category color, not the brand accent
   family: '#f59e0b',
   health: '#10b981',
   sports: '#ef4444',
   festival: '#d4af37',
-  recurring: '#a855f7',
+  recurring: '#a855f7', // eslint-disable-line no-restricted-syntax -- fixed category color, not the brand accent
   holiday: '#eab308',
   hobby: '#f97316',
   food: '#84cc16',
@@ -22,7 +22,7 @@ export const CAT = {
   hindu:          '#f59e0b',
   sikh:           '#fb923c',
   islamic:        '#34d399',
-  'thai-buddhist':'#a855f7',
+  'thai-buddhist':'#a855f7', // eslint-disable-line no-restricted-syntax -- fixed calendar-pack color, not the brand accent
   christian:      '#3b82f6',
   jain:           '#a78bfa',
 };
@@ -39,6 +39,7 @@ function createInitialState() {
   return {
   theme: 'dark',
   userId: 'jagdeep',
+  accent: '#1d98d9',
   section: 'today',
   isMobile: false,
   timer: 3600,
@@ -99,7 +100,7 @@ function createInitialState() {
 // UI prefs + user-authored data (meds, prescriptions) are persisted locally in v1.
 // Prescription file blobs live in a separate localStorage key ('orbitly-rx-files').
 const PERSIST_KEYS = [
-  'theme', 'userId', 'examDone', 'cycleDay',
+  'theme', 'userId', 'accent', 'examDone', 'cycleDay',
   'userGender', 'householdCycleShared', 'userCurrencies',
   'sportSubscriptions', 'overlays', 'notifications',
   'taskView', 'calView', 'rescheduleDismissed',
@@ -169,6 +170,8 @@ function reducer(state, action) {
       return { ...state, section: action.section };
     case 'TOGGLE_THEME':
       return { ...state, theme: state.theme === 'dark' ? 'light' : 'dark' };
+    case 'SET_ACCENT':
+      return { ...state, accent: action.color };
     case 'SET_MOBILE':
       return { ...state, isMobile: action.isMobile };
     case 'TOGGLE_MED':
@@ -485,10 +488,14 @@ export function AppStoreProvider({ children }) {
   const saved = loadFromStorage();
   const [state, dispatch] = useReducer(reducer, undefined, () => ({ ...createInitialState(), ...saved }));
 
+  // Deliberately not exhaustive: only the persisted fields (PERSIST_KEYS) are
+  // listed so this doesn't re-fire (and re-write localStorage) on every
+  // transient, non-persisted state change.
   useEffect(() => {
     saveToStorage(state);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    state.theme, state.userId, state.examDone, state.cycleDay,
+    state.theme, state.userId, state.accent, state.examDone, state.cycleDay,
     state.userGender, state.householdCycleShared, state.userCurrencies,
     state.sportSubscriptions, state.overlays, state.notifications,
     state.taskView, state.calView, state.rescheduleDismissed,
@@ -515,12 +522,13 @@ export function AppStoreProvider({ children }) {
   }, [state.theme]);
 
   useEffect(() => {
-    const user = USERS[state.userId];
     const root = document.documentElement;
-    root.style.setProperty('--accent', user.accent);
-    root.style.setProperty('--accent-soft', user.accentSoft);
-    root.style.setProperty('--glow', user.glow);
-  }, [state.userId]);
+    root.style.setProperty('--accent', state.accent);
+    root.style.setProperty('--accent-soft', hexToRgba(state.accent, 0.16));
+    root.style.setProperty('--glow', hexToRgba(state.accent, 0.2));
+    root.style.setProperty('--hero-a', hexToRgba(state.accent, 0.22));
+    root.style.setProperty('--hero-b', hexToRgba(state.accent, 0.08));
+  }, [state.accent]);
 
   return createElement(AppStoreContext.Provider, { value: { state, dispatch } }, children);
 }
