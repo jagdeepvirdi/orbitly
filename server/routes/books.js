@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -12,7 +13,7 @@ router.get('/', async (req, res) => {
     q += ' ORDER BY created_at';
     const { rows } = await db.query(q, params);
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[books]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.post('/', async (req, res) => {
@@ -28,7 +29,7 @@ router.post('/', async (req, res) => {
        rating ? Number(rating) : null, notes || null, req.userId]
     );
     res.status(201).json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[books]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.put('/:id', async (req, res) => {
@@ -48,14 +49,14 @@ router.put('/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[books]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.delete('/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM books WHERE id = $1 AND user_id = $2', [Number(req.params.id), req.userId]);
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[books]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 export default router;

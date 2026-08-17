@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getCache, setCache, clearCache } from '../cache.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 const TTL = 15 * 60 * 1000; // 15 min
@@ -61,6 +62,8 @@ router.get('/matches', async (req, res) => {
     setCache('cricket-matches', matches, TTL);
     res.json({ data: matches });
   } catch (e) {
+    console.error('[cricket]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

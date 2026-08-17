@@ -120,6 +120,30 @@
 
 ---
 
+## PHASE 37 — Codebase Review Findings (2026-08-17)
+
+> Source: three-pronged review (security, code quality/architecture, deployment readiness) of the full app. Items grouped by category, ordered by priority within each.
+
+### 37.1 — Bugs (fix these)
+- [x] **Auth fails open when `CLERK_SECRET_KEY` is unset.** `server/middleware/requireAuth.js` silently granted every request admin access as `userId='jagdeep'` instead of failing closed. Now throws at startup if `NODE_ENV=production` and the key is missing.
+- [x] **Silent billing errors.** `server/routes/billing.js` — all three Stripe handlers (`/status`, `/create-checkout`, `/webhook`) discarded caught errors entirely; Sentry was installed but `Sentry.captureException` was never called anywhere in the codebase. Now logs + reports to Sentry. Also wrapped the webhook's `checkout.session.completed` DB write in try/catch — it previously had none, and with no global Express error handler in `server/index.js`, a DB failure there would have crashed the whole process, not just the request.
+- [x] **Silent `catch(e)` blocks across `server/routes/*.js`.** Turned out to be 117 sites across 22 files (not ~11 as first estimated) — every catch that responded to the client with a 500 and logged nothing now does `console.error` + `Sentry.captureException`. Fallback-chain catches that already logged (Ollama→Gemini→curl retries in `courses.js`/`extract.js`) were left untouched on purpose.
+- [x] **`/api/health` always returns 200.** Now runs `SELECT 1` against Postgres and returns `503 {ok:false, db:'down'}` if it fails, instead of an unconditional 200.
+- [x] **`.env.example` was stale/incomplete.** Rewritten to include every var actually read via `process.env`/`import.meta.env`: `CLERK_SECRET_KEY`/`VITE_CLERK_PUBLISHABLE_KEY`, `NODE_ENV`, `APP_URL`, `ALLOWED_ORIGIN`, `SENTRY_DSN`/`VITE_SENTRY_DSN`, `VITE_POSTHOG_KEY`/`VITE_POSTHOG_HOST`, `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `BALLDONTLIE_API_KEY`.
+- [x] **Dead `child_process` import.** `server/routes/courses.js` — removed unused `exec`/`execAsync` (`execFile`/`execFileAsync`, which the curl fallback actually uses, kept).
+
+### 37.2 — Structural (worth doing before this grows further)
+- [ ] **Migration strategy is a footgun.** `server/index.js` `runMigrations()` runs ~184 raw SQL statements (already at "Phase 36") on every server boot, each wrapped in its own `try/catch` that swallows and just logs a truncated warning — no migration-history table, no ordering guarantees, no rollback. A bad `ALTER` can silently no-op forever until something downstream breaks in a confusing way. Replace with a real migration tool (e.g. `node-pg-migrate`) with a tracked history table before this is a multi-environment deployment.
+- [ ] **`server/schema.sql` appears stale/unused.** It's not applied anywhere in the actual startup path (`runMigrations()` is the real source of truth) — either wire it in or delete it so it stops misleading as documentation.
+
+### 37.3 — Code quality / maintainability
+- [ ] **`appStore.js` `PERSIST_KEYS` duplication.** The list of ~28 persisted state keys is hand-duplicated between `PERSIST_KEYS` (localStorage read/write) and the `useEffect` dependency array (triggers the save) — miss updating one when adding a field and it silently doesn't persist. (Already bit the Phase-37-adjacent dashboard-layout work — see commit `b88c5fa`.) Derive one from the other.
+- [ ] **CLAUDE.md's "Tailwind CSS utility classes only — no custom CSS" rule doesn't match reality.** The entire app uses inline `style={{}}` (149–349+ occurrences per section file), and there's no `tailwind.config.js` at all. Either update CLAUDE.md to reflect the actual convention, or treat this as a real (large) refactor backlog item.
+- [ ] **Largest monolith components** — break up if/when touched next: `LearningPlanner.jsx` (2,634 lines), `FoodPlanner.jsx` (1,508), `HealthWellness.jsx` (1,495), `SettingsProfiles.jsx` (1,190).
+- [ ] **Test coverage is effectively just date-math** (1 file, 19 tests, all on pure `dateUtils` functions). Zero coverage of the 88-case `appStore.js` reducer or any of the 26 route files. Add coverage for the reducer and the money/auth-handling routes (billing, requireAuth) first.
+
+---
+
 ## Notes for Claude Code
 - Read `CLAUDE.md` fully before starting any phase
 - Read `Orbitly-handoff.zip/orbitly/project/Orbitly.dc.html` fully before starting Phase 2

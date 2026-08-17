@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 const DEFAULT_CURRENCIES = ['INR', 'THB', 'USD'];
@@ -20,6 +21,8 @@ router.get('/', async (req, res) => {
     const { gender, share_cycle_tracker, prefs } = rows[0];
     res.json({ gender, share_cycle_tracker, currencies: safeCurrencies(prefs) });
   } catch (e) {
+    console.error('[profile]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -46,6 +49,8 @@ router.put('/', async (req, res) => {
     const row = rows[0];
     res.json({ gender: row.gender, share_cycle_tracker: row.share_cycle_tracker, currencies: safeCurrencies(row.prefs) });
   } catch (e) {
+    console.error('[profile]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });

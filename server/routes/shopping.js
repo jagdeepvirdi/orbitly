@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../db.js';
 import requireHousehold from '../middleware/requireHousehold.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 router.use(requireHousehold);
@@ -13,6 +14,8 @@ router.get('/', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[shopping]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -26,6 +29,8 @@ router.post('/', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[shopping]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -39,6 +44,8 @@ router.patch('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[shopping]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -51,6 +58,8 @@ router.delete('/:id', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[shopping]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

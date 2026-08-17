@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getCache, setCache } from '../cache.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 const H = 3600 * 1000;
@@ -38,6 +39,8 @@ router.get('/areas', async (req, res) => {
     setCache(cacheKey, areas, 24 * H);
     res.json(areas);
   } catch (e) {
+    console.error('[recipes]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -54,6 +57,8 @@ router.get('/categories', async (req, res) => {
     setCache(cacheKey, categories, 24 * H);
     res.json(categories);
   } catch (e) {
+    console.error('[recipes]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -78,6 +83,8 @@ router.get('/by-area', async (req, res) => {
     setCache(cacheKey, meals, 6 * H);
     res.json(meals);
   } catch (e) {
+    console.error('[recipes]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -102,6 +109,8 @@ router.get('/by-category', async (req, res) => {
     setCache(cacheKey, meals, 6 * H);
     res.json(meals);
   } catch (e) {
+    console.error('[recipes]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -127,6 +136,8 @@ router.get('/search', async (req, res) => {
     setCache(cacheKey, meals, 6 * H);
     res.json(meals);
   } catch (e) {
+    console.error('[recipes]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -174,6 +185,8 @@ router.get('/detail', async (req, res) => {
     setCache(cacheKey, recipe, 12 * H);
     res.json(recipe);
   } catch (e) {
+    console.error('[recipes]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

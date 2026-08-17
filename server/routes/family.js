@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../db.js';
 import requireHousehold from '../middleware/requireHousehold.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 router.use(requireHousehold);
@@ -14,7 +15,7 @@ router.get('/groups', async (req, res) => {
       [req.householdId]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.post('/groups', async (req, res) => {
@@ -28,7 +29,7 @@ router.post('/groups', async (req, res) => {
       [id, label, side, emoji, req.householdId]
     );
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.put('/groups/:id', async (req, res) => {
@@ -40,7 +41,7 @@ router.put('/groups/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 router.delete('/groups/:id', async (req, res) => {
@@ -62,6 +63,8 @@ router.delete('/groups/:id', async (req, res) => {
     await client.query('COMMIT');
     res.json({ ok: true });
   } catch (e) {
+    console.error('[family]', e);
+    Sentry.captureException(e);
     await client.query('ROLLBACK');
     res.status(500).json({ error: 'Something went wrong' });
   } finally {
@@ -82,7 +85,7 @@ router.get('/members', async (req, res) => {
       [req.householdId]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.post('/members', async (req, res) => {
@@ -100,7 +103,7 @@ router.post('/members', async (req, res) => {
        relation || null, bdayMonth || null, bdayDay || null, req.householdId]
     );
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.put('/members/:id', async (req, res) => {
@@ -115,7 +118,7 @@ router.put('/members/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 router.delete('/members/:id', async (req, res) => {
@@ -126,7 +129,7 @@ router.delete('/members/:id', async (req, res) => {
     );
     if (!rowCount) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 // ── Events ───────────────────────────────────────────────────────────────────
@@ -142,7 +145,7 @@ router.get('/events', async (req, res) => {
       [req.householdId]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.post('/events', async (req, res) => {
@@ -157,7 +160,7 @@ router.post('/events', async (req, res) => {
       [id, label, type, side, groupId, parseInt(month), parseInt(day), req.householdId]
     );
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.put('/events/:id', async (req, res) => {
@@ -170,7 +173,7 @@ router.put('/events/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 router.delete('/events/:id', async (req, res) => {
@@ -181,7 +184,7 @@ router.delete('/events/:id', async (req, res) => {
     );
     if (!rowCount) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 // ── Contacts ─────────────────────────────────────────────────────────────────
@@ -193,7 +196,7 @@ router.get('/contacts/:memberId', async (req, res) => {
       [req.params.memberId, req.householdId]
     );
     res.json(rows[0] || {});
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 router.put('/contacts/:memberId', async (req, res) => {
@@ -216,7 +219,7 @@ router.put('/contacts/:memberId', async (req, res) => {
       [memberId, req.householdId, phone, email, address, instagram, linkedin, facebook, workplace]
     );
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 // ── School Terms ─────────────────────────────────────────────────────────────
@@ -228,7 +231,7 @@ router.get('/school-terms', async (req, res) => {
       [req.householdId]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.post('/school-terms', async (req, res) => {
@@ -241,7 +244,7 @@ router.post('/school-terms', async (req, res) => {
       [label, date_display || null, date_start || null, color, Number(sort_order), req.householdId]
     );
     res.status(201).json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.put('/school-terms/:id', async (req, res) => {
@@ -255,7 +258,7 @@ router.put('/school-terms/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 router.delete('/school-terms/:id', async (req, res) => {
@@ -266,7 +269,7 @@ router.delete('/school-terms/:id', async (req, res) => {
     );
     if (!rowCount) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 // ── Moments ──────────────────────────────────────────────────────────────────
@@ -278,7 +281,7 @@ router.get('/moments', async (req, res) => {
       [req.householdId]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.post('/moments', async (req, res) => {
@@ -291,7 +294,7 @@ router.post('/moments', async (req, res) => {
       [caption, emoji, moment_date || null, notes || null, req.householdId]
     );
     res.status(201).json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: e.message }); }
 });
 
 router.put('/moments/:id', async (req, res) => {
@@ -305,7 +308,7 @@ router.put('/moments/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 router.delete('/moments/:id', async (req, res) => {
@@ -316,7 +319,7 @@ router.delete('/moments/:id', async (req, res) => {
     );
     if (!rowCount) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: 'Something went wrong' }); }
+  } catch (e) { console.error('[family]', e); Sentry.captureException(e); res.status(500).json({ error: 'Something went wrong' }); }
 });
 
 // ── Import preset ────────────────────────────────────────────────────────────

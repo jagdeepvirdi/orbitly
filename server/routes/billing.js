@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
+import * as Sentry from '@sentry/node';
 import db from '../db.js';
 
 const router = Router();
@@ -20,6 +21,8 @@ router.get('/status', async (req, res) => {
     const isPro = row?.plan === 'pro' && row?.pro_until && new Date(row.pro_until) > new Date();
     res.json({ plan: isPro ? 'pro' : 'free', pro_until: row?.pro_until || null });
   } catch (e) {
+    console.error('[billing] /status failed:', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -44,6 +47,8 @@ router.post('/create-checkout', async (req, res) => {
     });
     res.json({ url: session.url });
   } catch (e) {
+    console.error('[billing] /create-checkout failed:', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -58,22 +63,30 @@ router.post('/webhook', express_raw_middleware, async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (e) {
+    console.warn('[billing] webhook signature invalid:', e.message);
     return res.status(400).json({ error: 'Webhook signature invalid' });
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId = session.metadata?.user_id;
-    if (userId) {
-      const proUntil = new Date();
-      proUntil.setFullYear(proUntil.getFullYear() + 1);
-      await db.query(
-        `INSERT INTO user_plans (user_id, plan, pro_until, stripe_customer_id)
-         VALUES ($1, 'pro', $2, $3)
-         ON CONFLICT (user_id) DO UPDATE SET plan='pro', pro_until=$2, stripe_customer_id=$3`,
-        [userId, proUntil.toISOString(), session.customer]
-      );
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const userId = session.metadata?.user_id;
+      if (userId) {
+        const proUntil = new Date();
+        proUntil.setFullYear(proUntil.getFullYear() + 1);
+        await db.query(
+          `INSERT INTO user_plans (user_id, plan, pro_until, stripe_customer_id)
+           VALUES ($1, 'pro', $2, $3)
+           ON CONFLICT (user_id) DO UPDATE SET plan='pro', pro_until=$2, stripe_customer_id=$3`,
+          [userId, proUntil.toISOString(), session.customer]
+        );
+      }
     }
+  } catch (e) {
+    console.error('[billing] webhook handler failed:', e);
+    Sentry.captureException(e);
+    // 500 so Stripe retries delivery instead of treating the plan update as done.
+    return res.status(500).json({ error: 'Webhook handler failed' });
   }
 
   res.json({ received: true });

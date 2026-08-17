@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -16,6 +17,8 @@ router.get('/', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[meds]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -34,6 +37,8 @@ router.post('/:id/toggle', async (req, res) => {
     );
     res.json({ done: rows[0].done });
   } catch (e) {
+    console.error('[meds]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -57,6 +62,8 @@ router.post('/', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[meds]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -78,6 +85,8 @@ router.put('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[meds]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -87,6 +96,8 @@ router.delete('/:id', async (req, res) => {
     await db.query('DELETE FROM medications WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[meds]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

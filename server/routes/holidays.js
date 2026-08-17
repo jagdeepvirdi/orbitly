@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getCache, setCache } from '../cache.js';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 const TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -525,6 +526,8 @@ router.get('/:year/:country', async (req, res) => {
     setCache(key, data, TTL);
     res.json(data);
   } catch (e) {
+    console.error('[holidays]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });

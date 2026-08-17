@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import { exec, execFile } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { isIP } from 'net';
 import dns from 'dns';
 import rateLimit from 'express-rate-limit';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
-const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 const router = Router();
 
@@ -197,6 +197,8 @@ router.get('/', async (req, res) => {
     const { rows } = await db.query(q, params);
     res.json(rows);
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -217,6 +219,8 @@ router.patch('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -459,6 +463,8 @@ router.get('/pinned', async (req, res) => {
     );
     res.json(rows.map(r => r.course_id));
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -478,6 +484,8 @@ router.post('/pinned', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -491,6 +499,8 @@ router.delete('/pinned/:courseId', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -501,6 +511,8 @@ router.delete('/:id', async (req, res) => {
     await db.query('DELETE FROM courses WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -523,6 +535,8 @@ router.post('/', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[courses]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

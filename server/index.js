@@ -677,7 +677,16 @@ app.use('/api/football',     footballRouter);
 app.use('/api/nba',          nbaRouter);
 
 app.get('/', (_, res) => res.json({ ok: true, message: 'Orbitly API Server' }));
-app.get('/api/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('/api/health', async (_, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({ ok: true, db: 'up', ts: Date.now() });
+  } catch (e) {
+    console.error('[health] DB check failed:', e);
+    Sentry.captureException(e);
+    res.status(503).json({ ok: false, db: 'down', ts: Date.now() });
+  }
+});
 
 // All routes below require authentication
 app.use(requireAuth);

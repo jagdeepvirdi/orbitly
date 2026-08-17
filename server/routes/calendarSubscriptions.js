@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { syncUserFestivals } from './festivalSync.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -17,6 +18,8 @@ router.get('/subscriptions', async (req, res) => {
     }
     res.json({ calendars: rows.map(r => r.calendar_id) });
   } catch (e) {
+    console.error('[calendarSubscriptions]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -60,6 +63,8 @@ router.get('/proxy-ics', async (req, res) => {
     }
     res.json({ text });
   } catch (e) {
+    console.error('[calendarSubscriptions]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message || 'Failed to fetch calendar feed' });
   }
 });

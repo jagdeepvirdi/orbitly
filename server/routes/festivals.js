@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { syncUserFestivals } from './festivalSync.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -31,6 +32,8 @@ router.get('/pinned', async (req, res) => {
     );
     res.json(rows.map(r => r.festival_id));
   } catch (e) {
+    console.error('[festivals]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -50,6 +53,8 @@ router.post('/pinned', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[festivals]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -63,6 +68,8 @@ router.delete('/pinned/:festivalId', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[festivals]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });

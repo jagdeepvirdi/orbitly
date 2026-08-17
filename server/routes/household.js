@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../db.js';
 import requireHousehold from '../middleware/requireHousehold.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -22,6 +23,8 @@ router.get('/invite/:token', async (req, res) => {
     }
     res.json(invite);
   } catch (e) {
+    console.error('[household]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -67,6 +70,8 @@ router.post('/invite/:token/accept', async (req, res) => {
 
     res.json({ ok: true, householdId: invite.household_id });
   } catch (e) {
+    console.error('[household]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -86,6 +91,8 @@ router.get('/', async (req, res) => {
     ]);
     res.json({ household: hRows[0], members, householdId: req.householdId });
   } catch (e) {
+    console.error('[household]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -101,6 +108,8 @@ router.get('/invites', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[household]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -138,6 +147,8 @@ router.post('/invite', async (req, res) => {
 
     res.json({ invite, inviteLink });
   } catch (e) {
+    console.error('[household]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -12,6 +13,8 @@ router.get('/subscriptions', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -26,6 +29,8 @@ router.post('/subscriptions', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -43,6 +48,8 @@ router.put('/subscriptions/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -52,6 +59,8 @@ router.delete('/subscriptions/:id', async (req, res) => {
     await db.query('DELETE FROM finance_subscriptions WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -65,6 +74,8 @@ router.get('/loans', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -79,6 +90,8 @@ router.post('/loans', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -94,6 +107,8 @@ router.put('/loans/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -103,6 +118,8 @@ router.delete('/loans/:id', async (req, res) => {
     await db.query('DELETE FROM finance_loans WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -116,6 +133,8 @@ router.get('/credit-cards', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -130,6 +149,8 @@ router.post('/credit-cards', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -145,6 +166,8 @@ router.put('/credit-cards/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -154,6 +177,8 @@ router.delete('/credit-cards/:id', async (req, res) => {
     await db.query('DELETE FROM finance_credit_cards WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -167,6 +192,8 @@ router.get('/bills', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -181,6 +208,8 @@ router.post('/bills', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -196,6 +225,8 @@ router.put('/bills/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -205,6 +236,8 @@ router.delete('/bills/:id', async (req, res) => {
     await db.query('DELETE FROM finance_bills WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -218,6 +251,8 @@ router.get('/insurance', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -232,6 +267,8 @@ router.post('/insurance', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -247,6 +284,8 @@ router.put('/insurance/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -256,6 +295,8 @@ router.delete('/insurance/:id', async (req, res) => {
     await db.query('DELETE FROM finance_insurance WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -276,6 +317,8 @@ router.post('/paid/:type/:id', async (req, res) => {
     );
     res.json({ paid: rows[0].paid });
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -290,6 +333,8 @@ router.get('/paid', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[finance]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 });

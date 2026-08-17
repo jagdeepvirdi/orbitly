@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -59,6 +60,8 @@ router.get('/subscriptions', async (req, res) => {
       }))
     });
   } catch (e) {
+    console.error('[sportsCatalog]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -78,6 +81,8 @@ router.post('/subscriptions', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[sportsCatalog]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -91,6 +96,8 @@ router.delete('/subscriptions/:sport', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
+    console.error('[sportsCatalog]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });

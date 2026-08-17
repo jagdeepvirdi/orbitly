@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -13,6 +14,8 @@ router.get('/', async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
+    console.error('[courseTimeLogs]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -37,6 +40,8 @@ router.post('/increment', async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
+    console.error('[courseTimeLogs]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });

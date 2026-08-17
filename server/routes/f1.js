@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getCache, setCache } from '../cache.js';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -58,6 +59,8 @@ async function scheduleHandler(req, res) {
     setCache(key, races, CACHE_TTL.schedule);
     res.json(races);
   } catch (e) {
+    console.error('[f1]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 }
@@ -89,6 +92,8 @@ async function standingsHandler(req, res) {
     setCache(key, drivers, CACHE_TTL.standings);
     res.json(drivers);
   } catch (e) {
+    console.error('[f1]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 }
@@ -118,6 +123,8 @@ async function constructorStandingsHandler(req, res) {
     setCache(key, constructors, CACHE_TTL.constructors);
     res.json(constructors);
   } catch (e) {
+    console.error('[f1]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 }
@@ -148,6 +155,8 @@ async function raceResultsHandler(req, res) {
     setCache(key, races, CACHE_TTL.results);
     res.json(races);
   } catch (e) {
+    console.error('[f1]', e);
+    Sentry.captureException(e);
     res.status(500).json({ error: e.message });
   }
 }
