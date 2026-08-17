@@ -4,6 +4,7 @@ import { SEED_CHORES } from '../data/seedChores';
 import { CERT_COURSES } from '../data/certPlan';
 import { addWorkdayToISO, fmtShortDate } from '../utils/dateUtils';
 import { hexToRgba } from '../utils/colorUtils';
+import { DEFAULT_TODAY_LAYOUT, normalizeTodayLayout } from '../data/todayLayout';
 
 
 
@@ -40,6 +41,7 @@ function createInitialState() {
   theme: 'dark',
   userId: 'jagdeep',
   accent: '#1d98d9',
+  todayLayout: DEFAULT_TODAY_LAYOUT,
   section: 'today',
   isMobile: false,
   timer: 3600,
@@ -100,7 +102,7 @@ function createInitialState() {
 // UI prefs + user-authored data (meds, prescriptions) are persisted locally in v1.
 // Prescription file blobs live in a separate localStorage key ('orbitly-rx-files').
 const PERSIST_KEYS = [
-  'theme', 'userId', 'accent', 'examDone', 'cycleDay',
+  'theme', 'userId', 'accent', 'todayLayout', 'examDone', 'cycleDay',
   'userGender', 'householdCycleShared', 'userCurrencies',
   'sportSubscriptions', 'overlays', 'notifications',
   'taskView', 'calView', 'rescheduleDismissed',
@@ -132,6 +134,12 @@ function loadFromStorage() {
         subs.push({ sport: 'tennis', leagues: ['wimbledon', 'us-open', 'french-open', 'aus-open'] });
       }
       parsed.sportSubscriptions = subs;
+    }
+
+    // Reconcile against the current default widget set — merges in any
+    // widget added since this layout was saved and drops any since removed.
+    if (parsed.todayLayout !== undefined) {
+      parsed.todayLayout = normalizeTodayLayout(parsed.todayLayout);
     }
 
     return Object.fromEntries(
@@ -172,6 +180,15 @@ function reducer(state, action) {
       return { ...state, theme: state.theme === 'dark' ? 'light' : 'dark' };
     case 'SET_ACCENT':
       return { ...state, accent: action.color };
+    case 'SET_TODAY_LAYOUT':
+      return { ...state, todayLayout: action.layout };
+    case 'SET_WIDGET_SPAN':
+      return {
+        ...state,
+        todayLayout: state.todayLayout.map(w => w.id === action.id ? { ...w, span: action.span } : w),
+      };
+    case 'RESET_TODAY_LAYOUT':
+      return { ...state, todayLayout: DEFAULT_TODAY_LAYOUT };
     case 'SET_MOBILE':
       return { ...state, isMobile: action.isMobile };
     case 'TOGGLE_MED':
@@ -495,7 +512,7 @@ export function AppStoreProvider({ children }) {
     saveToStorage(state);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    state.theme, state.userId, state.accent, state.examDone, state.cycleDay,
+    state.theme, state.userId, state.accent, state.todayLayout, state.examDone, state.cycleDay,
     state.userGender, state.householdCycleShared, state.userCurrencies,
     state.sportSubscriptions, state.overlays, state.notifications,
     state.taskView, state.calView, state.rescheduleDismissed,
