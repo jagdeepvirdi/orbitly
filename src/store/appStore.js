@@ -35,7 +35,7 @@ export const PRIORITY = {
   Low:    { bg: 'rgba(148,163,184,0.16)', color: '#cbd5e1' },
 };
 
-function createInitialState() {
+export function createInitialState() {
   const now = new Date();
   return {
   theme: 'dark',
@@ -158,7 +158,7 @@ function saveToStorage(state) {
   } catch {}
 }
 
-function reducer(state, action) {
+export function reducer(state, action) {
   switch (action.type) {
     case 'SET_USER':
       return { ...state, userId: action.id };
@@ -505,27 +505,13 @@ export function AppStoreProvider({ children }) {
   const saved = loadFromStorage();
   const [state, dispatch] = useReducer(reducer, undefined, () => ({ ...createInitialState(), ...saved }));
 
-  // Deliberately not exhaustive: only the persisted fields (PERSIST_KEYS) are
-  // listed so this doesn't re-fire (and re-write localStorage) on every
-  // transient, non-persisted state change.
+  // Deps are derived from PERSIST_KEYS (fixed-length array, so the hook's
+  // dependency count is still stable across renders) so there's a single
+  // source of truth for "what gets persisted" — see PERSIST_KEYS above.
   useEffect(() => {
     saveToStorage(state);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    state.theme, state.userId, state.accent, state.todayLayout, state.examDone, state.cycleDay,
-    state.userGender, state.householdCycleShared, state.userCurrencies,
-    state.sportSubscriptions, state.overlays, state.notifications,
-    state.taskView, state.calView, state.rescheduleDismissed,
-    state.timer, state.lastResetDate,
-    state.familyTab, state.directorySide,
-    state.prescriptions, state.testResults,
-    state.importedCalEvents, state.importHistory,
-    state.recipes, state.mealPlan,
-    state.hobbyProjects, state.hobbyLog,
-    state.choreList,
-    state.subscribedCalendars,
-    state.icsFeeds,
-  ]);
+  }, PERSIST_KEYS.map(k => state[k]));
 
 
 

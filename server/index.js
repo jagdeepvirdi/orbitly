@@ -39,6 +39,7 @@ import profileRouter       from './routes/profile.js';
 import fs                  from 'fs';
 import path                from 'path';
 import { fileURLToPath }   from 'url';
+import crypto               from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,6 +47,214 @@ const __dirname = path.dirname(__filename);
 // Add missing columns that older schema installs don't have yet
 async function runMigrations() {
   const sqls = [
+    // ── Phase 0: base tables ────────────────────────────────────────────────
+    // Mirrors server/schema.sql's base tables (minus a few schema.sql already
+    // marks IF NOT EXISTS and that are also defined further down in this list
+    // — user_calendars, user_sport_subscriptions, user_festivals,
+    // finance_insurance, course_time_logs). Locally, schema.sql normally
+    // bootstraps these via docker-compose.yml's postgres initdb hook before
+    // the app ever starts, so this block is a no-op there. On a database
+    // that was never initialized from schema.sql (e.g. a fresh managed
+    // Postgres in production), this is what actually creates them — without
+    // it, the very first `ALTER TABLE medications ...` a few lines down would
+    // fail with "relation does not exist" on a truly empty database.
+    `CREATE TABLE IF NOT EXISTS tasks (
+       id          VARCHAR(50)  PRIMARY KEY,
+       title       VARCHAR(400) NOT NULL,
+       list        VARCHAR(20)  NOT NULL CHECK (list IN ('work','personal')),
+       priority    VARCHAR(20)  NOT NULL DEFAULT 'Normal' CHECK (priority IN ('Urgent','High','Normal','Low')),
+       due         VARCHAR(60),
+       status      VARCHAR(20)  NOT NULL DEFAULT 'todo' CHECK (status IN ('todo','doing','done')),
+       overdue     BOOLEAN      NOT NULL DEFAULT FALSE,
+       recurring   BOOLEAN      NOT NULL DEFAULT FALSE,
+       project     VARCHAR(100),
+       user_id     TEXT         NOT NULL DEFAULT '',
+       created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_tasks_list_status ON tasks(list, status)`,
+    `CREATE TABLE IF NOT EXISTS medications (
+       id            VARCHAR(50)  PRIMARY KEY,
+       name          VARCHAR(200) NOT NULL,
+       dose          VARCHAR(200),
+       time          VARCHAR(60),
+       sort_order    SMALLINT     NOT NULL DEFAULT 0,
+       days_of_week  SMALLINT[]   NOT NULL DEFAULT '{0,1,2,3,4,5,6}',
+       food_timing   VARCHAR(20)  CHECK (food_timing IS NULL OR food_timing IN ('before_food','after_food','with_food')),
+       user_id       TEXT         NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_medications_user_id ON medications(user_id)`,
+    `CREATE TABLE IF NOT EXISTS med_checkins (
+       med_id      VARCHAR(50) NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
+       checkin_date DATE        NOT NULL,
+       done        BOOLEAN      NOT NULL DEFAULT FALSE,
+       user_id     TEXT         NOT NULL DEFAULT '',
+       PRIMARY KEY (med_id, checkin_date)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_med_checkins_user_id ON med_checkins(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_med_checkins_date ON med_checkins(checkin_date)`,
+    `CREATE TABLE IF NOT EXISTS habits (
+       id          VARCHAR(50)  PRIMARY KEY,
+       label       VARCHAR(200) NOT NULL,
+       icon        VARCHAR(10),
+       sort_order  SMALLINT     NOT NULL DEFAULT 0,
+       user_id     TEXT         NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_habits_user_id ON habits(user_id)`,
+    `CREATE TABLE IF NOT EXISTS habit_checkins (
+       habit_id    VARCHAR(50) NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+       checkin_date DATE        NOT NULL,
+       done        BOOLEAN      NOT NULL DEFAULT FALSE,
+       user_id     TEXT         NOT NULL DEFAULT '',
+       PRIMARY KEY (habit_id, checkin_date)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_habit_checkins_user_id ON habit_checkins(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_habit_checkins_date ON habit_checkins(checkin_date)`,
+    `CREATE TABLE IF NOT EXISTS appointments (
+       id          VARCHAR(50)  PRIMARY KEY,
+       who         VARCHAR(100),
+       type        VARCHAR(300),
+       appt_date   VARCHAR(60),
+       done        BOOLEAN      NOT NULL DEFAULT FALSE,
+       user_id     TEXT         NOT NULL DEFAULT '',
+       created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_appointments_user_id ON appointments(user_id)`,
+    `CREATE TABLE IF NOT EXISTS shopping_items (
+       id          VARCHAR(50)  PRIMARY KEY,
+       item        VARCHAR(300) NOT NULL,
+       done        BOOLEAN      NOT NULL DEFAULT FALSE,
+       created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+     )`,
+    `CREATE TABLE IF NOT EXISTS courses (
+       id          VARCHAR(50)  PRIMARY KEY,
+       name        VARCHAR(300) NOT NULL,
+       phase       SMALLINT     NOT NULL,
+       total       SMALLINT     NOT NULL,
+       done        SMALLINT     NOT NULL DEFAULT 0,
+       next        VARCHAR(60),
+       next_iso    VARCHAR(10),
+       sort_order  SMALLINT     NOT NULL DEFAULT 0,
+       user_id     TEXT         NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_courses_user_id ON courses(user_id)`,
+    `CREATE TABLE IF NOT EXISTS family_groups (
+       id    VARCHAR(50) PRIMARY KEY,
+       label VARCHAR(200) NOT NULL,
+       side  VARCHAR(10)  NOT NULL,
+       emoji VARCHAR(10)
+     )`,
+    `CREATE TABLE IF NOT EXISTS family_members (
+       id         VARCHAR(60)  PRIMARY KEY,
+       real_name  VARCHAR(150) NOT NULL,
+       pet_name   VARCHAR(150),
+       side       VARCHAR(10)  NOT NULL,
+       group_id   VARCHAR(50)  REFERENCES family_groups(id),
+       relation   VARCHAR(150),
+       bday_month SMALLINT     CHECK (bday_month BETWEEN 1 AND 12),
+       bday_day   SMALLINT     CHECK (bday_day   BETWEEN 1 AND 31)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_family_members_group_id ON family_members(group_id)`,
+    `CREATE TABLE IF NOT EXISTS family_events (
+       id          VARCHAR(60)  PRIMARY KEY,
+       label       VARCHAR(300) NOT NULL,
+       type        VARCHAR(20)  NOT NULL CHECK (type IN ('marriage','engagement','court')),
+       side        VARCHAR(10)  NOT NULL,
+       group_id    VARCHAR(50)  REFERENCES family_groups(id),
+       event_month SMALLINT     NOT NULL CHECK (event_month BETWEEN 1 AND 12),
+       event_day   SMALLINT     NOT NULL CHECK (event_day   BETWEEN 1 AND 31)
+     )`,
+    `CREATE TABLE IF NOT EXISTS family_contacts (
+       member_id  VARCHAR(60)  PRIMARY KEY REFERENCES family_members(id) ON DELETE CASCADE,
+       phone      VARCHAR(40),
+       email      VARCHAR(150),
+       address    TEXT,
+       instagram  VARCHAR(120),
+       linkedin   VARCHAR(120),
+       facebook   VARCHAR(120),
+       workplace  VARCHAR(250)
+     )`,
+    `CREATE TABLE IF NOT EXISTS finance_subscriptions (
+       id          VARCHAR(50)    PRIMARY KEY,
+       name        VARCHAR(200)   NOT NULL,
+       country     VARCHAR(10),
+       cat         VARCHAR(50),
+       emoji       VARCHAR(10),
+       amount      NUMERIC(10,2),
+       currency    VARCHAR(5),
+       billing_day SMALLINT       CHECK (billing_day BETWEEN 1 AND 31),
+       cycle       VARCHAR(20)    NOT NULL DEFAULT 'monthly',
+       start_date  DATE,
+       user_id     TEXT           NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_subscriptions_user_id ON finance_subscriptions(user_id)`,
+    `CREATE TABLE IF NOT EXISTS finance_loans (
+       id       VARCHAR(50)   PRIMARY KEY,
+       name     VARCHAR(200)  NOT NULL,
+       bank     VARCHAR(200),
+       emi      NUMERIC(12,2),
+       currency VARCHAR(5),
+       due_day  SMALLINT      CHECK (due_day BETWEEN 1 AND 31),
+       emoji    VARCHAR(10),
+       user_id  TEXT          NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_loans_user_id ON finance_loans(user_id)`,
+    `CREATE TABLE IF NOT EXISTS finance_credit_cards (
+       id            VARCHAR(50)  PRIMARY KEY,
+       name          VARCHAR(200) NOT NULL,
+       bank          VARCHAR(200),
+       statement_day SMALLINT     CHECK (statement_day BETWEEN 1 AND 31),
+       due_day       SMALLINT     CHECK (due_day       BETWEEN 1 AND 31),
+       currency      VARCHAR(5),
+       emoji         VARCHAR(10),
+       user_id       TEXT         NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_credit_cards_user_id ON finance_credit_cards(user_id)`,
+    `CREATE TABLE IF NOT EXISTS finance_bills (
+       id             VARCHAR(50)  PRIMARY KEY,
+       name           VARCHAR(200) NOT NULL,
+       country        VARCHAR(10),
+       type           VARCHAR(50),
+       emoji          VARCHAR(10),
+       generation_day SMALLINT     CHECK (generation_day BETWEEN 1 AND 31),
+       due_day        SMALLINT     CHECK (due_day        BETWEEN 1 AND 31),
+       amount         NUMERIC(10,2),
+       currency       VARCHAR(5),
+       cycle          VARCHAR(20)  NOT NULL DEFAULT 'monthly',
+       start_date     DATE,
+       user_id        TEXT         NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_bills_user_id ON finance_bills(user_id)`,
+    `CREATE TABLE IF NOT EXISTS finance_paid (
+       item_type  VARCHAR(20)  NOT NULL CHECK (item_type IN ('subscription','loan','credit_card','bill')),
+       item_id    VARCHAR(50)  NOT NULL,
+       paid_month DATE         NOT NULL,
+       paid       BOOLEAN      NOT NULL DEFAULT FALSE,
+       user_id    TEXT         NOT NULL DEFAULT '',
+       PRIMARY KEY (item_type, item_id, paid_month)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_paid_user_id ON finance_paid(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_finance_paid_month ON finance_paid(paid_month)`,
+    `CREATE TABLE IF NOT EXISTS festivals (
+       id         SERIAL       PRIMARY KEY,
+       name       VARCHAR(200) NOT NULL,
+       event_date DATE         NOT NULL,
+       cat        VARCHAR(30),
+       emoji      VARCHAR(10),
+       action     TEXT,
+       reminder   VARCHAR(120)
+     )`,
+    `CREATE INDEX IF NOT EXISTS idx_festivals_date ON festivals(event_date)`,
+    `CREATE TABLE IF NOT EXISTS sikh_events (
+       id         SERIAL       PRIMARY KEY,
+       name       VARCHAR(200) NOT NULL,
+       event_date DATE         NOT NULL,
+       cat        VARCHAR(20)  CHECK (cat IN ('gurpurab','shahidi','cultural')),
+       emoji      VARCHAR(10),
+       description TEXT,
+       reminder   VARCHAR(120)
+     )`,
+    // ── Phase 1+: incremental changes (original migration history) ─────────
     `ALTER TABLE medications ADD COLUMN IF NOT EXISTS who VARCHAR(50) DEFAULT 'Jagdeep'`,
     `ALTER TABLE medications ADD COLUMN IF NOT EXISTS doctor VARCHAR(200)`,
     `ALTER TABLE medications ADD COLUMN IF NOT EXISTS notes TEXT`,
@@ -598,8 +807,53 @@ async function runMigrations() {
      )`,
     `CREATE INDEX IF NOT EXISTS idx_user_pinned_courses_user ON user_pinned_courses(user_id)`
   ];
+
+  // Track which of the statements above have already run, so each one
+  // executes exactly once ever instead of being re-attempted (and, for
+  // several of them, re-failing) on every single server boot.
+  await db.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+    name TEXT PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`);
+
+  const { rows: appliedRows } = await db.query('SELECT name FROM schema_migrations');
+  const applied = new Set(appliedRows.map(r => r.name));
+
+  // A pre-existing database (this app's local/prod Postgres, already carrying
+  // months of history from the old untracked runner) gets baselined: every
+  // statement below is marked applied WITHOUT re-running it, since running
+  // them again would immediately hit the exact "already converted"/"already
+  // exists" failures that motivated adding this tracking table in the first
+  // place. A genuinely fresh database (schema_migrations is empty AND the
+  // `tasks` table doesn't exist yet) gets no such treatment — every statement
+  // actually runs, in order, which is what bootstraps it from nothing.
+  const { rows: taskTableRows } = await db.query(`SELECT to_regclass('public.tasks') AS reg`);
+  const isFreshDatabase = taskTableRows[0].reg === null;
+  const isBaselining = applied.size === 0 && !isFreshDatabase;
+  if (isBaselining) {
+    console.log(`[migrate] Baselining ${sqls.length} pre-existing migration statements as already applied (retrofitting tracking onto an existing database) — see the runMigrations() comment in server/index.js.`);
+  }
+
   for (const sql of sqls) {
-    try { await db.query(sql); } catch (e) { console.warn('[migrate]', e.message.slice(0, 80)); }
+    const name = 'm_' + crypto.createHash('sha1').update(sql).digest('hex').slice(0, 16);
+    if (applied.has(name)) continue;
+
+    if (isBaselining) {
+      await db.query('INSERT INTO schema_migrations (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
+      continue;
+    }
+
+    try {
+      await db.query(sql);
+      await db.query('INSERT INTO schema_migrations (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
+    } catch (e) {
+      // Deliberately not fatal — a single bad statement shouldn't take the
+      // whole app down — but now loud instead of a truncated console.warn,
+      // and not marked applied, so it retries (and keeps being visible) on
+      // the next boot instead of silently vanishing either way.
+      console.error('[migrate] FAILED, will retry next boot:', sql.trim().slice(0, 100).replace(/\s+/g, ' '), '\n ', e.message);
+      Sentry.captureException(e);
+    }
   }
 
   // Seed the consolidated festivals from JSON

@@ -34,7 +34,7 @@ Current date in app: **Thursday, 11 June 2026**
 
 ## Tech Stack
 - **Framework**: React 18 + Vite
-- **Styling**: Tailwind CSS (utility classes only — no custom CSS unless required)
+- **Styling**: Tailwind CSS utility classes for layout/spacing, plus inline `style={{}}` for anything dynamic or CSS-var-driven (accent color, category colors, computed positions/sizes). This is the actual convention used throughout every section file (1,900+ `style={{}}` occurrences app-wide) — there is no `tailwind.config.js`, so Tailwind here means the utility class set only, not a themed build. No CSS modules or styled-components.
 - **State**: React useState / useReducer (local state, no Redux needed for v1)
 - **Routing**: React Router v6 (one route per section)
 - **Fonts**: Poppins (headings, via the `--font-heading` CSS var) + Hanken Grotesk (body) via Google Fonts
@@ -408,7 +408,7 @@ The app has a full Node.js/Express backend (added in Phase 14+). Key points:
 
 ## Do Not
 - Do not use an icon library (lucide, heroicons, etc.) — inline SVG only
-- Do not use CSS modules or styled-components — Tailwind only
+- Do not use CSS modules or styled-components — Tailwind utility classes + inline `style={{}}` for dynamic values only (see Tech Stack above)
 - Do not modify the design tokens — match the prototype exactly
 - Do not add features not in the prototype without asking first
 - Do not import static festival/holiday data files in frontend components — use `GET /api/festivals` instead
