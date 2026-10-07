@@ -143,6 +143,10 @@
 - [ ] **Largest monolith components** — break up if/when touched next: `LearningPlanner.jsx` (2,634 lines), `FoodPlanner.jsx` (1,508), `HealthWellness.jsx` (1,495), `SettingsProfiles.jsx` (1,190).
 - [x] **Test coverage is effectively just date-math** (1 file, 19 tests, all on pure `dateUtils` functions). Zero coverage of the 88-case `appStore.js` reducer or any of the 26 route files. Added `src/store/appStore.test.js` (60 tests covering every reducer action, including edge cases like `CAL_NAV` year rollover, `ADD_SESSION`/`REMOVE_SESSION` clamping, `ADD_SPORT_SUBSCRIPTION` dedup, and `TICK_TIMER` boundary behavior — `reducer`/`createInitialState` exported for this), `server/routes/billing.test.js` (13 tests: `/status`, `/create-checkout`, `/webhook`, including Stripe-not-configured, bad signature, and DB-failure/Sentry paths), and `server/middleware/requireAuth.test.js` (7 tests: dev fallback, prod fail-closed at import time, missing/invalid/valid token, `authorizedParties` prod-only gating). Route/middleware tests mock `db.js`, `stripe`, `@sentry/node`, and `@clerk/backend` — no real network/DB calls. 99/99 tests pass (`npm test`). Still open: `LearningPlanner.jsx`/`FoodPlanner.jsx`/etc. reducers-within-components and the other 24 route files remain uncovered.
 
+### 37.4 — Mobile navigation
+- [x] **Mobile "More" sheet.** `BottomTabBar` now shows 4 fixed tabs (Today/Calendar/Tasks/Health) plus a "More" button that opens a bottom sheet with every other section, a theme toggle and sign-out. Previously the bar only reached 5 of 14 sections on mobile. Nav icons/definitions extracted to `src/data/navConfig.js` (shared by `Sidebar` and `BottomTabBar`). Sheet is a modal dialog: closes on backdrop/Escape/navigation, and is `inert` + hidden while closed. `TopBar` compacts on mobile (icon-only search/AI buttons, smaller accent swatches, truncated labels).
+- [ ] Not yet verified visually on a real phone-width viewport *(manual)*
+
 ---
 
 ## Notes for Claude Code

@@ -1,58 +1,173 @@
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/appStore';
+import { NAV_ICONS, NAV_DEFS, UTILITY_ICONS } from '../../data/navConfig';
+import { useClerk } from '@clerk/clerk-react';
 
-const TABS = [
-  {
-    id: 'today', label: 'Today',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>',
-  },
-  {
-    id: 'calendar', label: 'Calendar',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>',
-  },
-  {
-    id: 'tasks', label: 'Tasks',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
-  },
-  {
-    id: 'health', label: 'Health',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12h4l2 5 4-12 2 7h6"/></svg>',
-  },
-  {
-    id: 'family', label: 'Family',
-    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.2"/><path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20M15.5 20v-1a3.5 3.5 0 0 1 3.5-3.5h0a2 2 0 0 1 2 2V20"/></svg>',
-  },
-];
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+const FIXED_IDS = ['today', 'calendar', 'tasks', 'health'];
+const FIXED_TABS = NAV_DEFS.filter(([id]) => FIXED_IDS.includes(id));
+const MORE_SECTIONS = NAV_DEFS.filter(([id]) => !FIXED_IDS.includes(id));
+
+function SignOutBtn() {
+  const { signOut } = useClerk();
+  return (
+    <button
+      onClick={() => signOut()}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+        padding: '11px 12px',
+        background: 'transparent', border: '1px solid var(--border)',
+        borderRadius: 13, cursor: 'pointer', color: 'var(--text-3)',
+        fontFamily: 'inherit', fontSize: 13.5, fontWeight: 500,
+      }}
+    >
+      <span dangerouslySetInnerHTML={{ __html: UTILITY_ICONS.signOut }} style={{ display: 'flex' }} />
+      <span>Sign out</span>
+    </button>
+  );
+}
+
+function TabButton({ id, label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+        flex: 1, padding: 4, background: 'none', border: 'none', cursor: 'pointer',
+        fontFamily: 'inherit',
+        color: active ? 'var(--accent)' : 'var(--text-3)',
+      }}
+    >
+      <span dangerouslySetInnerHTML={{ __html: NAV_ICONS[id] }} style={{ display: 'flex' }} />
+      <span style={{ fontSize: 10, fontWeight: 600 }}>{label}</span>
+    </button>
+  );
+}
 
 export default function BottomTabBar() {
   const { state, dispatch } = useAppStore();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const isMoreActive = !FIXED_IDS.includes(state.section);
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setSheetOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sheetOpen]);
+
+  const goTo = (section) => {
+    dispatch({ type: 'SET_SECTION', section });
+    setSheetOpen(false);
+  };
 
   return (
-    <nav style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
-      display: 'flex', justifyContent: 'space-around',
-      padding: 'calc(9px + env(safe-area-inset-bottom)) 6px 9px',
-      background: 'var(--bar)',
-      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-      borderTop: '1px solid var(--border)',
-    }}>
-      {TABS.map(tab => {
-        const active = state.section === tab.id;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => dispatch({ type: 'SET_SECTION', section: tab.id })}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-              flex: 1, padding: 4, background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: 'inherit',
-              color: active ? 'var(--accent)' : 'var(--text-3)',
-            }}
-          >
-            <span dangerouslySetInnerHTML={{ __html: tab.icon }} style={{ display: 'flex' }} />
-            <span style={{ fontSize: 10, fontWeight: 600 }}>{tab.label}</span>
-          </button>
-        );
-      })}
-    </nav>
+    <>
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
+        display: 'flex', justifyContent: 'space-around',
+        padding: 'calc(9px + env(safe-area-inset-bottom)) 6px 9px',
+        background: 'var(--bar)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid var(--border)',
+      }}>
+        {FIXED_TABS.map(([id, label]) => (
+          <TabButton
+            key={id} id={id} label={label}
+            active={state.section === id}
+            onClick={() => dispatch({ type: 'SET_SECTION', section: id })}
+          />
+        ))}
+        <button
+          onClick={() => setSheetOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={sheetOpen}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+            flex: 1, padding: 4, background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: 'inherit',
+            color: isMoreActive ? 'var(--accent)' : 'var(--text-3)',
+          }}
+        >
+          <span dangerouslySetInnerHTML={{ __html: UTILITY_ICONS.more }} style={{ display: 'flex' }} />
+          <span style={{ fontSize: 10, fontWeight: 600 }}>More</span>
+        </button>
+      </nav>
+
+      {/* Backdrop */}
+      <div
+        onClick={() => setSheetOpen(false)}
+        aria-hidden="true"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 35,
+          background: 'rgba(0,0,0,0.5)',
+          opacity: sheetOpen ? 1 : 0,
+          pointerEvents: sheetOpen ? 'auto' : 'none',
+          transition: 'opacity .25s ease',
+        }}
+      />
+
+      {/* More sheet */}
+      <div role="dialog" aria-modal="true" aria-label="More sections" aria-hidden={!sheetOpen} inert={!sheetOpen} style={{
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 36,
+        visibility: sheetOpen ? 'visible' : 'hidden',
+        maxHeight: '78vh', overflowY: 'auto',
+        background: 'var(--surface-solid)',
+        borderTop: '1px solid var(--border)',
+        borderTopLeftRadius: 22, borderTopRightRadius: 22,
+        padding: '10px 20px calc(20px + env(safe-area-inset-bottom))',
+        boxShadow: '0 -12px 30px rgba(0,0,0,0.35)',
+        transform: sheetOpen ? 'translateY(0)' : 'translateY(100%)',
+        transition: sheetOpen ? 'transform .28s cubic-bezier(.32,.72,0,1)' : 'transform .28s cubic-bezier(.32,.72,0,1), visibility 0s linear .28s',
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--border-strong)', margin: '6px auto 18px' }} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+          {MORE_SECTIONS.map(([id, label]) => {
+            const active = state.section === id;
+            return (
+              <button
+                key={id}
+                onClick={() => goTo(id)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                  padding: '12px 4px', background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: 'inherit', color: active ? 'var(--accent)' : 'var(--text-2)',
+                }}
+              >
+                <span style={{
+                  width: 46, height: 46, borderRadius: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: active ? 'var(--accent)' : 'var(--surface)',
+                  color: active ? '#fff' : 'var(--text-2)',
+                }}>
+                  <span dangerouslySetInnerHTML={{ __html: NAV_ICONS[id] }} style={{ display: 'flex' }} />
+                </span>
+                <span style={{ fontSize: 11.5, fontWeight: 600, textAlign: 'center' }}>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ height: 1, background: 'var(--border)', margin: '18px 0 12px' }} />
+
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_THEME' })}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+            padding: '11px 12px', marginBottom: 8,
+            background: 'transparent', border: '1px solid var(--border)',
+            borderRadius: 13, cursor: 'pointer', color: 'var(--text-2)',
+            fontFamily: 'inherit', fontSize: 13.5, fontWeight: 500,
+          }}
+        >
+          <span dangerouslySetInnerHTML={{ __html: state.theme === 'dark' ? UTILITY_ICONS.sun : UTILITY_ICONS.moon }} style={{ display: 'flex' }} />
+          <span>{state.theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+        </button>
+
+        {CLERK_KEY && <SignOutBtn />}
+      </div>
+    </>
   );
 }
