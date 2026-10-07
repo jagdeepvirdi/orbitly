@@ -58,7 +58,7 @@
 
 - [x] **Change `medications.who` default from hardcoded `'Jagdeep'` to `NULL`.** Added `ALTER TABLE medications ALTER COLUMN who SET DEFAULT NULL` to migrations.
 
-- [ ] **Delete stale `jagdeep` dev household.** **Production-only manual step** — do NOT add to migrations. In dev mode `userId='jagdeep'` is the active user and the jagdeep household is live. Run these only against the Neon production DB after deploying with real Clerk IDs:
+- [ ] **Delete stale `jagdeep` dev household.** **Production-only manual step** — do NOT add to migrations. In dev mode `userId='jagdeep'` is the active user and the jagdeep household is live. Run these only against the production DB (Railway Postgres) after deploying with real Clerk IDs:
   ```sql
   DELETE FROM household_members WHERE user_id = 'jagdeep';
   DELETE FROM households WHERE created_by = 'jagdeep';
@@ -76,7 +76,7 @@
 
 ### 24.6 — Testing checklist (run after completing 24.1–24.4)
 
-- [ ] Sign in with Clerk credentials in a browser *(manual — browser required)*
+- [x] Sign in with Clerk credentials in a browser *(manual — confirmed by Jagdeep 2026-10-07)*
 - [x] **Learning Planner** — Anthropic plan: 13 courses across phases 0–3 confirmed in DB (plus 2 additional plans: Google AI / Associate Data Analyst, 32 courses total)
 - [x] **Tasks Board** — 11 tasks confirmed under Clerk user (5 work, 6 personal; todo/doing/done mix)
 - [x] **Health & Wellness** — 6 medications + 3 habits (h1/h2/h3) confirmed under Clerk user
@@ -145,10 +145,31 @@
 
 ### 37.4 — Mobile navigation
 - [x] **Mobile "More" sheet.** `BottomTabBar` now shows 4 fixed tabs (Today/Calendar/Tasks/Health) plus a "More" button that opens a bottom sheet with every other section, a theme toggle and sign-out. Previously the bar only reached 5 of 14 sections on mobile. Nav icons/definitions extracted to `src/data/navConfig.js` (shared by `Sidebar` and `BottomTabBar`). Sheet is a modal dialog: closes on backdrop/Escape/navigation, and is `inert` + hidden while closed. `TopBar` compacts on mobile (icon-only search/AI buttons, smaller accent swatches, truncated labels).
-- [ ] Not yet verified visually on a real phone-width viewport *(manual)*
+- [x] Verified on a real phone: "More" sheet works *(manual, confirmed by Jagdeep 2026-10-07)*
 
 ### 37.5 — Festivals: multi-calendar duplicates
 - [x] **22 festivals were silently dropped by the seed.** `festivals.json` has 319 rows, but 22 are the same festival listed under two calendars (`indian`/`hindu` x15, `thai-buddhist`/`thai` x3, `sikh`/`indian` x2, `thai`/`indian` x2). The `UNIQUE (name, event_date)` constraint + `ON CONFLICT DO NOTHING` kept only the first, so a user subscribed to e.g. only `hindu` or `thai-buddhist` (without `IN`/`TH`) never saw Diwali, Dussehra, the three Bucha days, etc. Default subscribers (`IN`,`TH`,`hindu`,`sikh`) were unaffected. Fix: unique key is now `(name, event_date, calendar)` (migration swaps the constraint; seed `ON CONFLICT` updated), and `GET /api/festivals` collapses same name/date rows with `DISTINCT ON`, preferring the user's pinned copy so existing pins still match, then the copy with a description. Verified on a throwaway Postgres: fresh boot and upgrade-from-old-constraint both give 319 rows, a second boot is idempotent, and per-user results are correct (both calendars: 104 raw -> 89 deduped; `hindu`-only now sees Diwali; `thai-buddhist`-only gets all 25; pinned copy is the one returned).
+
+---
+
+## PHASE 38 — Deploy to Railway (mosaiclife.jagdeepsinghvirdi.com)
+
+> Target: one Railway service (Express serves the built frontend + API on one origin) + Railway Postgres + custom domain.
+
+### 38.1 — Code (done)
+- [x] `server/db.js` accepts `DATABASE_URL` (hosted Postgres); falls back to `DB_*` vars locally. Optional `DB_SSL=true` for public endpoints that need TLS.
+- [x] `server/index.js` serves `dist/` when it exists (hashed `/assets` cached 1y, `index.html` `no-cache`) with an SPA fallback for extensionless non-API GETs, placed *before* `requireAuth` because page loads carry no token. Other non-API misses return a plain 404. In dev (no `dist/`) behaviour is unchanged.
+- [x] Listens on `SERVER_PORT || PORT || 3003` (Railway injects `PORT`); `trust proxy` enabled in production so the per-IP rate limiters (`extract`, `courses`) don't share one bucket behind Railway's proxy; `APP_URL` added to the CORS allowlist.
+- [x] `npm start`, `engines.node >=20`, `railway.json` (build/start/healthcheck on `/api/health`), `.env.example` updated.
+- [x] Verified locally: booted with only `DATABASE_URL` set, `PORT`-only fallback works, `/`, deep links and assets serve correctly, `/api/*` still 401 without a token.
+
+### 38.2 — Railway / DNS / Clerk (manual, not started)
+- [ ] Create Railway project: app service (from this repo) + Postgres plugin; reference its `DATABASE_URL` from the app service.
+- [ ] Set env vars: `NODE_ENV=production`, `APP_URL=https://mosaiclife.jagdeepsinghvirdi.com`, `CLERK_SECRET_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` (**build-time** — must exist before the build runs), `GEMINI_API_KEY` (no Ollama in prod), plus any optional keys (Stripe, Resend, Sentry, sports APIs).
+- [ ] Add custom domain `mosaiclife.jagdeepsinghvirdi.com` in Railway; create the CNAME (+ verification record) at the DNS host for `jagdeepsinghvirdi.com`.
+- [ ] Clerk: create a **production** instance for the domain (needs its own DNS records) and use its keys. Production users get new IDs, so existing dev data keyed to the dev Clerk ID must be remapped to the new ID after first sign-in.
+- [ ] Decide data move: `pg_dump` from local Docker -> Railway, or start fresh (app self-bootstraps).
+- [ ] After first prod deploy: run the `jagdeep` household cleanup in Phase 23.4.
 
 ---
 

@@ -911,9 +911,15 @@ async function runMigrations() {
 }
 
 const app = express();
+// Behind Railway's edge proxy: without this every request appears to come from the
+// proxy's IP, so the per-IP rate limiters (extract/courses) would share one bucket.
+if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
 const allowedOrigins = ['http://localhost:5177', 'http://localhost:4177'];
 if (process.env.ALLOWED_ORIGIN) {
   allowedOrigins.push(process.env.ALLOWED_ORIGIN);
+}
+if (process.env.APP_URL) {
+  allowedOrigins.push(process.env.APP_URL.replace(/\/+$/, ''));
 }
 app.use(cors({ origin: allowedOrigins }));
 app.use((req, res, next) => {
@@ -942,7 +948,21 @@ app.use('/api/cricket',      cricketRouter);
 app.use('/api/football',     footballRouter);
 app.use('/api/nba',          nbaRouter);
 
-app.get('/', (_, res) => res.json({ ok: true, message: 'Orbitly API Server' }));
+// Serve the built frontend (vite build -> dist/) from the same origin as the API, so
+// production needs one service and no CORS. Skipped when dist/ doesn't exist (dev mode
+// runs Vite separately), in which case GET / keeps returning the JSON stub below.
+const distDir = path.join(__dirname, '..', 'dist');
+const serveFrontend = fs.existsSync(path.join(distDir, 'index.html'));
+if (serveFrontend) {
+  // Hashed asset filenames are safe to cache forever; index.html must always revalidate.
+  app.use('/assets', express.static(path.join(distDir, 'assets'), { immutable: true, maxAge: '1y' }));
+  app.use(express.static(distDir, { index: false, setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
+}
+
+app.get('/', (req, res, next) => {
+  if (serveFrontend) return next();
+  res.json({ ok: true, message: 'Orbitly API Server' });
+});
 app.get('/api/health', async (_, res) => {
   try {
     await db.query('SELECT 1');
@@ -953,6 +973,17 @@ app.get('/api/health', async (_, res) => {
     res.status(503).json({ ok: false, db: 'down', ts: Date.now() });
   }
 });
+
+// SPA fallback (must sit before requireAuth: page loads carry no token). Extensionless
+// non-API GETs get index.html so client-side routes survive a refresh; any other
+// non-API request (a missing asset, favicon, ...) is a plain 404, not a 401.
+if (serveFrontend) {
+  app.get(/^\/(?!api\/)[^.]*$/, (_, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(distDir, 'index.html'));
+  });
+  app.use((req, res, next) => (req.path.startsWith('/api/') ? next() : res.status(404).type('text').send('Not found')));
+}
 
 // All routes below require authentication
 app.use(requireAuth);
@@ -980,7 +1011,8 @@ app.use('/api/household',    householdRouter);
 app.use('/api/billing',     billingRouter);
 app.use('/api/profile',     profileRouter);
 
-const PORT = process.env.SERVER_PORT || 3003;
+// Railway injects PORT; SERVER_PORT is the local-dev override from .env.
+const PORT = process.env.SERVER_PORT || process.env.PORT || 3003;
 
 function startServer() {
   app.listen(PORT, () => {
