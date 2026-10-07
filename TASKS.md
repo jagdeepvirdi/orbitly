@@ -164,7 +164,8 @@
 - [x] Verified locally: booted with only `DATABASE_URL` set, `PORT`-only fallback works, `/`, deep links and assets serve correctly, `/api/*` still 401 without a token.
 
 ### 38.2 — Railway / DNS / Clerk (manual, not started)
-- [ ] Create Railway project: app service (from this repo) + Postgres plugin; reference its `DATABASE_URL` from the app service.
+- [x] Railway project `mosaic-life` (id `a28d0eb3-4bbb-4186-b8c1-30b127414b69`, workspace "Jagdeep Singh Virdi's Projects", env `production`) created 2026-10-07 with a Postgres service (deployed, empty). Decisions: connect GitHub repo `jagdeepvirdi/orbitly` for auto-deploy; start with a fresh database (no dev-data copy).
+- [ ] Create the app service from the GitHub repo **only once Clerk production keys exist** (in production the server refuses to start without `CLERK_SECRET_KEY`, so an earlier deploy just crash-loops). Reference the DB with `DATABASE_URL=${{Postgres.DATABASE_URL}}` (private network, so no `DB_SSL`).
 - [ ] Set env vars: `NODE_ENV=production`, `APP_URL=https://mosaiclife.jagdeepsinghvirdi.com`, `CLERK_SECRET_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` (**build-time** — must exist before the build runs), `GEMINI_API_KEY` (no Ollama in prod), plus any optional keys (Stripe, Resend, Sentry, sports APIs).
 - [ ] Add custom domain `mosaiclife.jagdeepsinghvirdi.com` in Railway; create the CNAME (+ verification record) at the DNS host for `jagdeepsinghvirdi.com`.
 - [ ] Clerk: create a **production** instance for the domain (needs its own DNS records) and use its keys. Production users get new IDs, so existing dev data keyed to the dev Clerk ID must be remapped to the new ID after first sign-in.
