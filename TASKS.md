@@ -147,6 +147,9 @@
 - [x] **Mobile "More" sheet.** `BottomTabBar` now shows 4 fixed tabs (Today/Calendar/Tasks/Health) plus a "More" button that opens a bottom sheet with every other section, a theme toggle and sign-out. Previously the bar only reached 5 of 14 sections on mobile. Nav icons/definitions extracted to `src/data/navConfig.js` (shared by `Sidebar` and `BottomTabBar`). Sheet is a modal dialog: closes on backdrop/Escape/navigation, and is `inert` + hidden while closed. `TopBar` compacts on mobile (icon-only search/AI buttons, smaller accent swatches, truncated labels).
 - [ ] Not yet verified visually on a real phone-width viewport *(manual)*
 
+### 37.5 — Festivals: multi-calendar duplicates
+- [x] **22 festivals were silently dropped by the seed.** `festivals.json` has 319 rows, but 22 are the same festival listed under two calendars (`indian`/`hindu` x15, `thai-buddhist`/`thai` x3, `sikh`/`indian` x2, `thai`/`indian` x2). The `UNIQUE (name, event_date)` constraint + `ON CONFLICT DO NOTHING` kept only the first, so a user subscribed to e.g. only `hindu` or `thai-buddhist` (without `IN`/`TH`) never saw Diwali, Dussehra, the three Bucha days, etc. Default subscribers (`IN`,`TH`,`hindu`,`sikh`) were unaffected. Fix: unique key is now `(name, event_date, calendar)` (migration swaps the constraint; seed `ON CONFLICT` updated), and `GET /api/festivals` collapses same name/date rows with `DISTINCT ON`, preferring the user's pinned copy so existing pins still match, then the copy with a description. Verified on a throwaway Postgres: fresh boot and upgrade-from-old-constraint both give 319 rows, a second boot is idempotent, and per-user results are correct (both calendars: 104 raw -> 89 deduped; `hindu`-only now sees Diwali; `thai-buddhist`-only gets all 25; pinned copy is the one returned).
+
 ---
 
 ## Notes for Claude Code

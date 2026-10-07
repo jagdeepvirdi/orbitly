@@ -521,6 +521,18 @@ async function runMigrations() {
     `UPDATE festivals SET calendar = 'thai' WHERE cat = 'thai' AND calendar = 'indian'`,
     `CREATE INDEX IF NOT EXISTS idx_festivals_user_id  ON festivals(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_festivals_calendar ON festivals(calendar)`,
+    // The same festival can legitimately appear under several calendars (e.g. Diwali under
+    // both 'indian' and 'hindu'). (name, event_date) alone silently dropped the later copy,
+    // so users subscribed to only that calendar never saw it. Include calendar in the key;
+    // GET /api/festivals collapses same-name/date rows for users subscribed to several.
+    `ALTER TABLE festivals DROP CONSTRAINT IF EXISTS festivals_name_date_unique`,
+    `DO $$ BEGIN
+       IF NOT EXISTS (
+         SELECT 1 FROM pg_constraint WHERE conname = 'festivals_name_date_calendar_unique'
+       ) THEN
+         ALTER TABLE festivals ADD CONSTRAINT festivals_name_date_calendar_unique UNIQUE (name, event_date, calendar);
+       END IF;
+     END $$`,
     // Phase 22: add household_id to family_contacts
     `ALTER TABLE family_contacts ADD COLUMN IF NOT EXISTS household_id TEXT`,
     `UPDATE family_contacts fc SET household_id = (SELECT household_id FROM family_members fm WHERE fm.id = fc.member_id) WHERE fc.household_id IS NULL`,
@@ -877,7 +889,7 @@ async function runMigrations() {
         await db.query(
           `INSERT INTO festivals (name, event_date, cat, emoji, action, reminder, calendar, description)
            VALUES ${valuePlaceholders.join(',')}
-           ON CONFLICT (name, event_date) DO NOTHING`,
+           ON CONFLICT (name, event_date, calendar) DO NOTHING`,
           values
         );
       }

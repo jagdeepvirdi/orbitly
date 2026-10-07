@@ -9,11 +9,22 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     await syncUserFestivals(req.userId);
+    // The same festival may exist under several calendars (e.g. Diwali in 'indian' and
+    // 'hindu'); a user subscribed to more than one should see it once. Keep the copy they
+    // pinned (so existing pins still match), else the one with a description, else lowest id.
     const { rows } = await db.query(
-      `SELECT f.* FROM festivals f
-       JOIN user_festivals uf ON f.id = uf.festival_id
-       WHERE uf.user_id = $1
-       ORDER BY f.event_date`,
+      `SELECT * FROM (
+         SELECT DISTINCT ON (f.name, f.event_date) f.*
+         FROM festivals f
+         JOIN user_festivals uf ON f.id = uf.festival_id
+         LEFT JOIN user_pinned_festivals p ON p.festival_id = f.id AND p.user_id = $1
+         WHERE uf.user_id = $1
+         ORDER BY f.name, f.event_date,
+                  (p.festival_id IS NOT NULL) DESC,
+                  (COALESCE(f.description, '') <> '') DESC,
+                  f.id
+       ) deduped
+       ORDER BY event_date, id`,
       [req.userId]
     );
     res.json(rows);

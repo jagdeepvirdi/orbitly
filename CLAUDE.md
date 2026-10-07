@@ -238,7 +238,7 @@ Top bar shows: done count, overdue count (pulsing red dot)
 
 ### FESTIVALS & RECURRING
 Grid: `repeat(auto-fill, minmax(300px, 1fr))`
-**Data source:** PostgreSQL `festivals` table — seeded from `server/seeds/festivals.json` (319 entries, 297 distinct by name + date) at server startup. No static frontend data files — the deleted files (`festivals.js`, `christianHolidays.js`, `jainHolidays.js`, `holidayCalendar.js`, `sikhCalendar.js`) have been removed.
+**Data source:** PostgreSQL `festivals` table — seeded from `server/seeds/festivals.json` (319 entries) at server startup. Unique on `(name, event_date, calendar)`: a festival that belongs to several calendars (e.g. Diwali in `indian` + `hindu`) has one row per calendar, and `GET /api/festivals` collapses same name/date rows for users subscribed to more than one. No static frontend data files — the deleted files (`festivals.js`, `christianHolidays.js`, `jainHolidays.js`, `holidayCalendar.js`, `sikhCalendar.js`) have been removed.
 - `user_festivals` mapping table filters which festivals each user sees (auto-synced from `user_calendars` via `syncUserFestivals()` in `server/routes/festivalSync.js` on every GET)
 - New users default to `['IN','TH','hindu','sikh']` subscriptions
 - Filter tabs: All | ⭐ Pinned (if any) | Sikh | Indian | Thai | Christian | Jain | etc. (only tabs for subscribed calendars shown)
@@ -327,7 +327,7 @@ orbitly/
 │   │   ├── festivalSync.js   # syncUserFestivals(userId) — syncs user_calendars → user_festivals
 │   │   └── ... (all other route files)
 │   ├── seeds/
-│   │   └── festivals.json    # 319 festival/holiday entries (297 distinct by name + date) — source of truth for festivals table
+│   │   └── festivals.json    # 319 festival/holiday entries (one row per calendar) — source of truth for festivals table
 │   ├── db.js
 │   └── index.js              # Express server, self-bootstrapping migrations (schema_migrations), festival seeding on startup
 ├── src/

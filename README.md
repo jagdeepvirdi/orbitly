@@ -103,7 +103,7 @@ orbitly/
 ├── server/
 │   ├── middleware/        # requireAuth, requireHousehold
 │   ├── routes/            # Express route handlers (one file per domain)
-│   ├── seeds/             # festivals.json — 319 holiday entries (297 distinct)
+│   ├── seeds/             # festivals.json — 319 holiday entries
 │   ├── db.js
 │   └── index.js           # Server entry point + self-bootstrapping migrations
 └── src/
