@@ -10,11 +10,9 @@ services:
       - "5437:5432"
     volumes:
       - orbitly_pg_data:/var/lib/postgresql/data
-      # Base schema is no longer seeded by Postgres's initdb hook — the app's
-      # own runMigrations() (server/index.js) bootstraps it on first boot,
-      # the same way it would against a fresh production database. This mount
-      # now only carries Jagdeep's local dev-convenience seed data.
-      - ./server/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      # No initdb scripts: the app's own runMigrations() (server/index.js)
+      # creates the schema and seeds festivals on first boot, the same way it
+      # would against a fresh production database.
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U orbitly -d orbitly"]

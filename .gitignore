@@ -6,6 +6,7 @@
 # Contains real family names, medical records (medications, appointments),
 # financial data (loan amounts, credit cards) and API keys
 server/seed.sql
+server/seed.legacy.sql
 
 # Contains real full names and birthdays of 70+ family members
 src/data/familyDirectory.js
