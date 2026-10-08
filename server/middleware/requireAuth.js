@@ -14,6 +14,12 @@ if (process.env.CLERK_SECRET_KEY) {
   clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 }
 
+// The azp claim is a bare lowercase origin, and Clerk compares it verbatim, so a
+// stray space, trailing slash or capital letter in APP_URL would 401 every request.
+export function normalizeOrigin(url) {
+  return url?.trim().replace(/\/+$/, '').toLowerCase() || undefined;
+}
+
 export default async function requireAuth(req, res, next) {
   if (!clerkClient) {
     req.userId = DEV_USER_ID;
@@ -32,7 +38,8 @@ export default async function requireAuth(req, res, next) {
   // the azp claim entirely; if authorizedParties is set and azp is absent, Clerk
   // throws and every request returns 401. In prod, APP_URL is a real domain so azp
   // will be present and the check is meaningful.
-  const authorizedParties = isProd && process.env.APP_URL ? [process.env.APP_URL] : undefined;
+  const appOrigin = normalizeOrigin(process.env.APP_URL);
+  const authorizedParties = isProd && appOrigin ? [appOrigin] : undefined;
 
   try {
     const payload = await verifyToken(token, {

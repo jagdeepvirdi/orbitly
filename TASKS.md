@@ -164,7 +164,7 @@
 - [x] Verified locally: booted with only `DATABASE_URL` set, `PORT`-only fallback works, `/`, deep links and assets serve correctly, `/api/*` still 401 without a token.
 
 ### 38.1b — Optional hardening (not started)
-- [ ] Normalise `APP_URL` in `server/middleware/requireAuth.js` (trim whitespace, strip trailing `/`, lowercase) before using it as Clerk `authorizedParties`. Today it is used verbatim, so `https://MosaicLife.jagdeepsinghvirdi.com` or a trailing slash makes every request 401 with no obvious cause. Add a test in `requireAuth.test.js`.
+- [x] Normalise `APP_URL` in `server/middleware/requireAuth.js` (trim whitespace, strip trailing `/`, lowercase) before using it as Clerk `authorizedParties`. Exported as `normalizeOrigin()` and also used for the CORS allowlist in `server/index.js`. Tests added in `requireAuth.test.js` (messy value normalised; blank value omits `authorizedParties`).
 - [ ] Clerk DNS record names in 38.3/38.4 are from memory of Clerk's usual setup — treat the Clerk dashboard's values as authoritative and correct this doc if they differ.
 
 ### 38.2 — Order of operations (manual unless noted)

@@ -10,7 +10,7 @@ if (process.env.SENTRY_DSN) {
 import express from 'express';
 import cors from 'cors';
 import db from './db.js';
-import requireAuth       from './middleware/requireAuth.js';
+import requireAuth, { normalizeOrigin } from './middleware/requireAuth.js';
 import holidaysRouter    from './routes/holidays.js';
 import f1Router          from './routes/f1.js';
 import cricketRouter     from './routes/cricket.js';
@@ -918,8 +918,8 @@ const allowedOrigins = ['http://localhost:5177', 'http://localhost:4177'];
 if (process.env.ALLOWED_ORIGIN) {
   allowedOrigins.push(process.env.ALLOWED_ORIGIN);
 }
-if (process.env.APP_URL) {
-  allowedOrigins.push(process.env.APP_URL.replace(/\/+$/, ''));
+if (normalizeOrigin(process.env.APP_URL)) {
+  allowedOrigins.push(normalizeOrigin(process.env.APP_URL));
 }
 app.use(cors({ origin: allowedOrigins }));
 app.use((req, res, next) => {

@@ -113,4 +113,26 @@ describe('with CLERK_SECRET_KEY configured', () => {
     const [, opts] = mockVerifyToken.mock.calls[0];
     expect(opts.authorizedParties).toEqual(['https://example.com']);
   });
+
+  it('normalises APP_URL (whitespace, trailing slash, case) before using it as authorizedParties', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.APP_URL = '  https://MosaicLife.Example.com/  ';
+    mockVerifyToken.mockResolvedValueOnce({ sub: 'user_x' });
+    const { default: requireAuth } = await import('./requireAuth.js');
+    const req = { headers: { authorization: 'Bearer t' }, method: 'GET', path: '/x' };
+    await requireAuth(req, mockRes(), vi.fn());
+    const [, opts] = mockVerifyToken.mock.calls[0];
+    expect(opts.authorizedParties).toEqual(['https://mosaiclife.example.com']);
+  });
+
+  it('omits authorizedParties in production when APP_URL is blank', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.APP_URL = '   ';
+    mockVerifyToken.mockResolvedValueOnce({ sub: 'user_x' });
+    const { default: requireAuth } = await import('./requireAuth.js');
+    const req = { headers: { authorization: 'Bearer t' }, method: 'GET', path: '/x' };
+    await requireAuth(req, mockRes(), vi.fn());
+    const [, opts] = mockVerifyToken.mock.calls[0];
+    expect(opts.authorizedParties).toBeUndefined();
+  });
 });
