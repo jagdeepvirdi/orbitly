@@ -156,6 +156,8 @@
 
 > Target: one Railway service (Express serves the built frontend + API on one origin) + Railway Postgres + custom domain.
 
+> **Status (2026-10-08): LIVE at https://mosaiclife.jagdeepsinghvirdi.com** — pending only the browser-side sign-in checks in 38.5 and the cleanups in 38.6. Railway service `app` (id `42b02946-87bf-45aa-b0ea-4602bec006fb`) deploys from `jagdeepvirdi/orbitly` `master`; custom domain verified, TLS valid; `/api/health` → `{"ok":true,"db":"up"}`; frontend bundle carries the `pk_live_` key; `/api/*` without a token → 401.
+
 ### 38.1 — Code (done)
 - [x] `server/db.js` accepts `DATABASE_URL` (hosted Postgres); falls back to `DB_*` vars locally. Optional `DB_SSL=true` for public endpoints that need TLS.
 - [x] `server/index.js` serves `dist/` when it exists (hashed `/assets` cached 1y, `index.html` `no-cache`) with an SPA fallback for extensionless non-API GETs, placed *before* `requireAuth` because page loads carry no token. Other non-API misses return a plain 404. In dev (no `dist/`) behaviour is unchanged.
@@ -165,15 +167,15 @@
 
 ### 38.1b — Optional hardening (not started)
 - [x] Normalise `APP_URL` in `server/middleware/requireAuth.js` (trim whitespace, strip trailing `/`, lowercase) before using it as Clerk `authorizedParties`. Exported as `normalizeOrigin()` and also used for the CORS allowlist in `server/index.js`. Tests added in `requireAuth.test.js` (messy value normalised; blank value omits `authorizedParties`).
-- [ ] Clerk DNS record names in 38.3/38.4 are from memory of Clerk's usual setup — treat the Clerk dashboard's values as authoritative and correct this doc if they differ.
+- [x] Clerk DNS record names in 38.3/38.4 are from memory of Clerk's usual setup — treat the Clerk dashboard's values as authoritative and correct this doc if they differ. *Checked: all five names (`clerk`, `accounts`, `clkmail`, `clk._domainkey`, `clk2._domainkey`, each under `.mosaiclife`) were correct and resolve to `*.clerk.services`; no doc change needed.*
 
 ### 38.2 — Order of operations (manual unless noted)
 Domain: `https://mosaiclife.jagdeepsinghvirdi.com` (always **lowercase**; DNS is case-insensitive but the browser `Origin` header and the `APP_URL` comparison are not).
 
 1. [x] Railway project `mosaic-life` (id `a28d0eb3-4bbb-4186-b8c1-30b127414b69`, workspace "Jagdeep Singh Virdi's Projects", env `production`) created 2026-10-07 with a Postgres service (deployed, empty). Decisions: connect GitHub repo `jagdeepvirdi/orbitly` for auto-deploy; start with a fresh database (no dev-data copy, so **no user-ID remapping is needed**).
-2. [ ] **Clerk production instance + DNS** — section 38.3. Gives you `pk_live_…` / `sk_live_…`.
-3. [ ] **Create the app service from the GitHub repo** (only now — in production the server refuses to start without `CLERK_SECRET_KEY`, so an earlier deploy just crash-loops) and set its variables (below). *(Claude can do this once the Clerk keys exist.)*
-4. [ ] **Railway custom domain + GoDaddy DNS for the app** — section 38.4.
+2. [x] **Clerk production instance + DNS** — section 38.3. Gives you `pk_live_…` / `sk_live_…`.
+3. [x] **Create the app service from the GitHub repo** (only now — in production the server refuses to start without `CLERK_SECRET_KEY`, so an earlier deploy just crash-loops) and set its variables (below). *(Claude can do this once the Clerk keys exist.)*
+4. [x] **Railway custom domain + GoDaddy DNS for the app** — section 38.4.
 5. [ ] Verify — section 38.5. (The Phase 23.4 `jagdeep` household cleanup only matters if you ever copy dev data in; not needed for a fresh DB.)
 
 **App service variables** (Railway → app service → Variables):
@@ -192,9 +194,9 @@ Do **not** set `PORT` (Railway injects it) or `SERVER_PORT`.
 
 ### 38.3 — Clerk production instance
 Your current keys are a Clerk *development* instance (`pk_test_` / `sk_test_`). Production is a separate instance with its own users and keys; **dev users and sessions do not carry over** (fine — fresh start).
-- [ ] Clerk Dashboard → your application → switch the instance selector (top) from *Development* to **Production** → *Create production instance* (choose "Clone settings from development" if offered).
-- [ ] When asked for the domain, enter **`mosaiclife.jagdeepsinghvirdi.com`** (the host the app will be served from).
-- [ ] Open the **Domains** page under Configure/Developers (the DNS records page). Clerk lists the DNS records for the domain — typically five CNAMEs. **Copy the exact Name/Value pairs from the dashboard; don't type them from memory:**
+- [x] Clerk Dashboard → your application → switch the instance selector (top) from *Development* to **Production** → *Create production instance* (choose "Clone settings from development" if offered).
+- [x] When asked for the domain, enter **`mosaiclife.jagdeepsinghvirdi.com`** (the host the app will be served from).
+- [x] Open the **Domains** page under Configure/Developers (the DNS records page). Clerk lists the DNS records for the domain — typically five CNAMEs. **Copy the exact Name/Value pairs from the dashboard; don't type them from memory:**
   - `clerk` → Clerk Frontend API host
   - `accounts` → Clerk Account Portal host
   - `clkmail` → Clerk mail host
@@ -202,8 +204,8 @@ Your current keys are a Clerk *development* instance (`pk_test_` / `sk_test_`). 
 
   Add them at GoDaddy (38.4 Part A), then click **Verify configuration** in Clerk. Clerk then issues SSL certificates for its own subdomains; this takes a few minutes up to an hour.
 - [ ] Re-check sign-in methods under **User & Authentication** (email/password, passkeys, social, etc.) — a cloned instance may not copy everything.
-- [ ] If Google (or any other social) sign-in is enabled: production **requires your own OAuth credentials**; the shared dev credentials don't work. Google Cloud Console → create an OAuth client, add the redirect URI that Clerk shows for that provider, paste the Client ID/Secret into Clerk → *SSO connections*.
-- [ ] **API keys** page of the *production* instance: copy the **Publishable key** (`pk_live_…`) and **Secret key** (`sk_live_…`). Store them in a password manager and set them in Railway (variables table above) — never in the repo or `.env.example`.
+- [x] If Google (or any other social) sign-in is enabled: production **requires your own OAuth credentials**; the shared dev credentials don't work. Google Cloud Console → create an OAuth client, add the redirect URI that Clerk shows for that provider, paste the Client ID/Secret into Clerk → *SSO connections*.
+- [x] **API keys** page of the *production* instance: copy the **Publishable key** (`pk_live_…`) and **Secret key** (`sk_live_…`). Store them in a password manager and set them in Railway (variables table above) — never in the repo or `.env.example`.
 - [ ] Confirm sign-in/sign-up redirect to `/` (this app is a single-page app at the root).
 - [ ] Optional, recommended for a private family app: after your own first sign-up, restrict sign-ups (**User & Authentication → Restrictions** → allowlist or disable sign-ups).
 
@@ -230,23 +232,29 @@ GoDaddy → **My Products** → `jagdeepsinghvirdi.com` → **DNS** (*Manage DNS
 If the dashboard shows names *without* the `.mosaiclife` part, follow it exactly, relative to whatever domain it says.
 
 **Part B — the app itself** (do these at step 4, after the app service exists):
-- [ ] Railway → app service → **Settings → Networking → Custom Domain** → add `mosaiclife.jagdeepsinghvirdi.com`; leave the target port on auto (Railway injects `PORT`). Railway shows a **CNAME target** (like `xxxxxxxx.up.railway.app`) and usually a **TXT verification** record.
-- [ ] GoDaddy → add:
+- [x] Railway → app service → **Settings → Networking → Custom Domain** → add `mosaiclife.jagdeepsinghvirdi.com`; leave the target port on auto (Railway injects `PORT`). Railway shows a **CNAME target** (like `xxxxxxxx.up.railway.app`) and usually a **TXT verification** record.
+- [x] GoDaddy → add:
 
 | Type | Name | Value |
 |---|---|---|
 | CNAME | `mosaiclife` | the target Railway shows |
 | TXT | the name Railway shows, made relative (e.g. `_railway-verify.mosaiclife`) | the value Railway shows — only if Railway asks for it |
 
-- [ ] Wait for the domain status in Railway to turn **Active** (TLS certificate is then provisioned automatically). Check with `nslookup -type=CNAME mosaiclife.jagdeepsinghvirdi.com`.
+- [x] Wait for the domain status in Railway to turn **Active** (TLS certificate is then provisioned automatically). Check with `nslookup -type=CNAME mosaiclife.jagdeepsinghvirdi.com`.
 
 ### 38.5 — Post-deploy verification
-- [ ] `https://mosaiclife.jagdeepsinghvirdi.com/api/health` returns `{"ok":true,"db":"up",…}`
+- [x] `https://mosaiclife.jagdeepsinghvirdi.com/api/health` returns `{"ok":true,"db":"up",…}`
 - [ ] `https://mosaiclife.jagdeepsinghvirdi.com/` shows the Clerk login (a blank page means `VITE_CLERK_PUBLISHABLE_KEY` was missing at build time — set it and redeploy).
 - [ ] Sign up/in; the app loads with empty data and **no 401s** in the browser network tab (401 on every call = `APP_URL` mismatch or wrong Clerk keys).
-- [ ] Reload on a deep link (e.g. `/calendar`) works (SPA fallback).
+- [x] Reload on a deep link (e.g. `/calendar`) works (SPA fallback).
 - [ ] Festivals page shows data (seeded on first boot).
 - [ ] Incognito shows the login gate; a second Clerk user sees zero data (closes the open items in Phase 24.6).
+
+### 38.6 — Follow-ups
+- [ ] Delete the stray `CLERK_SECRET_KEY` variable from the **Postgres** service in Railway (it was set there by mistake; the live copy is on `app`). Consider rotating the key afterwards, since it sat on the wrong service.
+- [ ] Restrict Clerk sign-ups after your own first sign-up (see 38.3, last item).
+- [ ] Optional keys not set yet: `CRICAPI_KEY` (cricket) and `FOOTBALL_DATA_KEY` (football) — those Sports panels stay empty without them. `GEMINI_API_KEY` is set (AI extraction logs `Gemini ✓`).
+- [ ] Re-check Clerk sign-in methods and the post-sign-in redirect to `/` (last open items in 38.3).
 
 ---
 
