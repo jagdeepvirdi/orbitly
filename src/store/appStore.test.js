@@ -254,15 +254,13 @@ describe('reducer: calendar', () => {
 });
 
 describe('reducer: tasks view / settings tab / family tab', () => {
-  it('SET_TASK_VIEW, SET_SETTINGS_TAB, SET_FAMILY_TAB, SET_DIRECTORY_SIDE', () => {
+  it('SET_TASK_VIEW, SET_SETTINGS_TAB, SET_FAMILY_TAB', () => {
     let s = reducer(baseState(), { type: 'SET_TASK_VIEW', view: 'checklist' });
     expect(s.taskView).toBe('checklist');
     s = reducer(s, { type: 'SET_SETTINGS_TAB', tab: 'notifications' });
     expect(s.settingsTab).toBe('notifications');
     s = reducer(s, { type: 'SET_FAMILY_TAB', tab: 'directory' });
     expect(s.familyTab).toBe('directory');
-    s = reducer(s, { type: 'SET_DIRECTORY_SIDE', side: 'virdi' });
-    expect(s.directorySide).toBe('virdi');
   });
 });
 

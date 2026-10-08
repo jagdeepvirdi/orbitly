@@ -474,7 +474,6 @@ function DirectoryView({ state, dispatch }) {
   const [events,  setEvents]  = useState([]);
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState('');
-  const [side,    setSide]    = useState(state.directorySide || 'sahmbi');
 
   // Modals
   const [addGroupOpen,   setAddGroupOpen]   = useState(false);
@@ -508,35 +507,26 @@ function DirectoryView({ state, dispatch }) {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  const changeSide = (s) => {
-    setSide(s);
-    dispatch({ type: 'SET_DIRECTORY_SIDE', side: s });
-  };
-
-  // Groups for the active side
-  const sideGroups = useMemo(() => groups.filter(g => g.side === side), [groups, side]);
-
   const filteredGroups = useMemo(() => {
-    if (!search.trim()) return sideGroups;
+    if (!search.trim()) return groups;
     const q = search.toLowerCase();
-    return sideGroups.filter(g => {
+    return groups.filter(g => {
       const gm = members.filter(m => m.group === g.id);
       return g.label.toLowerCase().includes(q) || gm.some(m =>
         m.petName.toLowerCase().includes(q) || m.realName.toLowerCase().includes(q) || m.relation.toLowerCase().includes(q)
       );
     });
-  }, [sideGroups, members, search]);
+  }, [groups, members, search]);
 
-  const totalMembers   = members.filter(m => groups.find(g => g.id === m.group && g.side === side)).length;
+  const totalMembers   = members.filter(m => groups.some(g => g.id === m.group)).length;
   const upcomingCount  = members.filter(m => {
-    const g = groups.find(gr => gr.id === m.group && gr.side === side);
-    return g && m.bday && nextBdayDays(m.bday) <= 30;
+    return groups.some(g => g.id === m.group) && m.bday && nextBdayDays(m.bday) <= 30;
   }).length;
 
   // ── CRUD handlers ──
 
   async function handleAddGroup(form) {
-    const row = await api.createGroup({ ...form, side });
+    const row = await api.createGroup({ ...form, side: 'custom' });
     setGroups(gs => [...gs, row]);
     setAddGroupOpen(false);
   }
@@ -588,27 +578,6 @@ function DirectoryView({ state, dispatch }) {
     setEvents(es => es.filter(e => e.id !== ev.id));
   }
 
-  const PRESETS = [
-    { id: 'virdi',  label: '🏠 Virdi Family',    desc: "Father's side",   file: '/seeds/family-virdi.json' },
-    { id: 'sahmbi', label: '🌸 Sahmbi Family',   desc: "Mother's side",   file: '/seeds/family-sahmbi.json' },
-    { id: 'custom', label: '✨ Bangkok Friends',  desc: 'Custom group',    file: '/seeds/family-custom.json' },
-  ];
-
-  async function handleImportPreset(preset) {
-    setImporting(preset.id);
-    setImportMsg(null);
-    try {
-      const data = await fetch(preset.file).then(r => r.json());
-      const res  = await api.importFamily(data.groups);
-      setImportMsg(`Imported ${res.groups} groups, ${res.members} members, ${res.events} events.`);
-      await loadAll();
-    } catch (e) {
-      setImportMsg('Import failed: ' + (e.message || 'Unknown error'));
-    } finally {
-      setImporting(null);
-    }
-  }
-
   async function handleImportFile(file) {
     setImporting('file');
     setImportMsg(null);
@@ -627,29 +596,10 @@ function DirectoryView({ state, dispatch }) {
     }
   }
 
-  const SIDES = [
-    { id: 'sahmbi', label: '🌸 Sahmbi Family', sub: "Mother's side" },
-    { id: 'virdi',  label: '🏠 Virdi Family',  sub: "Father's side" },
-    { id: 'custom', label: '✨ My Groups',       sub: 'Custom groups' },
-  ];
-
   return (
     <div>
-      {/* Side tabs + stats */}
+      {/* Actions + stats */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        {SIDES.map(s => {
-          const c = sc(s.id);
-          return (
-            <button
-              key={s.id}
-              onClick={() => changeSide(s.id)}
-              style={{ padding: '10px 20px', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${side === s.id ? c.border : 'var(--border)'}`, background: side === s.id ? c.accent : 'transparent', color: side === s.id ? 'var(--text)' : 'var(--text-3)', textAlign: 'left' }}
-            >
-              <div style={{ fontSize: 13.5, fontWeight: 700 }}>{s.label}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{s.sub}</div>
-            </button>
-          );
-        })}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
           <button
             onClick={() => { setImportOpen(true); setImportMsg(null); }}
@@ -661,7 +611,7 @@ function DirectoryView({ state, dispatch }) {
             onClick={() => setAddGroupOpen(true)}
             style={{ padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, background: 'var(--accent)', color: '#fff' }}
           >
-            + {side === 'custom' ? 'New Group' : 'Add Family'}
+            + New Group
           </button>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{totalMembers}</div>
@@ -690,14 +640,14 @@ function DirectoryView({ state, dispatch }) {
         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-3)' }}>Loading directory…</div>
       ) : filteredGroups.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-3)' }}>
-          {side === 'custom' ? (
+          {groups.length === 0 ? (
             <>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
-              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: 'var(--text-2)' }}>No custom groups yet</div>
-              <div style={{ fontSize: 13, lineHeight: 1.6 }}>Click <strong style={{ color: 'var(--text)' }}>+ New Group</strong> to create a group like<br />"Work Friends", "College Buddies", or "Thailand Friends"</div>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>👨‍👩‍👧‍👦</div>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: 'var(--text-2)' }}>No family groups yet</div>
+              <div style={{ fontSize: 13, lineHeight: 1.6 }}>Click <strong style={{ color: 'var(--text)' }}>+ New Group</strong> to add a family or friend group,<br />like "Parents", "In-laws", or "College Buddies"</div>
             </>
           ) : (
-            <div>No groups found</div>
+            <div>No matches</div>
           )}
         </div>
       ) : (
@@ -745,7 +695,7 @@ function DirectoryView({ state, dispatch }) {
       {(addMemberGroup || editMemberData) && (
         <MemberModal
           member={editMemberData}
-          groups={sideGroups}
+          groups={groups}
           defaultGroupId={addMemberGroup?.id}
           onSave={editMemberData ? handleEditMember : handleAddMember}
           onClose={() => { setAddMemberGroup(null); setEditMemberData(null); }}
@@ -774,29 +724,7 @@ function DirectoryView({ state, dispatch }) {
         <ModalBase onClose={() => setImportOpen(false)} maxWidth={440}>
           <div style={{ padding: '28px 28px 24px' }}>
             <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Import Family Data</div>
-            <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 20 }}>Load a preset or upload your own JSON file. Existing groups are updated, new ones are added.</div>
-
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Presets</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-              {PRESETS.map(p => (
-                <button
-                  key={p.id}
-                  disabled={!!importing}
-                  onClick={() => handleImportPreset(p)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', cursor: importing ? 'wait' : 'pointer', fontFamily: 'inherit', textAlign: 'left', opacity: importing && importing !== p.id ? 0.5 : 1 }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{p.label}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{p.desc}</div>
-                  </div>
-                  {importing === p.id ? (
-                    <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Loading…</span>
-                  ) : (
-                    <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Load →</span>
-                  )}
-                </button>
-              ))}
-            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 20 }}>Upload a JSON file with a "groups" array. Existing groups are updated, new ones are added.</div>
 
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Upload JSON</div>
             <label style={{ display: 'block', padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--border)', textAlign: 'center', cursor: 'pointer', color: 'var(--text-3)', fontSize: 13 }}>

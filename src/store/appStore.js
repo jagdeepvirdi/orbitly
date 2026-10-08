@@ -82,7 +82,6 @@ export function createInitialState() {
   familyEvents:  [],     // loaded from DB on mount
   familyContacts: {},   // kept for inline edits before DB save; authoritative source is family_contacts table
   familyTab: 'wall',    // 'wall' | 'directory'
-  directorySide: 'sahmbi', // 'sahmbi' | 'virdi'
   financePaid: [],      // [{ item_type, item_id, paid }] — loaded via BOOTSTRAP for current month
   importedCalEvents: [], // [{ id, title, date, time, endTime, category, importBatch, importedAt }]
   importHistory: [],     // [{ id, filename, category, count, importedAt }]
@@ -107,7 +106,7 @@ const PERSIST_KEYS = [
   'sportSubscriptions', 'overlays', 'notifications',
   'taskView', 'calView', 'rescheduleDismissed',
   'timer', 'lastResetDate',
-  'familyTab', 'directorySide',
+  'familyTab',
   'prescriptions', 'testResults',
   'importedCalEvents', 'importHistory',
   'recipes', 'mealPlan',
@@ -346,8 +345,6 @@ export function reducer(state, action) {
     }
     case 'SET_FAMILY_TAB':
       return { ...state, familyTab: action.tab };
-    case 'SET_DIRECTORY_SIDE':
-      return { ...state, directorySide: action.side };
     case 'DISMISS_RESCHEDULE':
       return { ...state, rescheduleDismissed: true };
 
