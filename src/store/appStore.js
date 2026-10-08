@@ -65,11 +65,7 @@ export function createInitialState() {
   userCurrencies: ['INR', 'THB', 'USD'],
   prescriptions: [],
   testResults: [],
-  sportSubscriptions: [
-    { sport: 'f1', leagues: [] },
-    { sport: 'cricket', leagues: ['ipl'] },
-    { sport: 'football', leagues: ['PL', 'CL'] }
-  ],
+  sportSubscriptions: [], // [{ sport, leagues, teams }] — empty until the user picks sports
   lastResetDate: null,
   shopList: [],
   notifications: {
@@ -337,6 +333,14 @@ export function reducer(state, action) {
           }
           return s;
         })
+      };
+    }
+    case 'UPDATE_SPORT_TEAMS': {
+      return {
+        ...state,
+        sportSubscriptions: state.sportSubscriptions.map(s =>
+          s.sport === action.sport ? { ...s, teams: action.teams } : s
+        )
       };
     }
     case 'SET_FAMILY_CONTACT': {

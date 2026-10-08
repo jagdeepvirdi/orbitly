@@ -12,7 +12,7 @@ describe('createInitialState', () => {
     expect(s.userId).toBe('jagdeep');
     expect(s.timer).toBe(3600);
     expect(s.timerRunning).toBe(false);
-    expect(s.sportSubscriptions).toHaveLength(3);
+    expect(s.sportSubscriptions).toEqual([]);
   });
 });
 
@@ -347,6 +347,15 @@ describe('reducer: sport subscriptions', () => {
     const s0 = baseState({ sportSubscriptions: [{ sport: 'cricket', leagues: ['ipl'] }, { sport: 'f1', leagues: [] }] });
     const s = reducer(s0, { type: 'UPDATE_SPORT_LEAGUES', sport: 'cricket', leagues: ['ipl', 'bbl'] });
     expect(s.sportSubscriptions).toEqual([{ sport: 'cricket', leagues: ['ipl', 'bbl'] }, { sport: 'f1', leagues: [] }]);
+  });
+
+  it('UPDATE_SPORT_TEAMS sets followed teams for the matching sport only, keeping leagues', () => {
+    const s0 = baseState({ sportSubscriptions: [{ sport: 'football', leagues: ['PL'] }, { sport: 'cricket', leagues: [] }] });
+    const s = reducer(s0, { type: 'UPDATE_SPORT_TEAMS', sport: 'football', teams: ['Arsenal'] });
+    expect(s.sportSubscriptions).toEqual([
+      { sport: 'football', leagues: ['PL'], teams: ['Arsenal'] },
+      { sport: 'cricket', leagues: [] },
+    ]);
   });
 });
 

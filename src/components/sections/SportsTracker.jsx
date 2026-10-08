@@ -6,6 +6,7 @@ import { useLiveF1 } from '../../hooks/useLiveF1';
 import { useLiveCricket } from '../../hooks/useLiveCricket';
 import { useLiveFootball } from '../../hooks/useLiveFootball';
 import { useLiveNba } from '../../hooks/useLiveNba';
+import { filterByTeams, collectTeams, sortMatches } from '../../utils/sportsUtils';
 import { api } from '../../api/client';
 
 // SportToggle helper is replaced by modal configuration flow
@@ -46,7 +47,7 @@ function ApiKeyPrompt({ sport, href }) {
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13.5, fontWeight: 700, color: '#fcd34d' }}>API key needed for live {sport} data</div>
         <div style={{ fontSize: 12.5, color: 'var(--text-3)', marginTop: 3 }}>
-          Register free at <strong>{href}</strong>, add key to <code style={{ background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: 4 }}>.env</code>, then restart the server.
+          Register free at <strong>{href}</strong> and add the key to the server environment (<code style={{ background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: 4 }}>.env</code> locally), then restart the server.
           Showing seed data below.
         </div>
       </div>
@@ -299,10 +300,104 @@ function RefreshBtn({ onClick, loading }) {
   );
 }
 
-function CricketSection() {
+// Picks which teams to follow. The list comes from the matches already loaded, so it costs no
+// extra API calls; an empty selection means "show every team".
+function TeamFilter({ options, selected, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const same = (a, b) => a.toLowerCase() === b.toLowerCase();
+  const isSel = t => selected.some(s => same(s, t));
+  const toggle = t => onChange(isSel(t) ? selected.filter(s => !same(s, t)) : [...selected, t]);
+  const shown = options.filter(t => t.toLowerCase().includes(q.trim().toLowerCase()));
+  const label = selected.length === 0 ? 'All teams' : `${selected.length} team${selected.length === 1 ? '' : 's'}`;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        title="Choose the teams you follow"
+        style={{
+          height: 34, padding: '0 12px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+          background: selected.length ? 'var(--accent-soft)' : 'var(--surface)',
+          border: `1px solid ${selected.length ? 'var(--accent)' : 'var(--border)'}`,
+          color: 'var(--text-2)', fontSize: 12.5, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        {label}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+          <div style={{
+            position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 41, width: 260,
+            background: 'var(--surface-solid)', border: '1px solid var(--border-strong)', borderRadius: 14,
+            boxShadow: '0 16px 48px rgba(0,0,0,0.4)', padding: 10,
+          }}>
+            <input
+              autoFocus
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Search teams…"
+              style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', borderRadius: 9, background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'inherit', fontSize: 13, outline: 'none', marginBottom: 8 }}
+            />
+            <div style={{ maxHeight: 240, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {shown.length === 0 && (
+                <div style={{ padding: '10px 6px', fontSize: 12.5, color: 'var(--text-3)' }}>
+                  {options.length === 0 ? 'Teams appear once matches have loaded.' : 'No team matches your search.'}
+                </div>
+              )}
+              {shown.map(t => (
+                <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px', borderRadius: 8, fontSize: 13, cursor: 'pointer', color: 'var(--text-2)' }}>
+                  <input type="checkbox" checked={isSel(t)} onChange={() => toggle(t)} style={{ cursor: 'pointer' }} />
+                  {t}
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+              <button
+                onClick={() => onChange([])}
+                disabled={selected.length === 0}
+                style={{ background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, color: selected.length ? 'var(--text-2)' : 'var(--text-3)', cursor: selected.length ? 'pointer' : 'default', padding: 4 }}
+              >
+                Clear (show all)
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function NoMatches({ teams, onClear }) {
+  return (
+    <div style={{ padding: '28px 20px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-3)', textAlign: 'center', fontSize: 13.5 }}>
+      {teams.length > 0 ? (
+        <>
+          No recent or upcoming matches for {teams.join(', ')}.{' '}
+          <button onClick={onClear} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+            Show all teams
+          </button>
+        </>
+      ) : 'No matches to show right now.'}
+    </div>
+  );
+}
+
+function CricketSection({ teams, onTeamsChange }) {
   const { matches, loading, placeholder, refresh } = useLiveCricket();
-  const displayMatches = matches || CRICKET_MATCHES;
   const isLive = !!matches;
+  const displayMatches = matches ? sortMatches(filterByTeams(matches, teams)) : CRICKET_MATCHES;
 
   return (
     <div style={{ marginBottom: 32 }}>
@@ -310,9 +405,12 @@ function CricketSection() {
         <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(56,189,248,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🏏</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Cricket</div>
-          <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>India Internationals · IPL</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>
+            {teams.length > 0 ? `Following ${teams.join(', ')}` : 'All matches'}
+          </div>
         </div>
         <DataSourceBadge live={isLive} />
+        <TeamFilter options={collectTeams(matches, teams)} selected={teams} onChange={onTeamsChange} />
         <RefreshBtn onClick={refresh} loading={loading} />
       </div>
       {placeholder && <ApiKeyPrompt sport="cricket" href="cricapi.com" />}
@@ -321,37 +419,42 @@ function CricketSection() {
           <div key={i} style={{ height: 100, borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--border)', opacity: 0.5, animation: 'om-pulse 1.4s infinite' }} />
         ))}
         {!loading && displayMatches.map((m, i) => (
-          <div key={m.id || i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 18 }}>
+          <div key={m.id || i} style={{ background: 'var(--surface)', border: `1px solid ${m.status === 'live' ? 'rgba(16,185,129,0.35)' : 'var(--border)'}`, borderRadius: 16, padding: 18 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
               <span style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.3 }}>{m.match}</span>
               <StatusPill status={m.status} />
             </div>
             {m.series && <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>{m.series}</div>}
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: m.score ? 10 : 0 }}>
-              {m.venue} · {fmtMatchDate(m.date) || m.date}
+              {[m.matchType && m.matchType.toUpperCase(), m.venue].filter(Boolean).join(' · ')}{(m.matchType || m.venue) ? ' · ' : ''}{fmtMatchDate(m.date) || m.date}
             </div>
             {m.score && (
               <div style={{ fontSize: 13, fontWeight: 700, color: '#7dd3fc', fontVariantNumeric: 'tabular-nums', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
                 {m.score}
               </div>
             )}
+            {m.result && m.status !== 'upcoming' && (
+              <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginTop: m.score ? 6 : 10 }}>{m.result}</div>
+            )}
           </div>
         ))}
       </div>
+      {!loading && isLive && displayMatches.length === 0 && <NoMatches teams={teams} onClear={() => onTeamsChange([])} />}
     </div>
   );
 }
 
 // ─── Football section ───────────────────────────────────────────────────────────
 
-function FootballSection({ competitions }) {
+function FootballSection({ competitions, teams, onTeamsChange }) {
   const { matches, loading, placeholder, refresh } = useLiveFootball(competitions);
-  const displayMatches = matches || FOOTBALL_FIXTURES;
   const isLive = !!matches;
+  const filtered = matches ? sortMatches(filterByTeams(matches, teams)) : null;
+  const displayMatches = filtered || FOOTBALL_FIXTURES;
 
   // Group by competition
   const grouped = {};
-  (matches || []).forEach(m => {
+  (filtered || []).forEach(m => {
     if (!grouped[m.competition]) grouped[m.competition] = [];
     grouped[m.competition].push(m);
   });
@@ -365,9 +468,11 @@ function FootballSection({ competitions }) {
           <div style={{ fontSize: 18, fontWeight: 800 }}>Football</div>
           <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>
             {isLive ? competitions.replace(/,/g, ' · ') : 'FIFA World Cup 2026 · Premier League'}
+            {teams.length > 0 && ` · Following ${teams.join(', ')}`}
           </div>
         </div>
         <DataSourceBadge live={isLive} />
+        <TeamFilter options={collectTeams(matches, teams)} selected={teams} onChange={onTeamsChange} />
         <RefreshBtn onClick={refresh} loading={loading} />
       </div>
       {placeholder && <ApiKeyPrompt sport="football" href="football-data.org" />}
@@ -391,7 +496,10 @@ function FootballSection({ competitions }) {
         </div>
       ))}
 
-      {!loading && !hasGroups && (
+      {/* Live feed loaded but nothing matches: say so, rather than falling back to sample fixtures */}
+      {!loading && isLive && !hasGroups && <NoMatches teams={teams} onClear={() => onTeamsChange([])} />}
+
+      {!loading && !isLive && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 12 }}>
           {(displayMatches).map((m, i) => <MatchCard key={m.id || i} m={m} showComp />)}
         </div>
@@ -528,14 +636,14 @@ export default function SportsTracker() {
   const [catalog, setCatalog] = useState([]);
   const [showManageModal, setShowManageModal] = useState(false);
 
-  // Hook statuses to evaluate API key placeholder states dynamically
-  const { placeholder: cricketPlaceholder } = useLiveCricket();
-  const { placeholder: footballPlaceholder } = useLiveFootball();
+  // Which live data sources the server has keys for (a config check, not an upstream call)
+  const [sourceStatus, setSourceStatus] = useState({});
   const { live: nbaLive } = useLiveNba();
 
-  // Load sports catalog on mount
+  // Load sports catalog + data-source status on mount
   useEffect(() => {
     api.getSportsCatalog().then(res => setCatalog(res || []));
+    api.getSportsStatus().then(res => setSourceStatus(res || {})).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -546,7 +654,15 @@ export default function SportsTracker() {
   }, []);
 
   const footballSub = sportSubscriptions.find(s => s.sport === 'football');
+  const cricketSub = sportSubscriptions.find(s => s.sport === 'cricket');
   const competitions = (footballSub?.leagues && footballSub.leagues.length > 0 ? footballSub.leagues : ['WC','PL','PD','CL','EC']).join(',');
+
+  // Followed teams are saved with the subscription so they follow the user across devices
+  const saveTeams = (sport, teams) => {
+    const sub = sportSubscriptions.find(s => s.sport === sport);
+    dispatch({ type: 'UPDATE_SPORT_TEAMS', sport, teams });
+    api.setSportSubscription(sport, sub?.leagues || [], teams).catch(() => {});
+  };
 
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '26px 34px 60px' }}>
@@ -599,17 +715,17 @@ export default function SportsTracker() {
       {sportSubscriptions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--surface)', borderRadius: 20, border: '1px solid var(--border)', color: 'var(--text-3)' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No Subscribed Sports</div>
-          <div style={{ fontSize: 14, marginBottom: 20 }}>Click "Manage Sports" to subscribe to your favorite sports and leagues.</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Choose the sports you follow</div>
+          <div style={{ fontSize: 14, marginBottom: 20 }}>Pick your sports and leagues, then narrow cricket and football to the teams you care about.</div>
           <button onClick={() => setShowManageModal(true)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: '#fff', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer' }}>
-            Configure Subscriptions
+            Choose sports
           </button>
         </div>
       ) : (
         sportSubscriptions.map(sub => {
           if (sub.sport === 'f1') return <F1Section key="f1" />;
-          if (sub.sport === 'cricket') return <CricketSection key="cricket" />;
-          if (sub.sport === 'football') return <FootballSection key="football" competitions={competitions} />;
+          if (sub.sport === 'cricket') return <CricketSection key="cricket" teams={cricketSub?.teams || []} onTeamsChange={t => saveTeams('cricket', t)} />;
+          if (sub.sport === 'football') return <FootballSection key="football" competitions={competitions} teams={footballSub?.teams || []} onTeamsChange={t => saveTeams('football', t)} />;
           if (sub.sport === 'nba') return <NBASection key="nba" />;
           if (sub.sport === 'tennis') return <TennisSection key="tennis" />;
           if (sub.sport === 'badminton') return <BadmintonSection key="badminton" />;
@@ -644,11 +760,11 @@ export default function SportsTracker() {
                 if (sport.id === 'f1') {
                   isLiveAvailable = true;
                 } else if (sport.id === 'cricket') {
-                  isLiveAvailable = !cricketPlaceholder;
+                  isLiveAvailable = !!sourceStatus.cricket;
                   keyLink = 'https://cricapi.com';
                   keyText = 'CricAPI key required';
                 } else if (sport.id === 'football') {
-                  isLiveAvailable = !footballPlaceholder;
+                  isLiveAvailable = !!sourceStatus.football;
                   keyLink = 'https://www.football-data.org';
                   keyText = 'football-data.org key required';
                 } else if (sport.id === 'nba') {
@@ -690,7 +806,6 @@ export default function SportsTracker() {
                           } else {
                             // Add default leagues if applicable
                             let defaultLeagues = [];
-                            if (sport.id === 'cricket') defaultLeagues = ['ipl'];
                             if (sport.id === 'football') defaultLeagues = ['PL', 'CL'];
                             if (sport.id === 'tennis') defaultLeagues = ['wimbledon', 'us-open', 'french-open', 'aus-open'];
                             dispatch({ type: 'ADD_SPORT_SUBSCRIPTION', sport: sport.id, leagues: defaultLeagues });

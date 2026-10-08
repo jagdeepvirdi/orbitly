@@ -76,8 +76,10 @@ export const api = {
     await fetch('/api/f1/refresh', { method: 'POST' });
   },
   holidays:          (year, cc) => apiFetch(`/holidays/${year}/${cc}`, `holidays-${year}-${cc}`, 7 * 24 * H),
-  cricketMatches:    () => apiFetch('/cricket/matches', 'cricket-matches', 15 * 60_000),
-  footballMatches:   (comps) => apiFetch(`/football/matches?competitions=${comps}`, `football-${comps}`, H),
+  // Short browser-side TTL: the server already caches (cricket 30 min, football 15 min) and
+  // is what protects the API quotas, so a long TTL here would only make the data staler.
+  cricketMatches:    () => apiFetch('/cricket/matches', 'cricket-matches', 5 * 60_000),
+  footballMatches:   (comps) => apiFetch(`/football/matches?competitions=${comps}`, `football-${comps}`, 5 * 60_000),
   footballStandings: (comp) => apiFetch(`/football/standings/${comp}`, `football-standings-${comp}`, 3 * H),
   nbaGames:          () => apiFetch('/nba/games?days=7', 'nba-games', H),
   getSportsCatalog:  () => get('/sports/catalog'),
@@ -238,7 +240,10 @@ export const api = {
 
   // ── Sports subscriptions ──────────────────────────────────────
   getSportSubscriptions: () => get('/sports/subscriptions'),
-  setSportSubscription: (sport, leagues) => post('/sports/subscriptions', { sport, leagues }),
+  getSportsStatus: () => get('/sports/status'),
+  // `teams` is optional: leave it out (league toggles) and the stored teams are kept.
+  setSportSubscription: (sport, leagues, teams) =>
+    post('/sports/subscriptions', teams === undefined ? { sport, leagues } : { sport, leagues, teams }),
   deleteSportSubscription: (sport) => del(`/sports/subscriptions/${sport}`),
 
 

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api/client';
 
-export function useLiveFootball(competitions = 'WC,PL,PD,CL,EC') {
+// `enabled=false` skips the fetch entirely, so unsubscribed users never spend the shared quota.
+export function useLiveFootball(competitions = 'WC,PL,PD,CL,EC', enabled = true) {
   const [matches, setMatches] = useState(null);
   const [loading, setLoading] = useState(true);
   const [placeholder, setPlaceholder] = useState(false);
@@ -15,6 +16,7 @@ export function useLiveFootball(competitions = 'WC,PL,PD,CL,EC') {
   // just without a loading flash — matches swap in-place once the new data
   // arrives instead of showing a skeleton first.
   useEffect(() => {
+    if (!enabled) return undefined;
     let cancelled = false;
     api.footballMatches(competitions)
       .then(res => {
@@ -28,7 +30,7 @@ export function useLiveFootball(competitions = 'WC,PL,PD,CL,EC') {
         if (!cancelled) { setError(e.message); setLoading(false); }
       });
     return () => { cancelled = true; };
-  }, [competitions, tick]);
+  }, [competitions, tick, enabled]);
 
   const refresh = useCallback(async () => {
     setLoading(true);

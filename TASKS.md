@@ -255,6 +255,22 @@ If the dashboard shows names *without* the `.mosaiclife` part, follow it exactly
 - [ ] Restrict Clerk sign-ups after your own first sign-up (see 38.3, last item).
 - [ ] Optional keys not set yet: `CRICAPI_KEY` (cricket) and `FOOTBALL_DATA_KEY` (football) — those Sports panels stay empty without them. `GEMINI_API_KEY` is set (AI extraction logs `Gemini ✓`).
 - [ ] Re-check Clerk sign-in methods and the post-sign-in redirect to `/` (last open items in 38.3).
+- [ ] **Fix Railway auto-deploy on push.** Pushing to `master` does not start a deployment on the `app` service. Seen 2026-10-08: the push of `dad8359` created no deployment; it only deployed after the repo was re-attached with `connect-service-source`, so right now every push needs a manual deploy. The service config shows `source.repo = jagdeepvirdi/orbitly` but no branch trigger is visible from the API. Check in Railway → `app` → Settings → Source: branch is `master`, auto-deploy/trigger is on, and "Wait for CI" isn't blocking. Also confirm the Railway GitHub app has access to `jagdeepvirdi/orbitly` (GitHub → Settings → Applications → Railway → Repository access). Done when a plain `git push` to `master` produces a new deployment with no manual step. Until then: redeploy via the dashboard's "Deploy latest commit", or ask Claude to re-attach the source.
+
+---
+
+## PHASE 39 — Sports: all matches, recent results, followed teams (2026-10-08)
+
+> `CRICAPI_KEY` and `FOOTBALL_DATA_KEY` are set on the Railway `app` service. Before this phase the app fell back to hardcoded June-2026 sample matches and filtered cricket to India/IPL only.
+
+- [x] **Sports starts empty.** `sportSubscriptions` defaults to `[]` in the store and the server no longer injects F1/cricket/football defaults; users pick sports in Manage Sports. The empty state now reads "Choose the sports you follow".
+- [x] **Cricket shows every match** (`server/routes/cricket.js`): removed the India/IPL filter. Fetches 2 pages (50 matches) and caches 30 min; logs CricAPI `hitsToday`. The free plan is 100 calls/day, worst case is 96. Serves stale data (up to 24 h) if CricAPI errors. The refresh button is throttled to once per 5 min so it can't burn the quota. Cricket league checkboxes removed (nothing used them).
+- [x] **Football includes recent results** (`server/routes/football.js`): window is now 7 days back to 30 ahead. Cached per competition for 15 min so users with different league mixes share upstream calls; competition codes are whitelisted; failures are logged with the HTTP status (they used to be swallowed and returned `[]`), and a failed competition falls back to stale data. Refresh throttled to once per 2 min.
+- [x] **Followed teams.** New `teams` JSONB column on `user_sport_subscriptions` (migration `ADD COLUMN IF NOT EXISTS`); `POST /api/sports/subscriptions` accepts `teams` and keeps the stored list when it is omitted (league toggles don't wipe it). Team picker on the cricket and football panels (list built from the loaded matches, no extra API calls); empty = all teams. The Today dashboard cricket/football tiles honour it too. Helpers + tests in `src/utils/sportsUtils.js`.
+- [x] `GET /api/sports/status` (key configured or not) replaces mounting the cricket/football hooks just to detect a missing key; hooks take `enabled` so unsubscribed sports never spend the shared quota. Client-side cache TTL cut to 5 min.
+- [x] Verified: 111 unit tests, route checks against a stubbed CricAPI/football-data (pagination, cache, throttle, partial failure, 502), and the migration + subscription routes on a throwaway Postgres 16.
+- [ ] **Not verified against the real APIs** (the keys are only on Railway): check on the live site that cricket shows a sensible list and football shows recent results. If football-data returns an error for the 37-day window, the Railway logs now say why (`[football] football-data PL HTTP ...`); the fix would be to shrink `DAYS_AHEAD`.
+- [ ] Still open: when the feed is unreachable and there is no stale copy, the panels fall back to the hardcoded sample matches (badge says "Seed data"). Consider an empty/error state instead. NBA and tennis are still seed-only.
 
 ---
 

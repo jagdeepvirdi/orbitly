@@ -6,6 +6,7 @@ import { F1_CALENDAR, CRICKET_MATCHES, FOOTBALL_FIXTURES } from '../../data/spor
 import { useLiveF1 } from '../../hooks/useLiveF1';
 import { useLiveCricket } from '../../hooks/useLiveCricket';
 import { useLiveFootball } from '../../hooks/useLiveFootball';
+import { filterByTeams, sortMatches } from '../../utils/sportsUtils';
 import { fireConfetti } from '../../hooks/useConfetti';
 import { useTimer } from '../../hooks/useTimer';
 import { api } from '../../api/client';
@@ -173,8 +174,9 @@ export default function TodayDashboard() {
   const footballCompetitions = (footballSub?.leagues && footballSub.leagues.length > 0 ? footballSub.leagues : ['WC', 'PL', 'PD', 'CL', 'EC']).join(',');
 
   const { schedule: liveF1Schedule } = useLiveF1();
-  const { matches: liveCricketMatches, placeholder: cricketPlaceholder } = useLiveCricket();
-  const { matches: liveFootballMatches, placeholder: footballPlaceholder } = useLiveFootball(footballCompetitions);
+  const cricketSub = sportSubscriptions.find(s => s.sport === 'cricket');
+  const { matches: liveCricketMatches, placeholder: cricketPlaceholder } = useLiveCricket(isSubbed('cricket'));
+  const { matches: liveFootballMatches, placeholder: footballPlaceholder } = useLiveFootball(footballCompetitions, isSubbed('football'));
 
   const rawF1Calendar = liveF1Schedule || F1_CALENDAR;
   const f1IsLive = !!liveF1Schedule;
@@ -184,13 +186,13 @@ export default function TodayDashboard() {
     .sort((a, b) => a.days - b.days)[0];
   const f1Days = nextRace?.days ?? null;
 
-  const rawCricketMatches = liveCricketMatches || CRICKET_MATCHES;
+  const rawCricketMatches = liveCricketMatches ? sortMatches(filterByTeams(liveCricketMatches, cricketSub?.teams)) : CRICKET_MATCHES;
   const cricketIsLive = !!liveCricketMatches && !cricketPlaceholder;
   const activeCricket = rawCricketMatches.find(m => m.status === 'live')
     || rawCricketMatches.find(m => m.status === 'upcoming');
   const cricketDays = daysAwayFromMatch(activeCricket);
 
-  const rawFootballMatches = liveFootballMatches || FOOTBALL_FIXTURES;
+  const rawFootballMatches = liveFootballMatches ? sortMatches(filterByTeams(liveFootballMatches, footballSub?.teams)) : FOOTBALL_FIXTURES;
   const footballIsLive = !!liveFootballMatches && !footballPlaceholder;
   const activeFootball = rawFootballMatches.find(m => m.status === 'live')
     || rawFootballMatches.find(m => m.status === 'upcoming');

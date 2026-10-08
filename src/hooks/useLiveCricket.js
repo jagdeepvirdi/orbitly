@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api/client';
 
-export function useLiveCricket() {
+// `enabled=false` skips the fetch entirely, so sports a user hasn't subscribed to never
+// spend the shared API quota.
+export function useLiveCricket(enabled = true) {
   const [matches, setMatches] = useState(null);
   const [loading, setLoading] = useState(true);
   const [placeholder, setPlaceholder] = useState(false);
@@ -12,6 +14,7 @@ export function useLiveCricket() {
   // reset here; refresh() resets it itself before bumping `tick`, since that
   // happens in a click handler rather than this effect.
   useEffect(() => {
+    if (!enabled) return undefined;
     let cancelled = false;
     api.cricketMatches()
       .then(res => {
@@ -25,7 +28,7 @@ export function useLiveCricket() {
         if (!cancelled) { setError(e.message); setLoading(false); }
       });
     return () => { cancelled = true; };
-  }, [tick]);
+  }, [tick, enabled]);
 
   const refresh = useCallback(async () => {
     setLoading(true);

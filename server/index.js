@@ -419,6 +419,8 @@ async function runMigrations() {
        PRIMARY KEY (user_id, sport_id)
      )`,
     `CREATE INDEX IF NOT EXISTS idx_user_sport_subscriptions_user_id ON user_sport_subscriptions(user_id)`,
+    // Followed teams per sport (empty = all teams). Applied as a filter on the shared match feed.
+    `ALTER TABLE user_sport_subscriptions ADD COLUMN IF NOT EXISTS teams JSONB NOT NULL DEFAULT '[]'::jsonb`,
     // Phase 14: backfill existing rows — set user_id = 'jagdeep' where still empty
     `UPDATE tasks SET user_id = 'jagdeep' WHERE user_id = ''`,
     `UPDATE medications SET user_id = 'jagdeep' WHERE user_id = ''`,
